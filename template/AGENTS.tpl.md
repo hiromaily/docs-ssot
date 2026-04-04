@@ -1,4 +1,4 @@
-<!-- template/CLAUDE.template.md -->
+<!-- template/CLAUDE.tpl.md -->
 <!--
 ⚠️ AUTO-GENERATED FILE — DO NOT EDIT
 -->

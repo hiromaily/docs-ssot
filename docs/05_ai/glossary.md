@@ -7,7 +7,7 @@ This glossary defines important terms used in this project so that AI agents and
 ### SSOT (Single Source of Truth)
 
 A design principle where documentation content exists in only one place.
-All generated documents (e.g., README.md, CLAUDE.md) are built from the docs/ directory, which is the single source of truth.
+All generated documents (e.g., README.md, AGENTS.md, CLAUDE.md) are built from the docs/ directory, which is the single source of truth.
 
 ### Docs Directory
 

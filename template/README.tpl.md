@@ -1,4 +1,4 @@
-<!-- template/README.template.md -->
+<!-- template/README.tpl.md -->
 <!--
 ⚠️ AUTO-GENERATED FILE — DO NOT EDIT
 -->

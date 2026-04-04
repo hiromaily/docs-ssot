@@ -32,7 +32,7 @@ The following components should be tested:
 
 - End-to-end document generation
 - README generation
-- CLAUDE.md generation
+- AGENTS.md, CLAUDE.md generation
 - Multiple template builds
 
 ---

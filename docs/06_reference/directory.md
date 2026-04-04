@@ -4,6 +4,6 @@
 cmd/
 internal/
 docs/
-README.template.md
+README.tpl.md
 Makefile
 ```

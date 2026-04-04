@@ -1,5 +1,17 @@
 APP=docs-ssot
 
+###############################################################################
+# Install
+###############################################################################
+
+.PHONY: install
+install:
+	go install ./cmd/docs-ssot
+
+###############################################################################
+# Development
+###############################################################################
+
 .PHONY: build
 build:
 	go build -o bin/$(APP) ./cmd/docs-ssot
@@ -8,9 +20,6 @@ build:
 run:
 	go run ./cmd/docs-ssot build
 
-.PHONY: install
-install:
-	go install ./cmd/docs-ssot
 
 .PHONY: clean
 clean:

@@ -1,6 +1,9 @@
 targets:
-  - input: template/README.template.md
+  - input: template/README.tpl.md
     output: README.md
 
-  - input: template/CLAUDE.template.md
+  - input: template/AGENTS.tpl.md
+    output: AGENTS.md
+
+  - input: template/CLAUDE.tpl.md
     output: CLAUDE.md

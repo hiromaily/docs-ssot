@@ -5,7 +5,7 @@ Documentation should be treated as a system, not as static files.
 In many projects, documentation becomes fragmented, duplicated, and inconsistent.
 The same information is rewritten across README files, design documents, and internal notes.
 
-docs-ssot aims to solve this by applying the **Single Source of Truth (SSOT)** principle to Markdown documentation.
+`docs-ssot` aims to solve this by applying the **Single Source of Truth (SSOT)** principle to Markdown documentation.
 
 ### Core Ideas
 
@@ -24,17 +24,19 @@ docs-ssot aims to solve this by applying the **Single Source of Truth (SSOT)** p
     - build pipelines
 
 - **Generated outputs**
-  - Final documents (README, CLAUDE.md, etc.) are build artifacts
+  - Final documents (README, AGENTS.md, CLAUDE.md, etc.) are build artifacts
   - Never edited manually
 
 ### Why this matters
 
 Without SSOT:
+
 - Documentation diverges
 - Updates are error-prone
 - Context is duplicated and inconsistent
 
-With docs-ssot:
+With `docs-ssot`:
+
 - Documentation stays consistent
 - Changes propagate automatically
 - Different audiences (users, developers, AI) get tailored outputs from the same source
