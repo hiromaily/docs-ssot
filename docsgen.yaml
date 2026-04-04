@@ -1,0 +1,6 @@
+targets:
+  - input: template/README.template.md
+    output: README.md
+
+  - input: template/CLAUDE.template.md
+    output: CLAUDE.md
