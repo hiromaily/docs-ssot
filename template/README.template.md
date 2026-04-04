@@ -1,6 +1,11 @@
+<!-- template/README.template.md -->
+<!--
+⚠️ AUTO-GENERATED FILE — DO NOT EDIT
+-->
 # docs-ssot
 
 <!-- @include: docs/01_project/overview.md -->
+
 <!-- @include: docs/01_project/vision.md -->
 
 ---
@@ -8,6 +13,7 @@
 ## Product
 
 <!-- @include: docs/02_product/concept.md -->
+
 <!-- @include: docs/02_product/features.md -->
 
 ---
@@ -15,6 +21,7 @@
 ## Architecture
 
 <!-- @include: docs/03_architecture/overview.md -->
+
 <!-- @include: docs/03_architecture/system.md -->
 
 ---

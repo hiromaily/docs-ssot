@@ -1,3 +1,7 @@
+<!-- template/README.template.md -->
+<!--
+⚠️ AUTO-GENERATED FILE — DO NOT EDIT
+-->
 # docs-ssot
 
 ## Overview
@@ -5,6 +9,7 @@
 docs-ssot is a documentation single source of truth generator.
 
 It composes README.md and CLAUDE.md from small modular markdown files.
+
 ## Vision
 
 Documentation should be treated as a system, not as static files.
@@ -65,6 +70,7 @@ Turning documentation into a **maintainable, scalable system**.
 
 Instead of maintaining large README files, this project splits documents into
 small reusable markdown modules and composes them into final documents.
+
 
 ### Features
 
@@ -140,6 +146,7 @@ The system consists of:
 - Markdown modules
 - Template files
 - Generator CLI
+
 
 ### System Architecture
 

@@ -1,3 +1,7 @@
+<!-- template/CLAUDE.template.md -->
+<!--
+⚠️ AUTO-GENERATED FILE — DO NOT EDIT
+-->
 # Project Context
 
 ## Overview
@@ -17,6 +21,7 @@ The system consists of:
 - Markdown modules
 - Template files
 - Generator CLI
+
 
 # Documentation Pipeline Architecture
 
@@ -166,6 +171,7 @@ The pipeline is designed with the following goals:
 make build
 make docs
 ```
+
 
 # Testing
 
