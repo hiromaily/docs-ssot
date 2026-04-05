@@ -8,6 +8,12 @@ APP=docs-ssot
 install:
 	go install ./cmd/docs-ssot
 
+.PHONY: install-dev
+install-dev:
+	brew install lefthook
+	lefthook install
+	go get -tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.11.4
+
 ###############################################################################
 # Development
 ###############################################################################
@@ -19,7 +25,6 @@ build:
 .PHONY: run
 run:
 	go run ./cmd/docs-ssot build
-
 
 .PHONY: clean
 clean:
