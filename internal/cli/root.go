@@ -13,9 +13,10 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "docs-ssot",
-	Short: "Documentation SSOT generator",
-	Long:  "docs-ssot generates documentation files from modular Markdown sources using a template-based composition system.",
+	Use:          "docs-ssot",
+	Short:        "Documentation SSOT generator",
+	Long:         "docs-ssot generates documentation files from modular Markdown sources using a template-based composition system.",
+	SilenceUsage: true,
 }
 
 func init() {

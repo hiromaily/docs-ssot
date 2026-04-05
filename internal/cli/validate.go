@@ -13,9 +13,10 @@ var validateCmd = &cobra.Command{
 	Short: "Check that all include directives can be resolved",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		err := generator.Validate(configFile)
-		if err != nil && !errors.Is(err, generator.ErrValidationFailed) {
-			// ErrValidationFailed is already reported line-by-line by Validate itself.
-			return err
+		if errors.Is(err, generator.ErrValidationFailed) {
+			// Per-template errors are already printed by Validate itself.
+			// Silence Cobra's "Error: validation failed" to avoid double-reporting.
+			cmd.Root().SilenceErrors = true
 		}
 
 		return err
