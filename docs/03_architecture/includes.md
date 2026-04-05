@@ -12,7 +12,7 @@ Includes are expanded recursively to build final generated documents.
 ### Include Directive Syntax
 
 ```
-<!-- @include: path -->
+<!-- @include: path [level=<delta>] -->
 ```
 
 Example:
@@ -22,6 +22,24 @@ Example:
 ```
 
 The directive must be written inside an HTML comment.
+
+An optional `level` parameter adjusts the heading depth of the included content:
+
+```
+<!-- @include: docs/03_architecture/overview.md level=+1 -->
+<!-- @include: docs/03_architecture/overview.md level=-1 -->
+<!-- @include: docs/03_architecture/overview.md level=+2 -->
+```
+
+| Parameter | Meaning |
+|-----------|---------|
+| `level=+1` | Deepen all headings by one level (`##` → `###`) |
+| `level=+2` | Deepen all headings by two levels (`##` → `####`) |
+| `level=-1` | Shallow all headings by one level (`###` → `##`) |
+| `level=0` | No change (same as omitting the parameter) |
+
+Heading levels are clamped to the valid range `[1, 6]`.
+Headings inside fenced code blocks in the included file are not adjusted.
 
 ---
 

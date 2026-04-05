@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 )
 
@@ -73,11 +74,16 @@ func processFile(absPath string, ancestors []string, absOutputPath string) (stri
 		if prevFenceType == "" && fenceType == "" {
 			matches := includePattern.FindStringSubmatch(line)
 			if len(matches) > 1 {
-				absInclude := resolveIncludePath(absPath, matches[1])
+				includePath, levelDelta := parseIncludeArgs(matches[1])
+				absInclude := resolveIncludePath(absPath, includePath)
 
 				content, err := processFile(absInclude, chain, absOutputPath)
 				if err != nil {
 					return "", err
+				}
+
+				if levelDelta != 0 {
+					content = adjustHeadingLevels(content, levelDelta)
 				}
 
 				sb.WriteString(content)
@@ -132,6 +138,27 @@ func nextFenceType(line, fenceType string) string {
 		}
 	}
 	return fenceType
+}
+
+// parseIncludeArgs parses the argument string captured from an include directive.
+// The expected form is: <path> [level=<delta>]
+// Returns the file path and optional level delta (0 if absent or unparseable).
+func parseIncludeArgs(args string) (string, int) {
+	parts := strings.Fields(args)
+	if len(parts) == 0 {
+		return "", 0
+	}
+	path := parts[0]
+	var level int
+	for _, param := range parts[1:] {
+		if strings.HasPrefix(param, "level=") {
+			n, err := strconv.Atoi(param[len("level="):])
+			if err == nil {
+				level = n
+			}
+		}
+	}
+	return path, level
 }
 
 // resolveIncludePath returns the absolute path for includePath relative to the containing file.
