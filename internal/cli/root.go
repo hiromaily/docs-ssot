@@ -1,4 +1,5 @@
-package main
+// Package cli wires together all Cobra subcommands for docs-ssot.
+package cli
 
 import (
 	"os"
@@ -6,7 +7,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var configFile string
+var (
+	configFile string
+	appVersion string
+)
 
 var rootCmd = &cobra.Command{
 	Use:   "docs-ssot",
@@ -19,8 +23,9 @@ func init() {
 	rootCmd.AddCommand(buildCmd, includeCmd, validateCmd, versionCmd)
 }
 
-// Execute runs the root command.
-func Execute() {
+// Execute initialises the CLI with the given build version and runs the root command.
+func Execute(version string) {
+	appVersion = version
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
