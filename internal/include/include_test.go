@@ -624,6 +624,41 @@ func TestProcessFile_GlobInclude_WithLevelAdjustment(t *testing.T) {
 	}
 }
 
+func TestProcessFile_GlobInclude_BadPattern(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+
+	// "[*.md" is a malformed bracket expression — filepath.Glob returns ErrBadPattern.
+	writeFile(t, filepath.Join(dir, "root.md"), "<!-- @include: [*.md -->\n")
+
+	_, err := include.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
+	if err == nil {
+		t.Fatal("expected error for malformed glob pattern, got nil")
+	}
+}
+
+func TestProcessFile_GlobInclude_QuestionMark(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+
+	subDir := filepath.Join(dir, "docs")
+	writeFile(t, filepath.Join(subDir, "a1.md"), "a1\n")
+	writeFile(t, filepath.Join(subDir, "b2.md"), "b2\n")
+	writeFile(t, filepath.Join(subDir, "cc.md"), "cc\n") // two chars after nothing — won't match ?1 or ?2
+	writeFile(t, filepath.Join(dir, "root.md"), "<!-- @include: docs/??.md -->\n")
+
+	got, err := include.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// "??.md" matches two-character base names: a1, b2, cc — all three
+	want := "a1\nb2\ncc\n"
+	if got != want {
+		t.Errorf("got:\n%q\nwant:\n%q", got, want)
+	}
+}
+
 // TestProcessFile_LinkRewrite_WithTitle tests that optional link titles are preserved.
 func TestProcessFile_LinkRewrite_WithTitle(t *testing.T) {
 	t.Parallel()
