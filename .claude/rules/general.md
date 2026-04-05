@@ -26,7 +26,7 @@ docs-ssot/
 ├── internal/
 │   ├── config/config.go        # YAML config loader (Config, Target types)
 │   ├── generator/generator.go  # Build orchestrator (Build func)
-│   └── include/include.go      # Include directive resolver (ProcessFile func)
+│   └── processor/              # Include resolver + transformer pipeline (ProcessFile func)
 ├── docs/                       # Source Markdown files (SSOT — edit here)
 │   ├── 01_project/             # Project context and vision
 │   ├── 02_product/             # Product concept and features
@@ -52,7 +52,7 @@ docs-ssot/
 | `main` | `cmd/docs-ssot/main.go` | CLI arg parsing, dispatch to `generator.Build()` |
 | `config` | `internal/config/config.go` | Load `docsgen.yaml` into `Config{Targets []Target}` |
 | `generator` | `internal/generator/generator.go` | Iterate targets, call include resolver, write output |
-| `include` | `internal/include/include.go` | Regex-based include directive expansion |
+| `processor` | `internal/processor/processor.go` | Include resolution, transformer pipeline (ProcessFile, Transformer, Apply) |
 
 ### Include Directive Pattern
 
@@ -140,9 +140,9 @@ make clean          # Remove bin/ and generated README.md, CLAUDE.md
 
 ## Current Limitations (Planned for Future)
 - **No variable substitution**: No `{{ variable }}` placeholder support.
-- **No validate command**: Must attempt a full build to detect missing or circular includes.
 
-When implementing include-related features, the primary file to modify is `internal/include/include.go`.
+When implementing include-related features, the primary file to modify is `internal/processor/processor.go`.
+To add a new content transformation, implement the `Transformer` interface in `internal/processor/` and register it in the relevant processing step.
 
 ---
 

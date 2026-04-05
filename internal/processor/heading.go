@@ -1,4 +1,4 @@
-package include
+package processor
 
 import (
 	"bufio"
@@ -11,15 +11,26 @@ import (
 // Group 1 captures leading indent; group 2 captures the '#' run.
 var headingPattern = regexp.MustCompile(`^( {0,3})(#{1,6})(?:[ \t]|$)`)
 
-// adjustHeadingLevels shifts every ATX heading in content by delta levels.
+// HeadingTransformer shifts every ATX heading in content by Delta levels.
 // Headings inside fenced code blocks are not adjusted.
 // Positive delta deepens headings (# → ## for delta=1).
 // Negative delta shallows headings (## → # for delta=-1).
 // Levels are clamped to [1, 6].
-func adjustHeadingLevels(content string, delta int) (string, error) {
-	if delta == 0 {
+type HeadingTransformer struct {
+	Delta int
+}
+
+// Transform implements Transformer.
+func (h HeadingTransformer) Transform(content string) (string, error) {
+	if h.Delta == 0 {
 		return content, nil
 	}
+	return adjustHeadingLevels(content, h.Delta)
+}
+
+// adjustHeadingLevels shifts every ATX heading in content by delta levels.
+// Callers must ensure delta != 0.
+func adjustHeadingLevels(content string, delta int) (string, error) {
 	var sb strings.Builder
 	scanner := bufio.NewScanner(strings.NewReader(content))
 	// Use a larger buffer for consistency with processFile.

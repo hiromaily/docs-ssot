@@ -1,5 +1,7 @@
-// Package include resolves include directives in Markdown files.
-package include
+// Package processor resolves include directives and transforms Markdown content.
+// The public API is ProcessFile; extensible content transformations are defined
+// via the Transformer interface and applied through Apply.
+package processor
 
 import (
 	"bufio"
@@ -56,6 +58,25 @@ func processFile(absPath string, ancestors []string, absOutputPath string) (stri
 	outputDir := filepath.Dir(absOutputPath)
 
 	var sb strings.Builder
+
+	// localBuf accumulates raw lines from the current file between include directives.
+	// It is flushed (with link rewriting applied) whenever an include directive is encountered
+	// and at the end of the file, ensuring link rewriting is scoped to each file's own lines.
+	var localBuf strings.Builder
+
+	flushLocalBuf := func() error {
+		if localBuf.Len() == 0 {
+			return nil
+		}
+		rewritten, applyErr := Apply(localBuf.String(), LinkTransformer{SourceDir: sourceDir, OutputDir: outputDir})
+		if applyErr != nil {
+			return applyErr
+		}
+		sb.WriteString(rewritten)
+		localBuf.Reset()
+		return nil
+	}
+
 	scanner := bufio.NewScanner(file)
 	// Allow lines up to 1 MB; start with a nil buffer so the scanner allocates only as needed.
 	scanner.Buffer(nil, 1024*1024)
@@ -71,37 +92,20 @@ func processFile(absPath string, ancestors []string, absOutputPath string) (stri
 		prevFenceType := fenceType
 		fenceType = nextFenceType(line, fenceType)
 
-		// Only process include directives and rewrite links when the line is normal text
+		// Only process include directives when the line is normal text
 		// (not a fence marker and not inside a fence block).
 		if prevFenceType == "" && fenceType == "" {
 			matches := includePattern.FindStringSubmatch(line)
 			if len(matches) > 1 {
-				includePath, levelDelta := parseIncludeArgs(matches[1])
-				absInclude := resolveIncludePath(absPath, includePath)
-
-				var (
-					content string
-					err     error
-				)
-				switch {
-				case strings.HasSuffix(includePath, "/"):
-					content, err = processDirectory(absInclude, chain, absOutputPath)
-				case strings.Contains(includePath, "**"):
-					content, err = processRecursiveGlob(absInclude, chain, absOutputPath)
-				case strings.ContainsAny(includePath, "*?["):
-					content, err = processGlob(absInclude, chain, absOutputPath)
-				default:
-					content, err = processFile(absInclude, chain, absOutputPath)
-				}
-				if err != nil {
+				// Flush local lines (with link rewriting) before inserting included content.
+				if err := flushLocalBuf(); err != nil {
 					return "", err
 				}
 
-				if levelDelta != 0 {
-					content, err = adjustHeadingLevels(content, levelDelta)
-					if err != nil {
-						return "", err
-					}
+				includePath, levelDelta := parseIncludeArgs(matches[1])
+				content, includeErr := resolveInclude(absPath, includePath, levelDelta, chain, absOutputPath)
+				if includeErr != nil {
+					return "", includeErr
 				}
 
 				sb.WriteString(content)
@@ -110,16 +114,48 @@ func processFile(absPath string, ancestors []string, absOutputPath string) (stri
 				}
 				continue
 			}
-			if strings.ContainsAny(line, "[!") {
-				line = rewriteLinksInDirs(line, sourceDir, outputDir)
-			}
-			sb.WriteString(line + "\n")
-		} else {
-			sb.WriteString(line + "\n")
 		}
+		localBuf.WriteString(line + "\n")
+	}
+
+	if err := flushLocalBuf(); err != nil {
+		return "", err
 	}
 
 	return sb.String(), scanner.Err()
+}
+
+// resolveInclude dispatches an include directive to the appropriate handler based on the path,
+// applies optional heading-level adjustment, and returns the assembled content.
+func resolveInclude(absContainingFile, includePath string, levelDelta int, chain []string, absOutputPath string) (string, error) {
+	absInclude := resolveIncludePath(absContainingFile, includePath)
+
+	var (
+		content string
+		err     error
+	)
+	switch {
+	case strings.HasSuffix(includePath, "/"):
+		content, err = processDirectory(absInclude, chain, absOutputPath)
+	case strings.Contains(includePath, "**"):
+		content, err = processRecursiveGlob(absInclude, chain, absOutputPath)
+	case strings.ContainsAny(includePath, "*?["):
+		content, err = processGlob(absInclude, chain, absOutputPath)
+	default:
+		content, err = processFile(absInclude, chain, absOutputPath)
+	}
+	if err != nil {
+		return "", err
+	}
+
+	if levelDelta != 0 {
+		content, err = HeadingTransformer{Delta: levelDelta}.Transform(content)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return content, nil
 }
 
 // nextFenceType returns the updated fence type after processing line.

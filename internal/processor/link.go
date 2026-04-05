@@ -1,6 +1,7 @@
-package include
+package processor
 
 import (
+	"bufio"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -23,14 +24,40 @@ var linkPattern = regexp.MustCompile(`(!?\[[^\]]*\])\(([^)]+)\)`)
 // absoluteURLPrefixes lists the prefixes that identify non-relative URLs.
 var absoluteURLPrefixes = []string{"http://", "https://", "//", "/", "#", "mailto:", "ftp:", "data:", "tel:"}
 
-// rewriteLinksInDirs rewrites relative Markdown link and image URLs in line so they are
-// correct relative to outputDir rather than sourceDir.
-// sourceDir and outputDir must be pre-computed absolute paths by the caller.
-// Lines inside code fences must be excluded by the caller.
-func rewriteLinksInDirs(line, sourceDir, outputDir string) string {
-	if sourceDir == outputDir {
-		return line
+// LinkTransformer rewrites relative Markdown link and image URLs so they are
+// correct relative to OutputDir rather than SourceDir.
+// Links inside fenced code blocks are not rewritten.
+type LinkTransformer struct {
+	SourceDir string
+	OutputDir string
+}
+
+// Transform implements Transformer.
+func (l LinkTransformer) Transform(content string) (string, error) {
+	if l.SourceDir == l.OutputDir {
+		return content, nil
 	}
+	var sb strings.Builder
+	scanner := bufio.NewScanner(strings.NewReader(content))
+	scanner.Buffer(nil, 1024*1024)
+	fenceType := ""
+	for scanner.Scan() {
+		line := scanner.Text()
+		prevFenceType := fenceType
+		fenceType = nextFenceType(line, fenceType)
+		if prevFenceType == "" && fenceType == "" && strings.ContainsAny(line, "[!") {
+			line = rewriteLinksInLine(line, l.SourceDir, l.OutputDir)
+		}
+		sb.WriteString(line + "\n")
+	}
+	return sb.String(), scanner.Err()
+}
+
+// rewriteLinksInLine rewrites relative Markdown link and image URLs in line so they are
+// correct relative to outputDir rather than sourceDir.
+// sourceDir and outputDir must be pre-computed absolute paths, and must differ.
+// Lines inside code fences must be excluded by the caller.
+func rewriteLinksInLine(line, sourceDir, outputDir string) string {
 	return linkPattern.ReplaceAllStringFunc(line, func(match string) string {
 		// Re-extract submatches from the already-matched substring.
 		// FindStringSubmatch on a string that already matched the pattern always succeeds.

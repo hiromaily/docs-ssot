@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/hiromaily/docs-ssot/internal/config"
-	"github.com/hiromaily/docs-ssot/internal/include"
+	"github.com/hiromaily/docs-ssot/internal/processor"
 )
 
 // ErrValidationFailed is returned by Validate when one or more templates contain unresolvable includes.
@@ -23,7 +23,7 @@ func Build(configPath string) error {
 	for _, t := range cfg.Targets {
 		_, _ = fmt.Fprintln(os.Stdout, "Generating:", t.Output)
 
-		content, err := include.ProcessFile(t.Input, t.Output)
+		content, err := processor.ProcessFile(t.Input, t.Output)
 		if err != nil {
 			return err
 		}
@@ -49,7 +49,7 @@ func Validate(configPath string) error {
 
 	ok := true
 	for _, t := range cfg.Targets {
-		if _, err := include.ProcessFile(t.Input, t.Output); err != nil {
+		if _, err := processor.ProcessFile(t.Input, t.Output); err != nil {
 			_, _ = fmt.Fprintln(os.Stderr, "ERROR:", err)
 			ok = false
 		}
