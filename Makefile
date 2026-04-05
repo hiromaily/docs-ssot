@@ -82,3 +82,26 @@ test:
 .PHONY: docs
 docs:
 	go run ./cmd/docs-ssot build
+
+#------------------------------------------------------------------------------
+# Release
+#------------------------------------------------------------------------------
+
+# update-git-tag: Create and push a git tag for the new version
+# e.g. make update-git-tag new=0.1
+.PHONY: update-git-tag
+update-git-tag:
+	@echo "Creating git tag v${new}"
+	@git tag -a "v${new}" -m "Release version ${new}"
+	@echo "Git tag v${new} created"
+	@echo "Pushing git tag v${new} to origin"
+	@git push origin "v${new}"
+	@echo "Git tag v${new} pushed to origin"
+
+# e.g. make retag TAG=v0.1
+.PHONY: retag
+retag:
+	git tag -d $(TAG) 2>/dev/null || true
+	git push --delete origin $(TAG) 2>/dev/null || true
+	git tag -a $(TAG) $(COMMIT) -m "retag $(TAG)"
+	git push origin $(TAG)
