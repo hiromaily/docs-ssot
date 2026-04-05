@@ -35,6 +35,7 @@ Other architecture documents should reference this file rather than duplicating 
 | Feature | Status | Notes |
 |---------|--------|-------|
 | `build` command | Implemented | Generates all output targets defined in `docsgen.yaml` |
+| `check` command | Implemented | Scans docs for near-duplicate sections using TF-IDF cosine similarity; reports potential SSOT violations |
 | `include` command | Implemented | Expands includes in a file and prints the result to stdout; useful for debugging |
 | `validate` command | Implemented | Dry-run over all templates; reports unresolvable includes without writing any output files |
 | `version` command | Implemented | Prints the build version |
