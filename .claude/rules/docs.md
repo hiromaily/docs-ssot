@@ -10,7 +10,7 @@ paths:
 This project generates documentation from source files. The pipeline is:
 
 ```
-docs/**/*.md  +  template/*.tpl.md  +  docsgen.yaml
+template/docs/**/*.md  +  template/*.tpl.md  +  docsgen.yaml
                           ↓
               docs-ssot build (make docs)
                           ↓

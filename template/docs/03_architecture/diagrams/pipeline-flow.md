@@ -1,6 +1,6 @@
 ```mermaid
 flowchart TD
-    A["docs/ (source markdown)"] --> B["template/*.tpl.md"]
+    A["template/docs/ (source markdown)"] --> B["template/*.tpl.md"]
     B --> C[Template Loader]
     C --> D[Include Resolver]
     D --> E{Include directive found?}

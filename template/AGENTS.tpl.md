@@ -1,29 +1,28 @@
-<!-- template/CLAUDE.tpl.md -->
 <!--
-⚠️ AUTO-GENERATED FILE — DO NOT EDIT
+⚠️ AUTO-GENERATED FILE — DO NOT EDIT - template/CLAUDE.tpl.md
 -->
 # Project Context
 
-<!-- @include: ../docs/01_project/overview.md -->
+<!-- @include: ./docs/01_project/overview.md -->
 
 ---
 
 # Architecture
 
-<!-- @include: ../docs/03_architecture/overview.md -->
+<!-- @include: ./docs/03_architecture/overview.md -->
 
-<!-- @include: ../docs/03_architecture/pipeline.md -->
+<!-- @include: ./docs/03_architecture/pipeline.md -->
 
 ---
 
 # Development Guide
 
-<!-- @include: ../docs/04_development/setup.md -->
+<!-- @include: ./docs/04_development/setup.md -->
 
-<!-- @include: ../docs/04_development/test.md -->
+<!-- @include: ./docs/04_development/test.md -->
 
 ---
 
 # Glossary
 
-<!-- @include: ../docs/05_ai/glossary.md -->
+<!-- @include: ./docs/05_ai/glossary.md -->

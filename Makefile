@@ -96,6 +96,16 @@ docs-validate:
 docs-include:
 	go run ./cmd/docs-ssot include $(FILE)
 
+# Usage: make docs-check
+# Usage: make docs-check ARGS="--threshold 0.75 --section-level 3"
+.PHONY: docs-check
+docs-check:
+	go run ./cmd/docs-ssot check $(ARGS)
+
+.PHONY: docs-version
+docs-version:
+	go run ./cmd/docs-ssot version
+
 #------------------------------------------------------------------------------
 # Release
 #------------------------------------------------------------------------------
