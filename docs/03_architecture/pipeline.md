@@ -18,19 +18,7 @@ The pipeline consists of the following stages:
 
 ### Pipeline Flow
 
-```
-docs/ (source markdown)
-  ↓
-template/*.tpl.md
-  ↓
-Include Resolver
-  ↓
-Expanded Markdown
-  ↓
-Document Builder
-  ↓
-README.md / AGENTS.md / CLAUDE.md (generated)
-```
+<!-- @include: diagrams/pipeline-flow.md -->
 
 ---
 
@@ -64,7 +52,7 @@ The include resolver replaces this directive with the contents of the referenced
 
 ---
 
-### Step 3 — Recursive Expansion (Planning)
+### Step 3 — Recursive Expansion
 
 Included files may also contain include directives.
 
@@ -117,23 +105,11 @@ These files are generated files and should not be edited directly.
 
 ---
 
-### Pipeline Summary
+### Include Resolution Detail
 
-```
-Template
-  ↓
-Load
-  ↓
-Resolve Includes
-  ↓
-Recursive Expansion
-  ↓
-Resolving the link path
-  ↓
-Assemble Document
-  ↓
-Write Output
-```
+The include resolver processes directives recursively. The following diagram shows the exact resolution algorithm:
+
+<!-- @include: diagrams/include-resolution.md -->
 
 ---
 

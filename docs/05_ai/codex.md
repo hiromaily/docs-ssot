@@ -1,0 +1,1 @@
+# Codex specific design patterns

@@ -100,7 +100,6 @@ This ensures:
 - Scalable documentation structure
 - AI-friendly documentation organization
 
-
 ## Vision
 
 Documentation should be treated as a system, not as static files.
@@ -154,7 +153,6 @@ To build a lightweight documentation system where:
 
 Turning documentation into a **maintainable, scalable system**.
 
-
 ---
 
 ## Product
@@ -163,7 +161,6 @@ Turning documentation into a **maintainable, scalable system**.
 
 Instead of maintaining large README files, this project splits documents into
 small reusable markdown modules and composes them into final documents.
-
 
 ## Features
 
@@ -176,7 +173,7 @@ Split large documents into small reusable Markdown files and include them where 
 Example:
 
 ```md
-<!-- @include: docs/01_project/overview.md -->
+<!-- @include: ../01_project/overview.md -->
 ```
 
 This allows documentation to be modular and reusable across multiple documents.
@@ -234,7 +231,6 @@ README.md    → output
 
 This makes documentation maintainable, scalable, and version-controlled like code.
 
-
 ---
 
 ## Architecture
@@ -246,7 +242,6 @@ The system consists of:
 - Generator CLI
 - Markdown modules
 - Template files
-
 
 ## System Architecture
 
@@ -368,28 +363,21 @@ targets:
 
 The document generation flow works like this:
 
-```
-Template Loader
-  ↓
-Include Resolver
-  ↓
-Link Path Resolver
-  ↓
-Document Builder
-```
-
-Or in terms of files:
-
-```
-`template/README.tpl.md`
-  ↓
-include resolver, link path resolver
-  ↓
-`docs/*.md`
-  ↓
-combine
-  ↓
-`README.md`
+```mermaid
+flowchart TD
+    A["docs/ (source markdown)"] --> B["template/*.tpl.md"]
+    B --> C[Template Loader]
+    C --> D[Include Resolver]
+    D --> E{Include directive found?}
+    E -- Yes --> F{Inside code fence?}
+    F -- Yes --> G[Keep as literal text]
+    F -- No --> H{Circular reference?}
+    H -- Yes --> I[Error: circular include]
+    H -- No --> J[Load included file]
+    J --> D
+    E -- No --> K[Document Builder]
+    G --> K
+    K --> L["README.md / AGENTS.md / CLAUDE.md"]
 ```
 
 ---
@@ -422,7 +410,6 @@ Instead of implementing a full template engine, the system performs only four op
 
 Everything else is handled through Markdown structure and file organization.
 
-
 ---
 
 ## Development
@@ -433,7 +420,6 @@ Everything else is handled through Markdown structure and file organization.
 make build
 make docs
 ```
-
 
 ---
 
@@ -458,7 +444,7 @@ The generator reads template files and expands include directives like:
 
 ```
 
-<!-- @include: docs/01_project/overview.md -->
+<!-- @include: ../01_project/overview.md -->
 
 ```
 
@@ -497,7 +483,6 @@ This project follows these principles:
 - Generated documents
 - Reusable Markdown modules
 - Template-based composition
-
 
 ## Reference
 
@@ -598,4 +583,3 @@ make docs-build
 make docs-validate
 make docs-clean
 ```
-

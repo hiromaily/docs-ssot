@@ -1,0 +1,16 @@
+pre-commit:
+  parallel: true
+  commands:
+    go-fmt:
+      root: "."
+      glob: "**/*.go"
+      run: make go-fmt
+      stage_fixed: true
+
+pre-push:
+  parallel: true
+  commands:
+    go-lint:
+      root: "."
+      glob: "**/*.go"
+      run: make go-lint

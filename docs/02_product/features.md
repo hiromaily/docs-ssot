@@ -9,7 +9,7 @@ Split large documents into small reusable Markdown files and include them where 
 Example:
 
 ```md
-<!-- @include: docs/01_project/overview.md -->
+<!-- @include: ../01_project/overview.md -->
 ```
 
 This allows documentation to be modular and reusable across multiple documents.

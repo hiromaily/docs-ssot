@@ -1,0 +1,168 @@
+# General Development Rules for docs-ssot
+
+## Project Purpose
+
+`docs-ssot` is a CLI tool that generates documentation files (README.md, CLAUDE.md, AGENTS.md) from modular Markdown source files using a template-based composition system. It implements the Single Source of Truth (SSOT) principle for documentation.
+
+---
+
+## Critical Rule: Never Edit Generated Files
+
+The following files are **build artifacts** — do NOT edit them directly:
+
+- `README.md`
+- `CLAUDE.md`
+- `AGENTS.md`
+
+Always edit the source files in `docs/` and regenerate with `make docs`.
+
+---
+
+## Repository Structure
+
+```
+docs-ssot/
+├── cmd/docs-ssot/main.go       # CLI entry point (build command)
+├── internal/
+│   ├── config/config.go        # YAML config loader (Config, Target types)
+│   ├── generator/generator.go  # Build orchestrator (Build func)
+│   └── include/include.go      # Include directive resolver (ProcessFile func)
+├── docs/                       # Source Markdown files (SSOT — edit here)
+│   ├── 01_project/             # Project context and vision
+│   ├── 02_product/             # Product concept and features
+│   ├── 03_architecture/        # System architecture and pipeline
+│   ├── 04_development/         # Setup, testing, linting guides
+│   ├── 05_ai/                  # AI tool-specific docs (Claude, Cursor, Codex, etc.)
+│   └── 06_reference/           # Commands and directory reference
+├── template/                   # Document templates (define output structure)
+│   ├── README.tpl.md
+│   ├── CLAUDE.tpl.md
+│   └── AGENTS.tpl.md
+├── docsgen.yaml                # Build targets: template → output mapping
+├── Makefile                    # Build, lint, test, docs commands
+└── .golangci.yml               # Linting configuration (46+ linters)
+```
+
+---
+
+## Go Package Responsibilities
+
+| Package | File | Responsibility |
+|---|---|---|
+| `main` | `cmd/docs-ssot/main.go` | CLI arg parsing, dispatch to `generator.Build()` |
+| `config` | `internal/config/config.go` | Load `docsgen.yaml` into `Config{Targets []Target}` |
+| `generator` | `internal/generator/generator.go` | Iterate targets, call include resolver, write output |
+| `include` | `internal/include/include.go` | Regex-based include directive expansion |
+
+### Include Directive Pattern
+
+```go
+var includePattern = regexp.MustCompile(`<!--\s*@include:\s*(.*?)\s*-->`)
+```
+
+In Markdown, the directive looks like:
+
+```markdown
+<!-- @include: docs/01_project/overview.md -->
+```
+
+`ProcessFile()` reads the template line-by-line, replaces include directives with file contents, and returns the assembled string.
+
+---
+
+## Build Pipeline
+
+```
+docsgen.yaml
+  → config.Load()
+  → for each target: include.ProcessFile(template)
+  → os.WriteFile(output)
+```
+
+Currently: **single-level include only** (no recursive expansion yet).
+
+---
+
+## Common Commands
+
+```sh
+make build          # Compile: go build -o bin/docs-ssot ./cmd/docs-ssot
+make docs           # Generate docs: go run ./cmd/docs-ssot build
+make go-test        # Run tests: go test ./...
+make go-lint        # Lint and auto-fix: golangci-lint run --fix
+make go-lint-check  # Lint check only (no fix)
+make go-fmt         # Format: golangci-lint fmt
+make run            # go run ./cmd/docs-ssot build
+make clean          # Remove bin/ and generated README.md, CLAUDE.md
+```
+
+---
+
+## How to Add New Documentation
+
+1. Create a new `.md` file in the appropriate `docs/` subdirectory.
+2. Add an include directive where needed in the relevant `template/*.tpl.md` file:
+   ```markdown
+   <!-- @include: docs/04_development/new-guide.md -->
+   ```
+3. Run `make docs` to regenerate output files.
+4. Commit both the source file and the regenerated output.
+
+---
+
+## How to Add a New Output Target
+
+1. Create a new template file in `template/`, e.g., `template/MYFILE.tpl.md`.
+2. Add a new entry in `docsgen.yaml`:
+   ```yaml
+   - input: template/MYFILE.tpl.md
+     output: MYFILE.md
+   ```
+3. Run `make docs`.
+
+---
+
+## Current Limitations (Planned for Future)
+
+- **No recursive includes**: Included files cannot themselves contain include directives.
+- **No circular include detection**: Circular references will cause infinite reads or errors.
+- **No glob/directory includes**: Cannot include all files in a directory.
+- **No link path rewriting**: Relative links in included files are not adjusted for the output location.
+
+When implementing these features, the primary file to modify is `internal/include/include.go`.
+
+---
+
+## Code Quality Requirements
+
+- **Go version**: 1.26.1
+- **Linter**: `golangci-lint` via `go tool golangci-lint` (configured in `.golangci.yml`)
+- **Active linters**: 46+ including `govet`, `staticcheck`, `gosec`, `errcheck`, `gofumpt`, `goimports`
+- **Max line length**: 200 chars
+- **Max cyclomatic complexity**: 16
+- **Formatting**: `gofumpt` (stricter than `gofmt`)
+- Always run `make go-lint` before committing Go changes.
+
+---
+
+## Testing Strategy
+
+- Unit tests: cover include parsing, path resolution, circular detection, file loading.
+- Integration tests: run generator on `testdata/`, compare output with `expected/` fixtures.
+- Deterministic output required: same input must always produce same output.
+
+After implementing features, verify with:
+
+```sh
+make go-test
+make docs
+git diff --exit-code README.md CLAUDE.md AGENTS.md
+```
+
+---
+
+## Module Info
+
+- **Module path**: `github.com/hiromaily/docs-ssot`
+- **Key dependency**: `gopkg.in/yaml.v3` for YAML config parsing
+- **Linting tools**: bundled as Go tool dependencies in `go.mod`

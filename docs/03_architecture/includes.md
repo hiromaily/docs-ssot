@@ -82,7 +82,7 @@ This ensures deterministic document structure.
 
 ---
 
-### Recursive Includes (Planning)
+### Recursive Includes
 
 Included files may contain include directives themselves.
 
@@ -101,11 +101,15 @@ A + B + C
 
 The system expands includes recursively until no include directives remain.
 
+The algorithm used for recursive resolution:
+
+<!-- @include: docs/03_architecture/diagrams/include-resolution.md -->
+
 ---
 
-### Circular Include Detection (Planning)
+### Circular Include Detection
 
-Circular includes must be detected and treated as errors.
+Circular includes are detected and treated as errors.
 
 Example:
 

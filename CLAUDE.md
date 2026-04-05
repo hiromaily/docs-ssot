@@ -100,7 +100,6 @@ This ensures:
 - Scalable documentation structure
 - AI-friendly documentation organization
 
-
 ---
 
 # Architecture
@@ -112,7 +111,6 @@ The system consists of:
 - Generator CLI
 - Markdown modules
 - Template files
-
 
 ## Documentation Pipeline Architecture
 
@@ -134,18 +132,21 @@ The pipeline consists of the following stages:
 
 ### Pipeline Flow
 
-```
-docs/ (source markdown)
-  ↓
-template/*.tpl.md
-  ↓
-Include Resolver
-  ↓
-Expanded Markdown
-  ↓
-Document Builder
-  ↓
-README.md / AGENTS.md / CLAUDE.md (generated)
+```mermaid
+flowchart TD
+    A["docs/ (source markdown)"] --> B["template/*.tpl.md"]
+    B --> C[Template Loader]
+    C --> D[Include Resolver]
+    D --> E{Include directive found?}
+    E -- Yes --> F{Inside code fence?}
+    F -- Yes --> G[Keep as literal text]
+    F -- No --> H{Circular reference?}
+    H -- Yes --> I[Error: circular include]
+    H -- No --> J[Load included file]
+    J --> D
+    E -- No --> K[Document Builder]
+    G --> K
+    K --> L["README.md / AGENTS.md / CLAUDE.md"]
 ```
 
 ---
@@ -180,7 +181,7 @@ The include resolver replaces this directive with the contents of the referenced
 
 ---
 
-### Step 3 — Recursive Expansion (Planning)
+### Step 3 — Recursive Expansion
 
 Included files may also contain include directives.
 
@@ -233,22 +234,28 @@ These files are generated files and should not be edited directly.
 
 ---
 
-### Pipeline Summary
+### Include Resolution Detail
 
-```
-Template
-  ↓
-Load
-  ↓
-Resolve Includes
-  ↓
-Recursive Expansion
-  ↓
-Resolving the link path
-  ↓
-Assemble Document
-  ↓
-Write Output
+The include resolver processes directives recursively. The following diagram shows the exact resolution algorithm:
+
+```mermaid
+flowchart TD
+    A[processFile called with path] --> B{Path in ancestor chain?}
+    B -- Yes --> C[Error: circular include]
+    B -- No --> D[Open file, add to ancestors]
+    D --> E[Read next line]
+    E --> F{Code fence toggle?}
+    F -- Yes --> G[Flip inCodeFence flag]
+    G --> H[Write line as-is]
+    F -- No --> I{Include directive match\nAND not in code fence?}
+    I -- No --> H
+    I -- Yes --> J[Resolve include path]
+    J --> K[Call processFile recursively]
+    K --> L[Append expanded content]
+    L --> M{More lines?}
+    H --> M
+    M -- Yes --> E
+    M -- No --> N[Return assembled string]
 ```
 
 ---
@@ -264,7 +271,6 @@ The pipeline is designed with the following goals:
 - Deterministic document builds
 - Simple and predictable behavior
 
-
 ---
 
 # Development Guide
@@ -275,7 +281,6 @@ The pipeline is designed with the following goals:
 make build
 make docs
 ```
-
 
 # Testing
 
@@ -419,7 +424,6 @@ test-e2e:
 	docs-ssot build
 	git diff --exit-code
 ```
-
 
 ---
 
@@ -573,4 +577,3 @@ Information provided to AI tools so they understand:
 - Architecture
 - Terminology
 - Development workflow
-
