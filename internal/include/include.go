@@ -198,7 +198,7 @@ func processDirectory(absDir string, ancestors []string, absOutputPath string) (
 			return "", err
 		}
 		sb.WriteString(content)
-		if !strings.HasSuffix(content, "\n") {
+		if content != "" && !strings.HasSuffix(content, "\n") {
 			sb.WriteByte('\n')
 		}
 	}
