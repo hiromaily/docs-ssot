@@ -118,29 +118,7 @@ targets:
 
 The document generation flow works like this:
 
-```
-Template Loader
-  ↓
-Include Resolver
-  ↓
-Link Path Resolver
-  ↓
-Document Builder
-```
-
-Or in terms of files:
-
-```
-`template/README.tpl.md`
-  ↓
-include resolver, link path resolver
-  ↓
-`docs/*.md`
-  ↓
-combine
-  ↓
-`README.md`
-```
+<!-- @include: docs/03_architecture/diagrams/pipeline-flow.md -->
 
 ---
 
