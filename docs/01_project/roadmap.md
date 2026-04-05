@@ -9,22 +9,25 @@
 - Multiple output targets via `docsgen.yaml`
 - README, CLAUDE.md, AGENTS.md generation
 
-### v0.2
+### v0.2 (Released)
+
+- Link path rewriting — relative links and image URLs in all processed files are rewritten to be correct relative to the output file location
+
+### v0.3
 
 - Directory include (`<!-- @include: docs/dir/ -->`) — include all `.md` files in a directory (sorted by filename)
 - Glob include (`<!-- @include: docs/*.md -->`) — include files matching a glob pattern
 - Recursive glob include (`<!-- @include: docs/**/*.md -->`) — include files matching a recursive glob
 
-### v0.3
+### v0.4
 
 - `validate` command — check include paths and detect missing files without generating output
 - Diff / up-to-date check — exit non-zero if generated files differ from committed versions (CI use)
 - Dry-run mode — preview changes without writing output files
 - Watch mode — automatically rebuild on source file changes
 
-### v0.4
+### v0.5
 
-- Link path rewriting — adjust relative links in included files to match the output file location
 - Variable substitution — allow `{{ variable }}` placeholders expanded at build time
 - Front matter support — parse and strip/merge YAML front matter from included files
 - Conditional includes — include or exclude sections based on build-time flags

@@ -125,7 +125,6 @@ make clean          # Remove bin/ and generated README.md, CLAUDE.md
 ## Current Limitations (Planned for Future)
 
 - **No glob/directory includes**: Cannot include all files in a directory or by pattern.
-- **No link path rewriting**: Relative links in included files are not adjusted for the output location.
 - **No variable substitution**: No `{{ variable }}` placeholder support.
 - **No validate command**: Must attempt a full build to detect missing or circular includes.
 

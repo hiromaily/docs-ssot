@@ -17,7 +17,7 @@ func Build(configPath string) error {
 	for _, t := range cfg.Targets {
 		fmt.Println("Generating:", t.Output)
 
-		content, err := include.ProcessFile(t.Input)
+		content, err := include.ProcessFile(t.Input, t.Output)
 		if err != nil {
 			return err
 		}

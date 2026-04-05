@@ -15,7 +15,7 @@ Other architecture documents should reference this file rather than duplicating 
 | Directory include | Planned | Include all `.md` files in a directory (sorted order) |
 | Glob include | Planned | Include files matching a glob pattern (e.g. `*.md`) |
 | Recursive glob include | Planned | Include files matching a recursive glob (e.g. `**/*.md`) |
-| Link path rewriting | Planned | Adjust relative links in included files to match the output file location |
+| Link path rewriting | Implemented | Relative links and image URLs in all files are rewritten to be correct relative to the output file location |
 | Include from URL | Planned | Fetch and include a remote Markdown file |
 
 ### Generator Features

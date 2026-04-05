@@ -16,18 +16,24 @@ var includePattern = regexp.MustCompile(`^\s*<!--\s*@include:\s*(.*?)\s*-->\s*$`
 
 // ProcessFile processes a template file, recursively resolving all include directives.
 // Relative include paths are resolved relative to the directory of the file containing the directive.
+// Relative Markdown links and image URLs are rewritten to be correct relative to outputPath.
 // Directives inside fenced code blocks are treated as literal text and not expanded.
-func ProcessFile(path string) (string, error) {
+func ProcessFile(path, outputPath string) (string, error) {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
 		return "", fmt.Errorf("failed to resolve path (%s): %w", path, err)
 	}
-	return processFile(absPath, []string{})
+	absOutputPath, err := filepath.Abs(outputPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to resolve output path (%s): %w", outputPath, err)
+	}
+	return processFile(absPath, []string{}, absOutputPath)
 }
 
 // processFile recursively resolves include directives.
 // ancestors holds the absolute paths of files in the current include chain for circular detection.
-func processFile(absPath string, ancestors []string) (string, error) {
+// absOutputPath is the absolute path of the final output file, used for link rewriting.
+func processFile(absPath string, ancestors []string, absOutputPath string) (string, error) {
 	if slices.Contains(ancestors, absPath) {
 		return "", fmt.Errorf("circular include detected: %s -> %s", strings.Join(ancestors, " -> "), absPath)
 	}
@@ -41,6 +47,10 @@ func processFile(absPath string, ancestors []string) (string, error) {
 	// Build a new chain slice with its own backing array so recursive calls cannot
 	// accidentally modify each other's ancestor lists via shared capacity.
 	chain := slices.Concat(ancestors, []string{absPath})
+
+	// Precompute directories once for link rewriting on every line of this file.
+	sourceDir := filepath.Dir(absPath)
+	outputDir := filepath.Dir(absOutputPath)
 
 	var sb strings.Builder
 	scanner := bufio.NewScanner(file)
@@ -58,14 +68,14 @@ func processFile(absPath string, ancestors []string) (string, error) {
 		prevFenceType := fenceType
 		fenceType = nextFenceType(line, fenceType)
 
-		// Only process include directives when the line is normal text (not a fence
-		// marker and not inside a fence block).
+		// Only process include directives and rewrite links when the line is normal text
+		// (not a fence marker and not inside a fence block).
 		if prevFenceType == "" && fenceType == "" {
 			matches := includePattern.FindStringSubmatch(line)
 			if len(matches) > 1 {
 				absInclude := resolveIncludePath(absPath, matches[1])
 
-				content, err := processFile(absInclude, chain)
+				content, err := processFile(absInclude, chain, absOutputPath)
 				if err != nil {
 					return "", err
 				}
@@ -76,9 +86,13 @@ func processFile(absPath string, ancestors []string) (string, error) {
 				}
 				continue
 			}
+			if strings.ContainsAny(line, "[!") {
+				line = rewriteLinksInDirs(line, sourceDir, outputDir)
+			}
+			sb.WriteString(line + "\n")
+		} else {
+			sb.WriteString(line + "\n")
 		}
-
-		sb.WriteString(line + "\n")
 	}
 
 	return sb.String(), scanner.Err()
