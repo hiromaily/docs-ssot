@@ -83,7 +83,10 @@ func processFile(absPath string, ancestors []string, absOutputPath string) (stri
 				}
 
 				if levelDelta != 0 {
-					content = adjustHeadingLevels(content, levelDelta)
+					content, err = adjustHeadingLevels(content, levelDelta)
+					if err != nil {
+						return "", err
+					}
 				}
 
 				sb.WriteString(content)
@@ -142,23 +145,23 @@ func nextFenceType(line, fenceType string) string {
 
 // parseIncludeArgs parses the argument string captured from an include directive.
 // The expected form is: <path> [level=<delta>]
+// The path may contain spaces; parameters are identified by trailing "level=±N" tokens.
 // Returns the file path and optional level delta (0 if absent or unparseable).
 func parseIncludeArgs(args string) (string, int) {
-	parts := strings.Fields(args)
-	if len(parts) == 0 {
+	args = strings.TrimSpace(args)
+	if args == "" {
 		return "", 0
 	}
-	path := parts[0]
 	var level int
-	for _, param := range parts[1:] {
-		if strings.HasPrefix(param, "level=") {
-			n, err := strconv.Atoi(param[len("level="):])
-			if err == nil {
-				level = n
-			}
+	// Scan from the end: if the last space-separated token is a known parameter, consume it.
+	if idx := strings.LastIndex(args, " level="); idx != -1 {
+		n, err := strconv.Atoi(args[idx+len(" level="):])
+		if err == nil {
+			level = n
+			args = strings.TrimSpace(args[:idx])
 		}
 	}
-	return path, level
+	return args, level
 }
 
 // resolveIncludePath returns the absolute path for includePath relative to the containing file.

@@ -16,12 +16,14 @@ var headingPattern = regexp.MustCompile(`^( {0,3})(#{1,6})(?:[ \t]|$)`)
 // Positive delta deepens headings (# → ## for delta=1).
 // Negative delta shallows headings (## → # for delta=-1).
 // Levels are clamped to [1, 6].
-func adjustHeadingLevels(content string, delta int) string {
+func adjustHeadingLevels(content string, delta int) (string, error) {
 	if delta == 0 {
-		return content
+		return content, nil
 	}
 	var sb strings.Builder
 	scanner := bufio.NewScanner(strings.NewReader(content))
+	// Use a larger buffer for consistency with processFile.
+	scanner.Buffer(nil, 1024*1024)
 	fenceType := ""
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -32,7 +34,7 @@ func adjustHeadingLevels(content string, delta int) string {
 		}
 		sb.WriteString(line + "\n")
 	}
-	return sb.String()
+	return sb.String(), scanner.Err()
 }
 
 // shiftHeading adjusts the ATX heading level of line by delta.
