@@ -6,6 +6,13 @@ This document describes the available CLI commands for docs-ssot.
 
 The CLI provides commands for generating documents from templates and managing documentation sources.
 
+| Command | Description |
+|---------|-------------|
+| `docs-ssot build` | Generate final documents from templates |
+| `docs-ssot include <file>` | Resolve includes and print expanded result to stdout |
+| `docs-ssot validate` | Validate documentation structure without generating output |
+| `docs-ssot version` | Print the build version |
+
 ---
 
 ## docs build
