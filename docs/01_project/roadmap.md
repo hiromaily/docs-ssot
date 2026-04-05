@@ -16,15 +16,15 @@
 - README, CLAUDE.md, AGENTS.md generation
 - Link path rewriting — relative links and image URLs in all processed files are rewritten to be correct relative to the output file location
 
-### v0.2 (Ready for Release)
+### v0.2 (Release)
 
 - Heading level adjustment — optional `level=±N` parameter on include directives shifts the heading depth of included content (e.g. `<!-- @include: file.md level=+1 -->`)
 - Directory include (`<!-- @include: docs/dir/ -->`) — include all `.md` files in a directory (sorted by filename)
 - Glob include (`<!-- @include: docs/*.md -->`) — include files matching a glob pattern
-
-### v0.3 (Ready for Release)
-
 - Recursive glob include (`<!-- @include: docs/**/*.md -->`) — include files matching a recursive glob; `**` matches zero or more path segments
+
+### v0.3
+
 - `validate` command — check include paths and detect missing files without generating output
 - Diff / up-to-date check — exit non-zero if generated files differ from committed versions (CI use)
 - Dry-run mode — preview changes without writing output files
