@@ -37,8 +37,14 @@ Other architecture documents should reference this file rather than duplicating 
 | Watch mode | Planned | Automatically rebuild on source file changes |
 | Dry-run mode | Planned | Preview changes without writing output files |
 | Diff / up-to-date check | Planned | Exit non-zero if generated files differ from committed versions (useful for CI) |
-| Lint / validation mode | Planned | Validate include paths, detect missing files without generating output |
+| `validate` command | Planned | Validate include paths, detect missing files without generating output |
 | Custom config file path | Planned | Allow specifying a non-default config file via CLI flag |
+
+### Output Header Features
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Auto-generated file header | Planned | Prepend a `<!-- ⚠️ AUTO-GENERATED FILE — DO NOT EDIT -->` banner to all generated files |
 
 ### Output Format Features
 

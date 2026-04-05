@@ -79,7 +79,7 @@ docsgen.yaml
   → os.WriteFile(output)
 ```
 
-Currently: **single-level include only** (no recursive expansion yet).
+Recursive expansion is supported: included files may themselves contain include directives, resolved depth-first with circular reference detection.
 
 ---
 
@@ -124,12 +124,12 @@ make clean          # Remove bin/ and generated README.md, CLAUDE.md
 
 ## Current Limitations (Planned for Future)
 
-- **No recursive includes**: Included files cannot themselves contain include directives.
-- **No circular include detection**: Circular references will cause infinite reads or errors.
-- **No glob/directory includes**: Cannot include all files in a directory.
+- **No glob/directory includes**: Cannot include all files in a directory or by pattern.
 - **No link path rewriting**: Relative links in included files are not adjusted for the output location.
+- **No variable substitution**: No `{{ variable }}` placeholder support.
+- **No validate command**: Must attempt a full build to detect missing or circular includes.
 
-When implementing these features, the primary file to modify is `internal/include/include.go`.
+When implementing include-related features, the primary file to modify is `internal/include/include.go`.
 
 ---
 
