@@ -18,9 +18,13 @@ install-dev:
 # Development
 ###############################################################################
 
+APP_VERSION := $(shell git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+
 .PHONY: build
 build:
-	go build -o bin/$(APP) ./cmd/docs-ssot
+	go build -trimpath \
+		-ldflags="-s -w -X main.appVersion=$(APP_VERSION)" \
+		-o bin/$(APP) ./cmd/docs-ssot
 
 .PHONY: run
 run:
@@ -88,7 +92,7 @@ docs:
 #------------------------------------------------------------------------------
 
 # update-git-tag: Create and push a git tag for the new version
-# e.g. make update-git-tag new=0.1
+# e.g. make update-git-tag new=0.1.0
 .PHONY: update-git-tag
 update-git-tag:
 	@echo "Creating git tag v${new}"
@@ -100,7 +104,7 @@ update-git-tag:
 
 COMMIT ?= HEAD
 
-# e.g. make retag TAG=v0.1
+# e.g. make retag TAG=v0.1.0
 .PHONY: retag
 retag:
 	git tag -d $(TAG) 2>/dev/null || true
