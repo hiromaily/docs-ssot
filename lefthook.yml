@@ -14,3 +14,7 @@ pre-push:
       root: "."
       glob: "**/*.go"
       run: make go-lint
+    go-test:
+      root: "."
+      glob: "**/*.go"
+      run: make go-test

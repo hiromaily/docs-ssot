@@ -1,8 +1,8 @@
-# Commands Reference
+## Commands Reference
 
 This document describes the available CLI commands for docs-ssot.
 
-## Overview
+### Overview
 
 The CLI provides commands for generating documents from templates and managing documentation sources.
 
@@ -16,7 +16,7 @@ The CLI provides commands for generating documents from templates and managing d
 
 ---
 
-## docs build
+### docs build
 
 Generate final documents (e.g., README.md, CLAUDE.md) from templates.
 
@@ -24,7 +24,7 @@ Generate final documents (e.g., README.md, CLAUDE.md) from templates.
 docs-ssot build
 ```
 
-### What it does
+#### What it does
 
 - Reads template files
 - Resolves `@include` directives
@@ -33,7 +33,7 @@ docs-ssot build
 
 ---
 
-## docs check
+### docs check
 
 Check docs for SSOT violations by detecting near-duplicate sections across Markdown files.
 
@@ -43,7 +43,7 @@ docs-ssot check [flags]
 
 Uses TF-IDF cosine similarity to compare sections at the specified heading level. Sections scoring above the threshold are reported as potential SSOT violations — places where the same information exists in multiple source files.
 
-### Flags
+#### Flags
 
 | Flag | Default | Description |
 |------|---------|-------------|
@@ -54,7 +54,7 @@ Uses TF-IDF cosine similarity to compare sections at the specified heading level
 | `--format` | `text` | Output format: `text` or `json` |
 | `--exclude` | — | Exclude path pattern (repeatable) |
 
-### Examples
+#### Examples
 
 Basic check with default settings:
 
@@ -74,7 +74,7 @@ Compare at H3 level, exclude changelogs, output JSON:
 docs-ssot check --section-level 3 --exclude docs/changelog/** --format json
 ```
 
-### Output
+#### Output
 
 Text output (one block per similar pair):
 
@@ -91,13 +91,13 @@ B snippet: Access tokens must be renewed prior to expiry...
 
 A score of `1.0` means identical content; `0.82` (default threshold) catches near-duplicates while filtering loosely related content.
 
-### Exit behaviour
+#### Exit behaviour
 
 Exits `0` whether or not duplicates are found. Use `--format json` and inspect `result_count` in CI pipelines.
 
 ---
 
-## docs include
+### docs include
 
 Resolve include directives and print the expanded result to stdout.
 
@@ -115,7 +115,7 @@ Useful for debugging template expansion without writing any output files.
 
 ---
 
-## docs validate
+### docs validate
 
 Validate documentation structure without generating any output files.
 
@@ -125,13 +125,13 @@ docs-ssot validate
 
 Performs a dry run over all templates in `docsgen.yaml`.
 
-### Validation checks
+#### Validation checks
 
 - Missing include files
 - Circular includes
 - Invalid paths
 
-### Output
+#### Output
 
 Success:
 
@@ -149,7 +149,7 @@ Exits with a non-zero status code when any error is found.
 
 ---
 
-## docs version
+### docs version
 
 Print the build version.
 
@@ -159,7 +159,7 @@ docs-ssot version
 
 ---
 
-## Typical Workflow
+### Typical Workflow
 
 ```
 docs-ssot validate
@@ -174,10 +174,13 @@ docs-ssot include template/README.tpl.md
 
 ---
 
-## Recommended Makefile Shortcuts
+### Recommended Makefile Shortcuts
 
 ```
 make docs                                     # generate all output targets
 make docs-validate                            # validate all templates
 make docs-include FILE=template/README.tpl.md # expand and print a template
+make docs-check                               # check docs for SSOT violations (default settings)
+make docs-check ARGS="--threshold 0.75"       # check with custom flags
+make docs-version                             # print the build version
 ```
