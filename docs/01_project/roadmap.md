@@ -1,10 +1,10 @@
-## Roadmap
-
 <!-- Status legend:
 - (Released): Tagged and released.
 - (Ready for Release): Implemented but not yet tagged; planned for release once all WIP items are complete.
 - No status: Planned for implementation.
 -->
+
+## Roadmap
 
 ### v0.1 (Released)
 
@@ -22,12 +22,9 @@
 - Directory include (`<!-- @include: docs/dir/ -->`) — include all `.md` files in a directory (sorted by filename)
 - Glob include (`<!-- @include: docs/*.md -->`) — include files matching a glob pattern
 
-#### WIP
-
-- Recursive glob include (`<!-- @include: docs/**/*.md -->`) — include files matching a recursive glob
-
 ### v0.3
 
+- Recursive glob include (`<!-- @include: docs/**/*.md -->`) — include files matching a recursive glob
 - `validate` command — check include paths and detect missing files without generating output
 - Diff / up-to-date check — exit non-zero if generated files differ from committed versions (CI use)
 - Dry-run mode — preview changes without writing output files
