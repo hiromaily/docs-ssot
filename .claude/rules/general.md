@@ -70,13 +70,17 @@ In Markdown, the directive looks like:
 <!-- @include: docs/02_product/ level=+1 -->
 <!-- @include: docs/02_product/*.md -->
 <!-- @include: docs/02_product/*.md level=+1 -->
+<!-- @include: docs/**/*.md -->
+<!-- @include: docs/**/*.md level=+1 -->
 ```
 
 The optional `level=±N` parameter shifts all ATX heading levels in the included content by N (clamped to `[1, 6]`). Headings inside code fences are not adjusted.
 
 When the path ends with `/`, all `.md` files in that directory are included in sorted filename order (subdirectories are skipped). Combine with `level=±N` to adjust heading depths for the entire directory's content.
 
-When the path contains glob metacharacters (`*`, `?`, `[`), all files matching the pattern are included in sorted (lexical) order. Directories matched by the pattern are skipped. If no files match, no content is inserted (no error).
+When the path contains `**`, all files matching the recursive glob pattern are included in sorted (lexical) path order. `**` matches zero or more path segments. If the root directory does not exist or no files match, no content is inserted (no error).
+
+When the path contains glob metacharacters (`*`, `?`, `[`) but not `**`, all files matching the pattern are included in sorted (lexical) order. Directories matched by the pattern are skipped. If no files match, no content is inserted (no error).
 
 `ProcessFile()` reads the template line-by-line, replaces include directives with file contents (applying heading adjustment if specified), and returns the assembled string.
 
@@ -135,8 +139,6 @@ make clean          # Remove bin/ and generated README.md, CLAUDE.md
 ---
 
 ## Current Limitations (Planned for Future)
-
-- **No recursive glob includes**: Cannot include files by recursive glob (e.g. `**/*.md`); single-level glob (`*.md`) is supported.
 - **No variable substitution**: No `{{ variable }}` placeholder support.
 - **No validate command**: Must attempt a full build to detect missing or circular includes.
 

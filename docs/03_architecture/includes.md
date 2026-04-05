@@ -80,13 +80,17 @@ Subdirectories matched by the pattern are skipped; only regular files are includ
 
 ---
 
-#### 4. Recursive Glob Include (Planning)
+#### 4. Recursive Glob Include
 
 ```
 <!-- @include: docs/**/*.md -->
 ```
 
-Includes files recursively.
+Includes all files matching the recursive glob pattern.
+`**` matches zero or more path segments, so `docs/**/*.md` matches both `docs/file.md` and `docs/sub/deep/file.md`.
+Files are included in sorted (lexical) path order.
+If the root directory does not exist or no files match, no content is inserted (no error).
+Directories are skipped; only regular files are included.
 
 ---
 
