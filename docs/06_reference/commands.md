@@ -27,46 +27,63 @@ docs-ssot build
 
 ## docs include
 
-Resolve include directives and print the expanded result.
+Resolve include directives and print the expanded result to stdout.
+
+```
+docs-ssot include <file>
+```
+
+Example:
 
 ```
 docs-ssot include template/README.tpl.md
 ```
 
-Useful for debugging template expansion.
+Useful for debugging template expansion without writing any output files.
 
 ---
 
 ## docs validate
 
-Validate documentation structure.
+Validate documentation structure without generating any output files.
 
 ```
 docs-ssot validate
 ```
 
-### Validation includes
+Performs a dry run over all templates in `docsgen.yaml`.
+
+### Validation checks
 
 - Missing include files
 - Circular includes
 - Invalid paths
-- Broken documentation structure
+
+### Output
+
+Success:
+
+```
+OK
+```
+
+Failure (one line per failing template):
+
+```
+ERROR: include error (/path/to/file.md): open /path/to/file.md: no such file or directory
+```
+
+Exits with a non-zero status code when any error is found.
 
 ---
 
-## docs clean
+## docs version
 
-Remove generated files.
+Print the build version.
 
 ```
-docs-ssot clean
+docs-ssot version
 ```
-
-Example files removed:
-
-- README.md
-- CLAUDE.md
-- generated docs
 
 ---
 
@@ -80,9 +97,7 @@ docs-ssot build
 Or during development:
 
 ```
-
 docs-ssot include template/README.tpl.md
-
 ```
 
 ---
@@ -90,8 +105,7 @@ docs-ssot include template/README.tpl.md
 ## Recommended Makefile Shortcuts
 
 ```
-make docs
-make docs-build
-make docs-validate
-make docs-clean
+make docs                                     # generate all output targets
+make docs-validate                            # validate all templates
+make docs-include FILE=template/README.tpl.md # expand and print a template
 ```

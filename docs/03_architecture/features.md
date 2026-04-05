@@ -35,10 +35,12 @@ Other architecture documents should reference this file rather than duplicating 
 | Feature | Status | Notes |
 |---------|--------|-------|
 | `build` command | Implemented | Generates all output targets defined in `docsgen.yaml` |
+| `include` command | Implemented | Expands includes in a file and prints the result to stdout; useful for debugging |
+| `validate` command | Implemented | Dry-run over all templates; reports unresolvable includes without writing any output files |
+| `version` command | Implemented | Prints the build version |
 | Watch mode | Planned | Automatically rebuild on source file changes |
 | Dry-run mode | Planned | Preview changes without writing output files |
 | Diff / up-to-date check | Planned | Exit non-zero if generated files differ from committed versions (useful for CI) |
-| `validate` command | Planned | Validate include paths, detect missing files without generating output |
 | Custom config file path | Planned | Allow specifying a non-default config file via CLI flag |
 
 ### Output Header Features

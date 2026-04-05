@@ -87,6 +87,15 @@ test:
 docs:
 	go run ./cmd/docs-ssot build
 
+.PHONY: docs-validate
+docs-validate:
+	go run ./cmd/docs-ssot validate
+
+# Usage: make docs-include FILE=template/README.tpl.md
+.PHONY: docs-include
+docs-include:
+	go run ./cmd/docs-ssot include $(FILE)
+
 #------------------------------------------------------------------------------
 # Release
 #------------------------------------------------------------------------------
