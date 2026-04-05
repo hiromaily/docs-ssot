@@ -23,22 +23,26 @@
 - Glob include (`<!-- @include: docs/*.md -->`) — include files matching a glob pattern
 - Recursive glob include (`<!-- @include: docs/**/*.md -->`) — include files matching a recursive glob; `**` matches zero or more path segments
 
-### v0.3 (Ready for Release)
+### v0.3 (Release)
 
 - `validate` command — dry-run over all templates; reports unresolvable includes without writing output files; exits non-zero on failure
 - `include` command — expand includes in a given file and print to stdout (debugging tool)
 - `version` command — print the build version
-- Diff / up-to-date check — exit non-zero if generated files differ from committed versions (CI use)
-- Dry-run mode — preview changes without writing output files
-- ~~Watch mode — automatically rebuild on source file changes~~
 
 ### v0.4
 
+- ssot validator
+
+### v0.5
+
+- Diff / up-to-date check — exit non-zero if generated files differ from committed versions (CI use)
+- Dry-run mode — preview changes without writing output files
+- ~~Watch mode — automatically rebuild on source file changes~~
 - Variable substitution — allow `{{ variable }}` placeholders expanded at build time
 - Front matter support — parse and strip/merge YAML front matter from included files
 - Conditional includes — include or exclude sections based on build-time flags
 
-### v0.5
+### v0.6
 
 - HTML output — convert generated Markdown to HTML
 - PDF output — convert generated Markdown to PDF
