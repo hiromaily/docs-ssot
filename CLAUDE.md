@@ -199,9 +199,9 @@ Final result:
 A + B + C
 ```
 
-### Step 4 — Resolving the link path (Planning)
+### Step 4 — Link Path Rewriting
 
-When each component of a markdown file is expanded into a template, the link paths included in the content are adjusted according to the template's expansion destination.
+When each file is processed, relative Markdown links and image URLs are rewritten so they resolve correctly relative to the output file location rather than the source file location.
 
 ```markdown
 [docsgen.yaml](../../docsgen.yaml)
@@ -222,7 +222,7 @@ This includes:
 
 ### Step 6 — Output Generation
 
-The final document is written to where defined at [docsgen.yaml](../../docsgen.yaml):
+The final document is written to where defined at [docsgen.yaml](./docsgen.yaml):
 
 ```
 README.md
