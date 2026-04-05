@@ -86,6 +86,14 @@ To include files matching a glob pattern (sorted lexically), use glob metacharac
 <!-- @include: docs/02_product/*.md -->
 ```
 
+To include files matching a recursive glob (sorted lexically by full path), use `**`:
+
+```markdown
+<!-- @include: docs/**/*.md -->
+```
+
+`**` matches zero or more path segments, so `docs/**/*.md` matches both `docs/file.md` and `docs/sub/deep/file.md`.
+
 An optional `level` parameter shifts the heading depth of the included content:
 
 ```markdown
@@ -93,6 +101,7 @@ An optional `level` parameter shifts the heading depth of the included content:
 <!-- @include: path/to/file.md level=-1 -->
 <!-- @include: docs/02_product/ level=+1 -->
 <!-- @include: docs/02_product/*.md level=+1 -->
+<!-- @include: docs/**/*.md level=+1 -->
 ```
 
 - `level=+N` deepens all headings by N levels (`##` → `###` for `+1`)
