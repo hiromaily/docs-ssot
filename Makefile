@@ -100,7 +100,7 @@ docs-include:
 # Usage: make docs-check ARGS="--threshold 0.75 --section-level 3"
 .PHONY: docs-check
 docs-check:
-	go run ./cmd/docs-ssot check $(ARGS)
+	go run ./cmd/docs-ssot check --root template/docs $(ARGS)
 
 .PHONY: docs-version
 docs-version:
