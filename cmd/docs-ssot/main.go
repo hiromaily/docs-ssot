@@ -7,6 +7,8 @@ import (
 	"github.com/hiromaily/docs-ssot/internal/generator"
 )
 
+var appVersion = "dev"
+
 func main() {
 	if len(os.Args) < 2 {
 		fmt.Println("Usage: docs-ssot build")
