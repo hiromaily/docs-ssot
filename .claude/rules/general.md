@@ -57,16 +57,20 @@ docs-ssot/
 ### Include Directive Pattern
 
 ```go
-var includePattern = regexp.MustCompile(`<!--\s*@include:\s*(.*?)\s*-->`)
+var includePattern = regexp.MustCompile(`^\s*<!--\s*@include:\s*(.*?)\s*-->\s*$`)
 ```
 
 In Markdown, the directive looks like:
 
 ```markdown
 <!-- @include: docs/01_project/overview.md -->
+<!-- @include: docs/01_project/overview.md level=+1 -->
+<!-- @include: docs/01_project/overview.md level=-1 -->
 ```
 
-`ProcessFile()` reads the template line-by-line, replaces include directives with file contents, and returns the assembled string.
+The optional `level=±N` parameter shifts all ATX heading levels in the included content by N (clamped to `[1, 6]`). Headings inside code fences are not adjusted.
+
+`ProcessFile()` reads the template line-by-line, replaces include directives with file contents (applying heading adjustment if specified), and returns the assembled string.
 
 ---
 

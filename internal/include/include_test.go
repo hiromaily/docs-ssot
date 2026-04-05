@@ -179,6 +179,52 @@ func TestProcessFile_IncludeInlineNotExpanded(t *testing.T) {
 	}
 }
 
+// TestProcessFile_LevelAdjustment_RecursiveExpansion verifies that level=+N shifts headings
+// in the entire recursively-expanded content of the included file, not just its top level.
+func TestProcessFile_LevelAdjustment_RecursiveExpansion(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+
+	// c.md is included by b.md (no level param), b.md is included by root with level=+1.
+	// All headings in the expanded B+C content should be shifted by +1.
+	writeFile(t, filepath.Join(dir, "c.md"), "### Deep\n")
+	writeFile(t, filepath.Join(dir, "b.md"), "## Section\n<!-- @include: c.md -->\n")
+	writeFile(t, filepath.Join(dir, "root.md"), "<!-- @include: b.md level=+1 -->\n")
+
+	got, err := include.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	want := "### Section\n#### Deep\n"
+	if got != want {
+		t.Errorf("got:\n%q\nwant:\n%q", got, want)
+	}
+}
+
+// TestProcessFile_LevelAdjustment_WithLinkRewrite verifies that heading level adjustment
+// and link rewriting do not interfere with each other.
+func TestProcessFile_LevelAdjustment_WithLinkRewrite(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+
+	docsDir := filepath.Join(dir, "docs")
+	writeFile(t, filepath.Join(docsDir, "guide.md"), "## Title\n\nSee [ref](./other.md).\n")
+	writeFile(t, filepath.Join(dir, "root.md"),
+		fmt.Sprintf("<!-- @include: %s level=+1 -->\n", filepath.Join(docsDir, "guide.md")))
+
+	got, err := include.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// heading shifted +1; link rewritten relative to output dir
+	want := "### Title\n\nSee [ref](./docs/other.md).\n"
+	if got != want {
+		t.Errorf("got:\n%q\nwant:\n%q", got, want)
+	}
+}
+
 // TestProcessFile_LinkRewrite_DirectFile tests that a link inside the template file itself
 // is rewritten when the template and output live in different directories.
 func TestProcessFile_LinkRewrite_DirectFile(t *testing.T) {
@@ -305,6 +351,92 @@ func TestProcessFile_LinkRewrite_InsideCodeFenceUnchanged(t *testing.T) {
 	want := "```\n[link](./example.md)\n```\n"
 	if got != want {
 		t.Errorf("got:\n%q\nwant:\n%q", got, want)
+	}
+}
+
+func TestProcessFile_LevelAdjustment(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name    string
+		content string
+		param   string
+		want    string
+	}{
+		{
+			name:    "plus1",
+			content: "## Title\n### Sub1\n### Sub2\n",
+			param:   "level=+1",
+			want:    "### Title\n#### Sub1\n#### Sub2\n",
+		},
+		{
+			name:    "minus1",
+			content: "## Title\n### Sub1\n",
+			param:   "level=-1",
+			want:    "# Title\n## Sub1\n",
+		},
+		{
+			name:    "plus2",
+			content: "# Title\n## Sub\n",
+			param:   "level=+2",
+			want:    "### Title\n#### Sub\n",
+		},
+		{
+			name:    "zero_explicit",
+			content: "## Title\n### Sub\n",
+			param:   "level=0",
+			want:    "## Title\n### Sub\n",
+		},
+		{
+			name:    "no_param",
+			content: "## Title\n### Sub\n",
+			param:   "",
+			want:    "## Title\n### Sub\n",
+		},
+		{
+			name:    "clamp_at_h6",
+			content: "###### Deep\n",
+			param:   "level=+1",
+			want:    "###### Deep\n",
+		},
+		{
+			name:    "clamp_at_h1",
+			content: "# Top\n",
+			param:   "level=-1",
+			want:    "# Top\n",
+		},
+		{
+			name:    "non_heading_unchanged",
+			content: "just text\n- list item\n",
+			param:   "level=+1",
+			want:    "just text\n- list item\n",
+		},
+		{
+			name:    "heading_in_code_fence_unchanged",
+			content: "# Outside\n```\n# Inside fence\n```\n",
+			param:   "level=+1",
+			want:    "## Outside\n```\n# Inside fence\n```\n",
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			dir := t.TempDir()
+			writeFile(t, filepath.Join(dir, "child.md"), tc.content)
+			directive := "<!-- @include: child.md"
+			if tc.param != "" {
+				directive += " " + tc.param
+			}
+			directive += " -->"
+			writeFile(t, filepath.Join(dir, "root.md"), directive+"\n")
+
+			got, err := include.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got != tc.want {
+				t.Errorf("got:\n%q\nwant:\n%q", got, tc.want)
+			}
+		})
 	}
 }
 

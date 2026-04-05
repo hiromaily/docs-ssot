@@ -74,6 +74,19 @@ Include directives follow the [VitePress](https://vitepress.dev/) style:
 <!-- @include: path/to/file.md -->
 ```
 
+An optional `level` parameter shifts the heading depth of the included content:
+
+```markdown
+<!-- @include: path/to/file.md level=+1 -->
+<!-- @include: path/to/file.md level=-1 -->
+```
+
+- `level=+N` deepens all headings by N levels (`##` → `###` for `+1`)
+- `level=-N` shallows all headings by N levels (`###` → `##` for `-1`)
+- Heading levels are clamped to `[1, 6]`; headings inside code fences are not adjusted
+
+Other rules:
+
 - Paths are resolved relative to the file containing the directive.
 - Include directives inside code fences are treated as literal text (not expanded).
 - Recursive includes are supported: included files may themselves contain include directives.

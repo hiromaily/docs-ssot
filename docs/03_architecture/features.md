@@ -16,6 +16,7 @@ Other architecture documents should reference this file rather than duplicating 
 | Glob include | Planned | Include files matching a glob pattern (e.g. `*.md`) |
 | Recursive glob include | Planned | Include files matching a recursive glob (e.g. `**/*.md`) |
 | Link path rewriting | Implemented | Relative links and image URLs in all files are rewritten to be correct relative to the output file location |
+| Heading level adjustment | Implemented | Optional `level=±N` parameter on include directives shifts heading depth of included content |
 | Include from URL | Planned | Fetch and include a remote Markdown file |
 
 ### Generator Features

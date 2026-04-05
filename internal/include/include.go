@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 )
 
@@ -73,11 +74,19 @@ func processFile(absPath string, ancestors []string, absOutputPath string) (stri
 		if prevFenceType == "" && fenceType == "" {
 			matches := includePattern.FindStringSubmatch(line)
 			if len(matches) > 1 {
-				absInclude := resolveIncludePath(absPath, matches[1])
+				includePath, levelDelta := parseIncludeArgs(matches[1])
+				absInclude := resolveIncludePath(absPath, includePath)
 
 				content, err := processFile(absInclude, chain, absOutputPath)
 				if err != nil {
 					return "", err
+				}
+
+				if levelDelta != 0 {
+					content, err = adjustHeadingLevels(content, levelDelta)
+					if err != nil {
+						return "", err
+					}
 				}
 
 				sb.WriteString(content)
@@ -132,6 +141,27 @@ func nextFenceType(line, fenceType string) string {
 		}
 	}
 	return fenceType
+}
+
+// parseIncludeArgs parses the argument string captured from an include directive.
+// The expected form is: <path> [level=<delta>]
+// The path may contain spaces; parameters are identified by trailing "level=±N" tokens.
+// Returns the file path and optional level delta (0 if absent or unparseable).
+func parseIncludeArgs(args string) (string, int) {
+	args = strings.TrimSpace(args)
+	if args == "" {
+		return "", 0
+	}
+	var level int
+	// Scan from the end: if the last space-separated token is a known parameter, consume it.
+	if idx := strings.LastIndex(args, " level="); idx != -1 {
+		n, err := strconv.Atoi(args[idx+len(" level="):])
+		if err == nil {
+			level = n
+			args = strings.TrimSpace(args[:idx])
+		}
+	}
+	return args, level
 }
 
 // resolveIncludePath returns the absolute path for includePath relative to the containing file.
