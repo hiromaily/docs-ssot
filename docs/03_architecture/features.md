@@ -14,7 +14,7 @@ Other architecture documents should reference this file rather than duplicating 
 | Code fence passthrough | Implemented | Include directives inside fenced code blocks are treated as literal text |
 | Directory include | Implemented | Include all `.md` files in a directory (sorted by filename); trailing `/` in path triggers directory mode |
 | Glob include | Implemented | Include files matching a glob pattern (e.g. `*.md`); glob metacharacters (`*`, `?`, `[`) in path trigger glob mode |
-| Recursive glob include | Planned | Include files matching a recursive glob (e.g. `**/*.md`) |
+| Recursive glob include | Implemented | Include files matching a recursive glob (e.g. `**/*.md`); `**` matches zero or more path segments |
 | Link path rewriting | Implemented | Relative links and image URLs in all files are rewritten to be correct relative to the output file location |
 | Heading level adjustment | Implemented | Optional `level=±N` parameter on include directives shifts heading depth of included content |
 | Include from URL | Planned | Fetch and include a remote Markdown file |

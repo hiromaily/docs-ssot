@@ -3,7 +3,9 @@ package include
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -84,6 +86,8 @@ func processFile(absPath string, ancestors []string, absOutputPath string) (stri
 				switch {
 				case strings.HasSuffix(includePath, "/"):
 					content, err = processDirectory(absInclude, chain, absOutputPath)
+				case strings.Contains(includePath, "**"):
+					content, err = processRecursiveGlob(absInclude, chain, absOutputPath)
 				case strings.ContainsAny(includePath, "*?["):
 					content, err = processGlob(absInclude, chain, absOutputPath)
 				default:
@@ -209,6 +213,108 @@ func processGlob(pattern string, ancestors []string, absOutputPath string) (stri
 		}
 	}
 	return sb.String(), nil
+}
+
+// processRecursiveGlob handles patterns containing "**" by walking the directory tree recursively.
+// Files are included in lexical path order. No error is returned when the root directory does not exist
+// or no files match the pattern.
+func processRecursiveGlob(pattern string, ancestors []string, absOutputPath string) (string, error) {
+	root := findGlobRoot(pattern)
+
+	if _, statErr := os.Stat(root); statErr != nil {
+		if errors.Is(statErr, os.ErrNotExist) {
+			return "", nil
+		}
+		return "", fmt.Errorf("include error (recursive glob %s): %w", pattern, statErr)
+	}
+
+	var matchedPaths []string
+	walkErr := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			return nil
+		}
+		matched, matchErr := matchDoubleStarPattern(pattern, path)
+		if matchErr != nil {
+			return fmt.Errorf("include error (recursive glob %s): %w", pattern, matchErr)
+		}
+		if matched {
+			matchedPaths = append(matchedPaths, path)
+		}
+		return nil
+	})
+	if walkErr != nil {
+		return "", fmt.Errorf("include error (recursive glob %s): %w", pattern, walkErr)
+	}
+
+	slices.Sort(matchedPaths)
+
+	var sb strings.Builder
+	for _, match := range matchedPaths {
+		content, err := processFile(match, ancestors, absOutputPath)
+		if err != nil {
+			return "", err
+		}
+		sb.WriteString(content)
+		if content != "" && !strings.HasSuffix(content, "\n") {
+			sb.WriteByte('\n')
+		}
+	}
+	return sb.String(), nil
+}
+
+// findGlobRoot returns the deepest ancestor directory of pattern that contains no glob metacharacters.
+func findGlobRoot(pattern string) string {
+	dir := filepath.Dir(pattern)
+	for strings.ContainsAny(dir, "*?[") {
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			return "."
+		}
+		dir = parent
+	}
+	return dir
+}
+
+// matchDoubleStarPattern reports whether path matches a glob pattern that may contain "**".
+// "**" matches zero or more path segments. Single-segment patterns are matched via filepath.Match.
+func matchDoubleStarPattern(pattern, path string) (bool, error) {
+	patParts := strings.Split(filepath.ToSlash(pattern), "/")
+	pathParts := strings.Split(filepath.ToSlash(path), "/")
+	return matchGlobParts(patParts, pathParts)
+}
+
+// matchGlobParts recursively matches pattern segments against path segments.
+// A "**" segment matches zero or more consecutive path segments.
+func matchGlobParts(pat, path []string) (bool, error) {
+	for len(pat) > 0 {
+		if pat[0] == "**" {
+			if len(pat) == 1 {
+				return true, nil // ** at end matches any remaining path
+			}
+			// Try consuming zero path segments (skip **)
+			if ok, err := matchGlobParts(pat[1:], path); err != nil || ok {
+				return ok, err
+			}
+			// Try consuming one path segment and retrying with the same **
+			if len(path) == 0 {
+				return false, nil
+			}
+			return matchGlobParts(pat, path[1:])
+		}
+		if len(path) == 0 {
+			return false, nil
+		}
+		matched, err := filepath.Match(pat[0], path[0])
+		if err != nil || !matched {
+			return false, err
+		}
+		pat = pat[1:]
+		path = path[1:]
+	}
+	return len(path) == 0, nil
 }
 
 // processDirectory includes all .md files in absDir (sorted by filename) by processing each in order.

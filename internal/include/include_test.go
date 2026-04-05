@@ -659,6 +659,103 @@ func TestProcessFile_GlobInclude_QuestionMark(t *testing.T) {
 	}
 }
 
+func TestProcessFile_RecursiveGlobInclude(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+
+	writeFile(t, filepath.Join(dir, "docs", "a.md"), "a\n")
+	writeFile(t, filepath.Join(dir, "docs", "sub", "b.md"), "b\n")
+	writeFile(t, filepath.Join(dir, "docs", "sub", "deep", "c.md"), "c\n")
+	writeFile(t, filepath.Join(dir, "root.md"), "before\n<!-- @include: docs/**/*.md -->\nafter\n")
+
+	got, err := include.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	want := "before\na\nb\nc\nafter\n"
+	if got != want {
+		t.Errorf("got:\n%q\nwant:\n%q", got, want)
+	}
+}
+
+func TestProcessFile_RecursiveGlobInclude_ZeroSegments(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+
+	// "**" should also match zero segments, so docs/**/*.md matches docs/a.md directly
+	writeFile(t, filepath.Join(dir, "docs", "a.md"), "a\n")
+	writeFile(t, filepath.Join(dir, "root.md"), "<!-- @include: docs/**/*.md -->\n")
+
+	got, err := include.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	want := "a\n"
+	if got != want {
+		t.Errorf("got:\n%q\nwant:\n%q", got, want)
+	}
+}
+
+func TestProcessFile_RecursiveGlobInclude_SortedOrder(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+
+	// Files across different subdirectories — must be sorted lexically by full path
+	writeFile(t, filepath.Join(dir, "docs", "b", "file.md"), "b\n")
+	writeFile(t, filepath.Join(dir, "docs", "a", "file.md"), "a\n")
+	writeFile(t, filepath.Join(dir, "docs", "c", "file.md"), "c\n")
+	writeFile(t, filepath.Join(dir, "root.md"), "<!-- @include: docs/**/*.md -->\n")
+
+	got, err := include.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	want := "a\nb\nc\n"
+	if got != want {
+		t.Errorf("got:\n%q\nwant:\n%q", got, want)
+	}
+}
+
+func TestProcessFile_RecursiveGlobInclude_NoMatches(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+
+	writeFile(t, filepath.Join(dir, "root.md"), "before\n<!-- @include: docs/**/*.md -->\nafter\n")
+
+	got, err := include.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// non-existent root → no matches, no error
+	want := "before\nafter\n"
+	if got != want {
+		t.Errorf("got:\n%q\nwant:\n%q", got, want)
+	}
+}
+
+func TestProcessFile_RecursiveGlobInclude_WithLevelAdjustment(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+
+	writeFile(t, filepath.Join(dir, "docs", "a.md"), "## Section A\n")
+	writeFile(t, filepath.Join(dir, "docs", "sub", "b.md"), "## Section B\n")
+	writeFile(t, filepath.Join(dir, "root.md"), "<!-- @include: docs/**/*.md level=+1 -->\n")
+
+	got, err := include.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	want := "### Section A\n### Section B\n"
+	if got != want {
+		t.Errorf("got:\n%q\nwant:\n%q", got, want)
+	}
+}
+
 // TestProcessFile_LinkRewrite_WithTitle tests that optional link titles are preserved.
 func TestProcessFile_LinkRewrite_WithTitle(t *testing.T) {
 	t.Parallel()
