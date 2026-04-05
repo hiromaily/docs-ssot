@@ -9,10 +9,12 @@ import (
 // linkPattern matches Markdown inline links and images: [text](url) and ![alt](url).
 // Group 1 captures the label (e.g. "[text]" or "![alt]"), group 2 the full destination
 // (e.g. `./foo.md` or `./foo.md "My Title"`).
+// Limitation: the URL pattern [^)]+ does not handle URLs that contain unescaped parentheses
+// (e.g. Wikipedia URLs like `.../Markdown_(programming_language)`). Such links are left unchanged.
 var linkPattern = regexp.MustCompile(`(!?\[[^\]]*\])\(([^)]+)\)`)
 
 // absoluteURLPrefixes lists the prefixes that identify non-relative URLs.
-var absoluteURLPrefixes = []string{"http://", "https://", "//", "/", "#", "mailto:", "ftp:"}
+var absoluteURLPrefixes = []string{"http://", "https://", "//", "/", "#", "mailto:", "ftp:", "data:", "tel:"}
 
 // rewriteLinksInDirs rewrites relative Markdown link and image URLs in line so they are
 // correct relative to outputDir rather than sourceDir.
@@ -53,6 +55,7 @@ func rewriteLinksInDirs(line, sourceDir, outputDir string) string {
 		if err != nil {
 			return match // fallback: leave unchanged
 		}
+		newRel = filepath.ToSlash(newRel)
 		if !strings.HasPrefix(newRel, ".") {
 			newRel = "./" + newRel
 		}
