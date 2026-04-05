@@ -81,9 +81,12 @@ func processFile(absPath string, ancestors []string, absOutputPath string) (stri
 					content string
 					err     error
 				)
-				if strings.HasSuffix(includePath, "/") {
+				switch {
+				case strings.HasSuffix(includePath, "/"):
 					content, err = processDirectory(absInclude, chain, absOutputPath)
-				} else {
+				case strings.ContainsAny(includePath, "*?["):
+					content, err = processGlob(absInclude, chain, absOutputPath)
+				default:
 					content, err = processFile(absInclude, chain, absOutputPath)
 				}
 				if err != nil {
@@ -178,6 +181,34 @@ func resolveIncludePath(absContainingFile, includePath string) string {
 		return includePath
 	}
 	return filepath.Join(filepath.Dir(absContainingFile), includePath)
+}
+
+// processGlob includes all files matched by the glob pattern (sorted lexically) by processing each in order.
+// Only regular files (not directories) are included. No error is returned when the pattern matches nothing.
+func processGlob(pattern string, ancestors []string, absOutputPath string) (string, error) {
+	matches, err := filepath.Glob(pattern)
+	if err != nil {
+		return "", fmt.Errorf("include error (glob %s): %w", pattern, err)
+	}
+	var sb strings.Builder
+	for _, match := range matches {
+		info, err := os.Stat(match)
+		if err != nil {
+			return "", fmt.Errorf("include error (glob match %s): %w", match, err)
+		}
+		if info.IsDir() {
+			continue
+		}
+		content, err := processFile(match, ancestors, absOutputPath)
+		if err != nil {
+			return "", err
+		}
+		sb.WriteString(content)
+		if content != "" && !strings.HasSuffix(content, "\n") {
+			sb.WriteByte('\n')
+		}
+	}
+	return sb.String(), nil
 }
 
 // processDirectory includes all .md files in absDir (sorted by filename) by processing each in order.

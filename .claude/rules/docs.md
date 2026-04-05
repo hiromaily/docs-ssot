@@ -80,12 +80,19 @@ To include all `.md` files in a directory (sorted by filename), end the path wit
 <!-- @include: docs/02_product/ -->
 ```
 
+To include files matching a glob pattern (sorted lexically), use glob metacharacters (`*`, `?`, `[`):
+
+```markdown
+<!-- @include: docs/02_product/*.md -->
+```
+
 An optional `level` parameter shifts the heading depth of the included content:
 
 ```markdown
 <!-- @include: path/to/file.md level=+1 -->
 <!-- @include: path/to/file.md level=-1 -->
 <!-- @include: docs/02_product/ level=+1 -->
+<!-- @include: docs/02_product/*.md level=+1 -->
 ```
 
 - `level=+N` deepens all headings by N levels (`##` → `###` for `+1`)

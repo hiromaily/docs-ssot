@@ -15,9 +15,12 @@
 - Heading level adjustment — optional `level=±N` parameter on include directives shifts the heading depth of included content (e.g. `<!-- @include: file.md level=+1 -->`)
 - Directory include (`<!-- @include: docs/dir/ -->`) — include all `.md` files in a directory (sorted by filename)
 
-### v0.3 (WIP)
+### v0.3 (Released)
 
 - Glob include (`<!-- @include: docs/*.md -->`) — include files matching a glob pattern
+
+### v0.4 (WIP)
+
 - Recursive glob include (`<!-- @include: docs/**/*.md -->`) — include files matching a recursive glob
 
 ### v0.4

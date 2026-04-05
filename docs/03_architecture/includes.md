@@ -66,13 +66,17 @@ Files are included in sorted filename order.
 The trailing `/` in the path is required to trigger directory mode.
 Subdirectories are skipped; only `.md` files directly in the specified directory are included.
 
-#### 3. Glob Include (Planning)
+#### 3. Glob Include
 
 ```
 <!-- @include: docs/02_product/*.md -->
 ```
 
 Includes all files matching the glob pattern.
+Files are included in sorted (lexical) order.
+Glob metacharacters (`*`, `?`, `[`) in the path trigger glob mode.
+If the pattern matches no files, no content is inserted (no error).
+Subdirectories matched by the pattern are skipped; only regular files are included.
 
 ---
 
