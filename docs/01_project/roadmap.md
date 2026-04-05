@@ -1,5 +1,11 @@
 ## Roadmap
 
+<!-- Status legend:
+- (Released): Tagged and released.
+- (Ready for Release): Implemented but not yet tagged; planned for release once all WIP items are complete.
+- No status: Planned for implementation.
+-->
+
 ### v0.1 (Released)
 
 - Single file include directive (`<!-- @include: path -->`)
