@@ -77,7 +77,15 @@ func processFile(absPath string, ancestors []string, absOutputPath string) (stri
 				includePath, levelDelta := parseIncludeArgs(matches[1])
 				absInclude := resolveIncludePath(absPath, includePath)
 
-				content, err := processFile(absInclude, chain, absOutputPath)
+				var (
+					content string
+					err     error
+				)
+				if strings.HasSuffix(includePath, "/") {
+					content, err = processDirectory(absInclude, chain, absOutputPath)
+				} else {
+					content, err = processFile(absInclude, chain, absOutputPath)
+				}
 				if err != nil {
 					return "", err
 				}
@@ -90,7 +98,7 @@ func processFile(absPath string, ancestors []string, absOutputPath string) (stri
 				}
 
 				sb.WriteString(content)
-				if !strings.HasSuffix(content, "\n") {
+				if content != "" && !strings.HasSuffix(content, "\n") {
 					sb.WriteByte('\n')
 				}
 				continue
@@ -170,4 +178,29 @@ func resolveIncludePath(absContainingFile, includePath string) string {
 		return includePath
 	}
 	return filepath.Join(filepath.Dir(absContainingFile), includePath)
+}
+
+// processDirectory includes all .md files in absDir (sorted by filename) by processing each in order.
+func processDirectory(absDir string, ancestors []string, absOutputPath string) (string, error) {
+	entries, err := os.ReadDir(absDir)
+	if err != nil {
+		return "", fmt.Errorf("include error (directory %s): %w", absDir, err)
+	}
+
+	var sb strings.Builder
+	for _, entry := range entries {
+		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".md") {
+			continue
+		}
+		absFile := filepath.Join(absDir, entry.Name())
+		content, err := processFile(absFile, ancestors, absOutputPath)
+		if err != nil {
+			return "", err
+		}
+		sb.WriteString(content)
+		if !strings.HasSuffix(content, "\n") {
+			sb.WriteByte('\n')
+		}
+	}
+	return sb.String(), nil
 }
