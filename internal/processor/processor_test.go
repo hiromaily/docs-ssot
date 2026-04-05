@@ -1,4 +1,4 @@
-package include_test
+package processor_test
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/hiromaily/docs-ssot/internal/include"
+	"github.com/hiromaily/docs-ssot/internal/processor"
 )
 
 func writeFile(t *testing.T, path, content string) {
@@ -27,7 +27,7 @@ func TestProcessFile_SingleInclude(t *testing.T) {
 	writeFile(t, childPath, "child content\n")
 	writeFile(t, filepath.Join(dir, "root.md"), fmt.Sprintf("before\n<!-- @include: %s -->\nafter\n", childPath))
 
-	got, err := include.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
+	got, err := processor.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -48,7 +48,7 @@ func TestProcessFile_RecursiveInclude(t *testing.T) {
 	writeFile(t, bPath, fmt.Sprintf("level-b\n<!-- @include: %s -->\n", cPath))
 	writeFile(t, filepath.Join(dir, "a.md"), fmt.Sprintf("level-a\n<!-- @include: %s -->\n", bPath))
 
-	got, err := include.ProcessFile(filepath.Join(dir, "a.md"), filepath.Join(dir, "output.md"))
+	got, err := processor.ProcessFile(filepath.Join(dir, "a.md"), filepath.Join(dir, "output.md"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -68,7 +68,7 @@ func TestProcessFile_CircularInclude(t *testing.T) {
 	writeFile(t, aPath, fmt.Sprintf("<!-- @include: %s -->\n", bPath))
 	writeFile(t, bPath, fmt.Sprintf("<!-- @include: %s -->\n", aPath))
 
-	_, err := include.ProcessFile(aPath, filepath.Join(dir, "output.md"))
+	_, err := processor.ProcessFile(aPath, filepath.Join(dir, "output.md"))
 	if err == nil {
 		t.Fatal("expected circular include error, got nil")
 	}
@@ -81,7 +81,7 @@ func TestProcessFile_MissingFile(t *testing.T) {
 	missingPath := filepath.Join(dir, "missing.md")
 	writeFile(t, filepath.Join(dir, "root.md"), fmt.Sprintf("<!-- @include: %s -->\n", missingPath))
 
-	_, err := include.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
+	_, err := processor.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
 	if err == nil {
 		t.Fatal("expected error for missing include, got nil")
 	}
@@ -93,7 +93,7 @@ func TestProcessFile_NoIncludes(t *testing.T) {
 
 	writeFile(t, filepath.Join(dir, "plain.md"), "just text\nno includes\n")
 
-	got, err := include.ProcessFile(filepath.Join(dir, "plain.md"), filepath.Join(dir, "output.md"))
+	got, err := processor.ProcessFile(filepath.Join(dir, "plain.md"), filepath.Join(dir, "output.md"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -112,7 +112,7 @@ func TestProcessFile_IncludeInsideCodeFence(t *testing.T) {
 	// child.md does NOT exist — if the include inside the fence were expanded, it would error
 	writeFile(t, filepath.Join(dir, "root.md"), fmt.Sprintf("```md\n<!-- @include: %s -->\n```\n", childPath))
 
-	got, err := include.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
+	got, err := processor.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
 	if err != nil {
 		t.Fatalf("include inside code fence should not be expanded, got error: %v", err)
 	}
@@ -131,7 +131,7 @@ func TestProcessFile_RelativeIncludePath(t *testing.T) {
 	// Use a relative path from the root file's directory
 	writeFile(t, filepath.Join(dir, "root.md"), "before\n<!-- @include: sub/child.md -->\nafter\n")
 
-	got, err := include.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
+	got, err := processor.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -150,7 +150,7 @@ func TestProcessFile_MixedFenceTypes(t *testing.T) {
 	// child.md does NOT exist; if the include were expanded it would error.
 	writeFile(t, filepath.Join(dir, "root.md"), "~~~\n<!-- @include: missing.md -->\n~~~\nafter\n")
 
-	got, err := include.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
+	got, err := processor.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
 	if err != nil {
 		t.Fatalf("include inside tilde fence should not be expanded, got error: %v", err)
 	}
@@ -168,7 +168,7 @@ func TestProcessFile_IncludeInlineNotExpanded(t *testing.T) {
 	// Directive embedded within other text should NOT be expanded (regex is anchored).
 	writeFile(t, filepath.Join(dir, "root.md"), "Note: <!-- @include: missing.md --> end\n")
 
-	got, err := include.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
+	got, err := processor.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
 	if err != nil {
 		t.Fatalf("inline directive should not be expanded, got error: %v", err)
 	}
@@ -191,7 +191,7 @@ func TestProcessFile_LevelAdjustment_RecursiveExpansion(t *testing.T) {
 	writeFile(t, filepath.Join(dir, "b.md"), "## Section\n<!-- @include: c.md -->\n")
 	writeFile(t, filepath.Join(dir, "root.md"), "<!-- @include: b.md level=+1 -->\n")
 
-	got, err := include.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
+	got, err := processor.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -213,7 +213,7 @@ func TestProcessFile_LevelAdjustment_WithLinkRewrite(t *testing.T) {
 	writeFile(t, filepath.Join(dir, "root.md"),
 		fmt.Sprintf("<!-- @include: %s level=+1 -->\n", filepath.Join(docsDir, "guide.md")))
 
-	got, err := include.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
+	got, err := processor.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -235,7 +235,7 @@ func TestProcessFile_LinkRewrite_DirectFile(t *testing.T) {
 	templateDir := filepath.Join(dir, "template")
 	writeFile(t, filepath.Join(templateDir, "root.tpl.md"), "[guide](./guide.md)\n")
 
-	got, err := include.ProcessFile(
+	got, err := processor.ProcessFile(
 		filepath.Join(templateDir, "root.tpl.md"),
 		filepath.Join(dir, "output.md"),
 	)
@@ -263,7 +263,7 @@ func TestProcessFile_LinkRewrite_IncludedFile(t *testing.T) {
 	writeFile(t, filepath.Join(dir, "root.tpl.md"),
 		fmt.Sprintf("# Title\n<!-- @include: %s -->\n", includedPath))
 
-	got, err := include.ProcessFile(
+	got, err := processor.ProcessFile(
 		filepath.Join(dir, "root.tpl.md"),
 		filepath.Join(dir, "output.md"),
 	)
@@ -290,7 +290,7 @@ func TestProcessFile_LinkRewrite_AbsoluteAndExternalUnchanged(t *testing.T) {
 	writeFile(t, filepath.Join(dir, "root.tpl.md"),
 		"<!-- @include: sub/file.md -->\n")
 
-	got, err := include.ProcessFile(
+	got, err := processor.ProcessFile(
 		filepath.Join(dir, "root.tpl.md"),
 		filepath.Join(dir, "output.md"),
 	)
@@ -314,7 +314,7 @@ func TestProcessFile_LinkRewrite_WithFragment(t *testing.T) {
 	writeFile(t, filepath.Join(dir, "root.tpl.md"),
 		"<!-- @include: docs/guide.md -->\n")
 
-	got, err := include.ProcessFile(
+	got, err := processor.ProcessFile(
 		filepath.Join(dir, "root.tpl.md"),
 		filepath.Join(dir, "output.md"),
 	)
@@ -339,7 +339,7 @@ func TestProcessFile_LinkRewrite_InsideCodeFenceUnchanged(t *testing.T) {
 	writeFile(t, filepath.Join(dir, "root.tpl.md"),
 		"<!-- @include: docs/guide.md -->\n")
 
-	got, err := include.ProcessFile(
+	got, err := processor.ProcessFile(
 		filepath.Join(dir, "root.tpl.md"),
 		filepath.Join(dir, "output.md"),
 	)
@@ -429,7 +429,7 @@ func TestProcessFile_LevelAdjustment(t *testing.T) {
 			directive += " -->"
 			writeFile(t, filepath.Join(dir, "root.md"), directive+"\n")
 
-			got, err := include.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
+			got, err := processor.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -454,7 +454,7 @@ func TestProcessFile_DirectoryInclude(t *testing.T) {
 	}
 	writeFile(t, filepath.Join(dir, "root.md"), "before\n<!-- @include: docs/ -->\nafter\n")
 
-	got, err := include.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
+	got, err := processor.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -476,7 +476,7 @@ func TestProcessFile_DirectoryInclude_SortedOrder(t *testing.T) {
 	writeFile(t, filepath.Join(subDir, "c.md"), "c\n")
 	writeFile(t, filepath.Join(dir, "root.md"), "<!-- @include: docs/ -->\n")
 
-	got, err := include.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
+	got, err := processor.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -493,7 +493,7 @@ func TestProcessFile_DirectoryInclude_MissingDir(t *testing.T) {
 
 	writeFile(t, filepath.Join(dir, "root.md"), "<!-- @include: nonexistent/ -->\n")
 
-	_, err := include.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
+	_, err := processor.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
 	if err == nil {
 		t.Fatal("expected error for missing directory, got nil")
 	}
@@ -508,7 +508,7 @@ func TestProcessFile_DirectoryInclude_EmptyDir(t *testing.T) {
 	}
 	writeFile(t, filepath.Join(dir, "root.md"), "before\n<!-- @include: empty/ -->\nafter\n")
 
-	got, err := include.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
+	got, err := processor.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -528,7 +528,7 @@ func TestProcessFile_DirectoryInclude_WithLevelAdjustment(t *testing.T) {
 	writeFile(t, filepath.Join(subDir, "b.md"), "## Section B\n")
 	writeFile(t, filepath.Join(dir, "root.md"), "<!-- @include: docs/ level=+1 -->\n")
 
-	got, err := include.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
+	got, err := processor.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -553,7 +553,7 @@ func TestProcessFile_GlobInclude(t *testing.T) {
 	}
 	writeFile(t, filepath.Join(dir, "root.md"), "before\n<!-- @include: docs/*.md -->\nafter\n")
 
-	got, err := include.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
+	got, err := processor.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -575,7 +575,7 @@ func TestProcessFile_GlobInclude_SortedOrder(t *testing.T) {
 	writeFile(t, filepath.Join(subDir, "b.md"), "b\n")
 	writeFile(t, filepath.Join(dir, "root.md"), "<!-- @include: docs/*.md -->\n")
 
-	got, err := include.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
+	got, err := processor.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -592,7 +592,7 @@ func TestProcessFile_GlobInclude_NoMatches(t *testing.T) {
 
 	writeFile(t, filepath.Join(dir, "root.md"), "before\n<!-- @include: docs/*.md -->\nafter\n")
 
-	got, err := include.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
+	got, err := processor.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -613,7 +613,7 @@ func TestProcessFile_GlobInclude_WithLevelAdjustment(t *testing.T) {
 	writeFile(t, filepath.Join(subDir, "b.md"), "## Section B\n")
 	writeFile(t, filepath.Join(dir, "root.md"), "<!-- @include: docs/*.md level=+1 -->\n")
 
-	got, err := include.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
+	got, err := processor.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -631,7 +631,7 @@ func TestProcessFile_GlobInclude_BadPattern(t *testing.T) {
 	// "[*.md" is a malformed bracket expression — filepath.Glob returns ErrBadPattern.
 	writeFile(t, filepath.Join(dir, "root.md"), "<!-- @include: [*.md -->\n")
 
-	_, err := include.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
+	_, err := processor.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
 	if err == nil {
 		t.Fatal("expected error for malformed glob pattern, got nil")
 	}
@@ -647,7 +647,7 @@ func TestProcessFile_GlobInclude_QuestionMark(t *testing.T) {
 	writeFile(t, filepath.Join(subDir, "cc.md"), "cc\n") // two chars after nothing — won't match ?1 or ?2
 	writeFile(t, filepath.Join(dir, "root.md"), "<!-- @include: docs/??.md -->\n")
 
-	got, err := include.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
+	got, err := processor.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -668,7 +668,7 @@ func TestProcessFile_RecursiveGlobInclude(t *testing.T) {
 	writeFile(t, filepath.Join(dir, "docs", "sub", "deep", "c.md"), "c\n")
 	writeFile(t, filepath.Join(dir, "root.md"), "before\n<!-- @include: docs/**/*.md -->\nafter\n")
 
-	got, err := include.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
+	got, err := processor.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -687,7 +687,7 @@ func TestProcessFile_RecursiveGlobInclude_ZeroSegments(t *testing.T) {
 	writeFile(t, filepath.Join(dir, "docs", "a.md"), "a\n")
 	writeFile(t, filepath.Join(dir, "root.md"), "<!-- @include: docs/**/*.md -->\n")
 
-	got, err := include.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
+	got, err := processor.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -708,7 +708,7 @@ func TestProcessFile_RecursiveGlobInclude_SortedOrder(t *testing.T) {
 	writeFile(t, filepath.Join(dir, "docs", "c", "file.md"), "c\n")
 	writeFile(t, filepath.Join(dir, "root.md"), "<!-- @include: docs/**/*.md -->\n")
 
-	got, err := include.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
+	got, err := processor.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -725,7 +725,7 @@ func TestProcessFile_RecursiveGlobInclude_NoMatches(t *testing.T) {
 
 	writeFile(t, filepath.Join(dir, "root.md"), "before\n<!-- @include: docs/**/*.md -->\nafter\n")
 
-	got, err := include.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
+	got, err := processor.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -745,7 +745,7 @@ func TestProcessFile_RecursiveGlobInclude_WithLevelAdjustment(t *testing.T) {
 	writeFile(t, filepath.Join(dir, "docs", "sub", "b.md"), "## Section B\n")
 	writeFile(t, filepath.Join(dir, "root.md"), "<!-- @include: docs/**/*.md level=+1 -->\n")
 
-	got, err := include.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
+	got, err := processor.ProcessFile(filepath.Join(dir, "root.md"), filepath.Join(dir, "output.md"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -765,7 +765,7 @@ func TestProcessFile_LinkRewrite_WithTitle(t *testing.T) {
 	writeFile(t, filepath.Join(dir, "root.tpl.md"),
 		"<!-- @include: docs/guide.md -->\n")
 
-	got, err := include.ProcessFile(
+	got, err := processor.ProcessFile(
 		filepath.Join(dir, "root.tpl.md"),
 		filepath.Join(dir, "output.md"),
 	)

@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/hiromaily/docs-ssot/internal/include"
+	"github.com/hiromaily/docs-ssot/internal/processor"
 )
 
 var includeCmd = &cobra.Command{
@@ -14,7 +14,7 @@ var includeCmd = &cobra.Command{
 	Short: "Expand include directives in <file> and print to stdout",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		content, err := include.ProcessFile(args[0], args[0])
+		content, err := processor.ProcessFile(args[0], args[0])
 		if err != nil {
 			return err
 		}
