@@ -12,7 +12,7 @@ Other architecture documents should reference this file rather than duplicating 
 | Circular include detection | Implemented | Circular references produce a build error |
 | Missing file error | Implemented | Missing included file stops the build with an error |
 | Code fence passthrough | Implemented | Include directives inside fenced code blocks are treated as literal text |
-| Directory include | Planned | Include all `.md` files in a directory (sorted order) |
+| Directory include | Implemented | Include all `.md` files in a directory (sorted by filename); trailing `/` in path triggers directory mode |
 | Glob include | Planned | Include files matching a glob pattern (e.g. `*.md`) |
 | Recursive glob include | Planned | Include files matching a recursive glob (e.g. `**/*.md`) |
 | Link path rewriting | Implemented | Relative links and image URLs in all files are rewritten to be correct relative to the output file location |

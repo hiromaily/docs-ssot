@@ -55,14 +55,16 @@ The include directive supports multiple path formats.
 
 Includes a single Markdown file.
 
-#### 2. Directory Include (Planning)
+#### 2. Directory Include
 
 ```
 <!-- @include: docs/02_product/ -->
 ```
 
-Includes all `.md` files in the directory.
+Includes all `.md` files in the directory (non-recursive).
 Files are included in sorted filename order.
+The trailing `/` in the path is required to trigger directory mode.
+Subdirectories are skipped; only `.md` files directly in the specified directory are included.
 
 #### 3. Glob Include (Planning)
 

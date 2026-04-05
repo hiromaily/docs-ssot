@@ -66,9 +66,13 @@ In Markdown, the directive looks like:
 <!-- @include: docs/01_project/overview.md -->
 <!-- @include: docs/01_project/overview.md level=+1 -->
 <!-- @include: docs/01_project/overview.md level=-1 -->
+<!-- @include: docs/02_product/ -->
+<!-- @include: docs/02_product/ level=+1 -->
 ```
 
 The optional `level=±N` parameter shifts all ATX heading levels in the included content by N (clamped to `[1, 6]`). Headings inside code fences are not adjusted.
+
+When the path ends with `/`, all `.md` files in that directory are included in sorted filename order (subdirectories are skipped). Combine with `level=±N` to adjust heading depths for the entire directory's content.
 
 `ProcessFile()` reads the template line-by-line, replaces include directives with file contents (applying heading adjustment if specified), and returns the assembled string.
 
@@ -128,7 +132,7 @@ make clean          # Remove bin/ and generated README.md, CLAUDE.md
 
 ## Current Limitations (Planned for Future)
 
-- **No glob/directory includes**: Cannot include all files in a directory or by pattern.
+- **No glob includes**: Cannot include files by pattern (e.g. `*.md` or `**/*.md`).
 - **No variable substitution**: No `{{ variable }}` placeholder support.
 - **No validate command**: Must attempt a full build to detect missing or circular includes.
 

@@ -1,0 +1,2 @@
+# This directory is an exception, but normally, the markdown components and templates used for generation are excluded, 
+# and it is expected that only the generated files will be read by the AI ​​Agent.
