@@ -44,8 +44,8 @@ func processFile(absPath string, ancestors []string) (string, error) {
 
 	var sb strings.Builder
 	scanner := bufio.NewScanner(file)
-	// Use a 1 MB buffer to handle files with long lines (e.g. large embedded diagrams).
-	scanner.Buffer(make([]byte, 1024*1024), 1024*1024)
+	// Allow lines up to 1 MB; start with a nil buffer so the scanner allocates only as needed.
+	scanner.Buffer(nil, 1024*1024)
 
 	// fenceType is "" when outside a code fence, or "```"/"~~~" when inside one.
 	// Per CommonMark: backtick fences are closed only by backticks, tilde fences only by tildes.
@@ -85,27 +85,35 @@ func processFile(absPath string, ancestors []string) (string, error) {
 }
 
 // nextFenceType returns the updated fence type after processing line.
-// Per CommonMark, a backtick fence is only closed by backticks, and a tilde fence only by tildes.
-// Up to 3 spaces of indentation are allowed on fence markers.
+// fenceType is "" when outside a fence, or the opening fence string (e.g. "```", "~~~~") when inside.
+// Per CommonMark:
+//   - A backtick fence is only closed by backticks; a tilde fence only by tildes.
+//   - A closing fence must have at least as many fence characters as the opening fence.
+//   - A closing fence must contain only fence characters and optional trailing spaces.
+//   - Up to 3 spaces of indentation are allowed on fence markers.
 func nextFenceType(line, fenceType string) string {
 	trimmed := strings.TrimLeft(line, " ")
 	if len(line)-len(trimmed) > 3 {
 		return fenceType // more than 3 spaces of indentation: not a fence marker
 	}
-	switch fenceType {
-	case "":
-		if strings.HasPrefix(trimmed, "```") {
-			return "```"
+	if fenceType == "" {
+		// Opening fence: starts with ``` or ~~~
+		if strings.HasPrefix(trimmed, "```") || strings.HasPrefix(trimmed, "~~~") {
+			char := trimmed[0]
+			i := 0
+			for i < len(trimmed) && trimmed[i] == char {
+				i++
+			}
+			return trimmed[:i] // store the exact opening fence (length matters for closing)
 		}
-		if strings.HasPrefix(trimmed, "~~~") {
-			return "~~~"
+	} else {
+		// Closing fence: same character type, at least as many chars, trailing spaces only
+		char := fenceType[0]
+		i := 0
+		for i < len(trimmed) && trimmed[i] == char {
+			i++
 		}
-	case "```":
-		if strings.HasPrefix(trimmed, "```") {
-			return ""
-		}
-	case "~~~":
-		if strings.HasPrefix(trimmed, "~~~") {
+		if i >= len(fenceType) && strings.TrimRight(trimmed[i:], " ") == "" {
 			return ""
 		}
 	}

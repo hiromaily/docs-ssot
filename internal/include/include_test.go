@@ -20,6 +20,7 @@ func writeFile(t *testing.T, path, content string) {
 }
 
 func TestProcessFile_SingleInclude(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 
 	childPath := filepath.Join(dir, "child.md")
@@ -38,6 +39,7 @@ func TestProcessFile_SingleInclude(t *testing.T) {
 }
 
 func TestProcessFile_RecursiveInclude(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 
 	cPath := filepath.Join(dir, "c.md")
@@ -58,6 +60,7 @@ func TestProcessFile_RecursiveInclude(t *testing.T) {
 }
 
 func TestProcessFile_CircularInclude(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 
 	aPath := filepath.Join(dir, "a.md")
@@ -72,6 +75,7 @@ func TestProcessFile_CircularInclude(t *testing.T) {
 }
 
 func TestProcessFile_MissingFile(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 
 	missingPath := filepath.Join(dir, "missing.md")
@@ -84,6 +88,7 @@ func TestProcessFile_MissingFile(t *testing.T) {
 }
 
 func TestProcessFile_NoIncludes(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 
 	writeFile(t, filepath.Join(dir, "plain.md"), "just text\nno includes\n")
@@ -100,6 +105,7 @@ func TestProcessFile_NoIncludes(t *testing.T) {
 }
 
 func TestProcessFile_IncludeInsideCodeFence(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 
 	childPath := filepath.Join(dir, "child.md")
@@ -118,6 +124,7 @@ func TestProcessFile_IncludeInsideCodeFence(t *testing.T) {
 }
 
 func TestProcessFile_RelativeIncludePath(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 
 	writeFile(t, filepath.Join(dir, "sub", "child.md"), "child content\n")
@@ -136,6 +143,7 @@ func TestProcessFile_RelativeIncludePath(t *testing.T) {
 }
 
 func TestProcessFile_MixedFenceTypes(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 
 	// A tilde fence should NOT be closed by backticks — the include inside remains literal.
@@ -154,6 +162,7 @@ func TestProcessFile_MixedFenceTypes(t *testing.T) {
 }
 
 func TestProcessFile_IncludeInlineNotExpanded(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 
 	// Directive embedded within other text should NOT be expanded (regex is anchored).
