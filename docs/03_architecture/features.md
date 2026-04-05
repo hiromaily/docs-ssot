@@ -1,0 +1,49 @@
+## Feature Status
+
+This document is the single source of truth for the feature roadmap and implementation status of `docs-ssot`.
+Other architecture documents should reference this file rather than duplicating status information.
+
+### Include Resolver Features
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Single file include | Implemented | `<!-- @include: path/to/file.md -->` |
+| Recursive include | Implemented | Included files may themselves contain include directives |
+| Circular include detection | Implemented | Circular references produce a build error |
+| Missing file error | Implemented | Missing included file stops the build with an error |
+| Code fence passthrough | Implemented | Include directives inside fenced code blocks are treated as literal text |
+| Directory include | Planned | Include all `.md` files in a directory (sorted order) |
+| Glob include | Planned | Include files matching a glob pattern (e.g. `*.md`) |
+| Recursive glob include | Planned | Include files matching a recursive glob (e.g. `**/*.md`) |
+| Link path rewriting | Planned | Adjust relative links in included files to match the output file location |
+| Include from URL | Planned | Fetch and include a remote Markdown file |
+
+### Generator Features
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Multiple output targets | Implemented | One `docsgen.yaml` can define many template → output pairs |
+| Template-based generation | Implemented | Templates in `template/` define output structure |
+| Deterministic output | Implemented | Same input always produces identical output |
+| Variable substitution | Planned | Allow `{{ variable }}` placeholders expanded at build time |
+| Conditional includes | Planned | Include or exclude sections based on build-time flags |
+| Front matter support | Planned | Parse and strip/merge YAML front matter from included files |
+
+### CLI and Workflow Features
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| `build` command | Implemented | Generates all output targets defined in `docsgen.yaml` |
+| Watch mode | Planned | Automatically rebuild on source file changes |
+| Dry-run mode | Planned | Preview changes without writing output files |
+| Diff / up-to-date check | Planned | Exit non-zero if generated files differ from committed versions (useful for CI) |
+| Lint / validation mode | Planned | Validate include paths, detect missing files without generating output |
+| Custom config file path | Planned | Allow specifying a non-default config file via CLI flag |
+
+### Output Format Features
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Markdown output | Implemented | Generated files are standard Markdown |
+| HTML output | Planned | Convert generated Markdown to HTML |
+| PDF output | Planned | Convert generated Markdown to PDF |
