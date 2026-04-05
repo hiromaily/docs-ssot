@@ -214,29 +214,48 @@ func normalizeText(s string) string {
 func tokenize(s string) []string {
 	s = strings.ToLower(s)
 
-	var b strings.Builder
+	isCJK := func(r rune) bool {
+		return unicode.In(r, unicode.Han, unicode.Hiragana, unicode.Katakana)
+	}
+
+	flushNonCJK := func(buf *strings.Builder, out []string) []string {
+		for f := range strings.FieldsSeq(buf.String()) {
+			if utf8.RuneCountInString(f) > 1 {
+				out = append(out, f)
+			}
+		}
+		buf.Reset()
+		return out
+	}
+
+	var out []string
+	var nonCJKBuf strings.Builder
+	var cjkRun []rune
+
 	for _, r := range s {
-		switch {
-		case unicode.IsLetter(r), unicode.IsNumber(r):
-			b.WriteRune(r)
-		case unicode.In(r, unicode.Hiragana, unicode.Katakana, unicode.Han):
-			b.WriteRune(r)
-		default:
-			b.WriteRune(' ')
+		if isCJK(r) {
+			out = flushNonCJK(&nonCJKBuf, out)
+			cjkRun = append(cjkRun, r)
+		} else {
+			// Flush accumulated CJK run as bigrams.
+			for i := range len(cjkRun) - 1 {
+				out = append(out, string(cjkRun[i:i+2]))
+			}
+			cjkRun = cjkRun[:0]
+
+			if unicode.IsLetter(r) || unicode.IsNumber(r) {
+				nonCJKBuf.WriteRune(r)
+			} else {
+				nonCJKBuf.WriteRune(' ')
+			}
 		}
 	}
 
-	// strings.Fields handles consecutive whitespace, so no regex pass needed.
-	fields := strings.Fields(b.String())
-
-	out := make([]string, 0, len(fields))
-	for _, f := range fields {
-		if utf8.RuneCountInString(f) <= 1 {
-			continue
-		}
-		out = append(out, f)
+	// Flush remaining CJK bigrams and non-CJK tokens.
+	for i := range len(cjkRun) - 1 {
+		out = append(out, string(cjkRun[i:i+2]))
 	}
-	return out
+	return flushNonCJK(&nonCJKBuf, out)
 }
 
 // Ensure the goldmark parser interface is satisfied at compile time.

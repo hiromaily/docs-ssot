@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"fmt"
 	"io"
+	"os"
 	"slices"
 	"strings"
 )
@@ -37,7 +38,7 @@ func Run(w io.Writer, cfg Config) error {
 	for _, path := range files {
 		extracted, err := extractSectionChunks(path, cfg.MinChars, cfg.SectionLevel)
 		if err != nil {
-			_, _ = fmt.Fprintf(w, "warning: parse failed: %s: %v\n", path, err)
+			_, _ = fmt.Fprintf(os.Stderr, "warning: parse failed: %s: %v\n", path, err)
 			continue
 		}
 		chunks = append(chunks, extracted...)
