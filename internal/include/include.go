@@ -228,6 +228,8 @@ func processRecursiveGlob(pattern string, ancestors []string, absOutputPath stri
 		return "", fmt.Errorf("include error (recursive glob %s): %w", pattern, statErr)
 	}
 
+	patParts := strings.Split(filepath.ToSlash(pattern), "/")
+
 	var matchedPaths []string
 	walkErr := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -236,7 +238,8 @@ func processRecursiveGlob(pattern string, ancestors []string, absOutputPath stri
 		if d.IsDir() {
 			return nil
 		}
-		matched, matchErr := matchDoubleStarPattern(pattern, path)
+		pathParts := strings.Split(filepath.ToSlash(path), "/")
+		matched, matchErr := matchGlobParts(patParts, pathParts)
 		if matchErr != nil {
 			return fmt.Errorf("include error (recursive glob %s): %w", pattern, matchErr)
 		}
@@ -276,14 +279,6 @@ func findGlobRoot(pattern string) string {
 		dir = parent
 	}
 	return dir
-}
-
-// matchDoubleStarPattern reports whether path matches a glob pattern that may contain "**".
-// "**" matches zero or more path segments. Single-segment patterns are matched via filepath.Match.
-func matchDoubleStarPattern(pattern, path string) (bool, error) {
-	patParts := strings.Split(filepath.ToSlash(pattern), "/")
-	pathParts := strings.Split(filepath.ToSlash(path), "/")
-	return matchGlobParts(patParts, pathParts)
 }
 
 // matchGlobParts recursively matches pattern segments against path segments.
