@@ -9,6 +9,8 @@
     "SSOT",
     "docsgen",
     "VitePress",
-    "Setext"
+    "Setext",
+    "nolint",
+    "gosec"
   ]
 }

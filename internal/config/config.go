@@ -1,3 +1,4 @@
+// Package config loads the docsgen.yaml build configuration.
 package config
 
 import (

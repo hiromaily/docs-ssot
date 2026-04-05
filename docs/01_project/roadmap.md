@@ -23,9 +23,11 @@
 - Glob include (`<!-- @include: docs/*.md -->`) — include files matching a glob pattern
 - Recursive glob include (`<!-- @include: docs/**/*.md -->`) — include files matching a recursive glob; `**` matches zero or more path segments
 
-### v0.3
+### v0.3 (Ready for Release)
 
-- `validate` command — check include paths and detect missing files without generating output
+- `validate` command — dry-run over all templates; reports unresolvable includes without writing output files; exits non-zero on failure
+- `include` command — expand includes in a given file and print to stdout (debugging tool)
+- `version` command — print the build version
 - Diff / up-to-date check — exit non-zero if generated files differ from committed versions (CI use)
 - Dry-run mode — preview changes without writing output files
 - ~~Watch mode — automatically rebuild on source file changes~~
