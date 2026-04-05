@@ -31,7 +31,7 @@ func main() {
 			_, _ = fmt.Fprintln(os.Stderr, "Usage: docs-ssot include <file>")
 			os.Exit(1)
 		}
-		content, err := include.ProcessFile(os.Args[2], "")
+		content, err := include.ProcessFile(os.Args[2], os.Args[2])
 		if err != nil {
 			_, _ = fmt.Fprintln(os.Stderr, "Error:", err)
 			os.Exit(1)

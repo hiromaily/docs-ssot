@@ -50,7 +50,7 @@ func Validate(configPath string) error {
 	ok := true
 	for _, t := range cfg.Targets {
 		if _, err := include.ProcessFile(t.Input, t.Output); err != nil {
-			_, _ = fmt.Fprintln(os.Stdout, "ERROR:", err)
+			_, _ = fmt.Fprintln(os.Stderr, "ERROR:", err)
 			ok = false
 		}
 	}
