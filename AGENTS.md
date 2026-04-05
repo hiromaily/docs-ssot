@@ -275,21 +275,18 @@ The pipeline is designed with the following goals:
 
 # Development Guide
 
-## Setup
+### Setup
 
 ```sh
-# build go files
 make build
-
-# run `docs-ssot` build
 make docs
 ```
 
-## Testing
+# Testing
 
-This document describes the testing strategy for `docs-ssot`.
+This document describes the testing strategy for docs-ssot.
 
-### Overview
+## Overview
 
 The project includes tests for the documentation generator, include resolver, and pipeline processing.
 
@@ -402,7 +399,7 @@ Tests should run in CI on every pull request.
 Typical CI steps:
 
 ```sh
-make test
+go test ./...
 docs-ssot build
 git diff --exit-code README.md
 ```
@@ -414,16 +411,15 @@ This ensures that generated files are always up to date.
 ## Recommended Test Command
 
 ```sh
-make go-test
+make test
 ```
 
 Example Makefile:
 
 ```makefile
-go-test:
+test:
 	go test ./...
 
-# not implemented yet
 test-e2e:
 	docs-ssot build
 	git diff --exit-code
@@ -456,7 +452,7 @@ Templates usually live in the `template/` directory and include documentation fi
 
 Example:
 
-```markdown
+```
 <!-- @include: docs/01_project/overview.md -->
 ```
 
@@ -466,7 +462,7 @@ A special comment directive used to include another Markdown file into a templat
 
 Format:
 
-```markdown
+```
 <!-- @include: path/to/file.md -->
 ```
 

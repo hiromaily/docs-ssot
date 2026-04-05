@@ -1,3 +1,4 @@
+// Package include resolves include directives in Markdown files.
 package include
 
 import (
@@ -10,10 +11,11 @@ import (
 	"strings"
 )
 
-var includePattern = regexp.MustCompile(`<!--\s*@include:\s*(.*?)\s*-->`)
+// includePattern matches an include directive that occupies its own line (with optional surrounding whitespace).
+var includePattern = regexp.MustCompile(`^\s*<!--\s*@include:\s*(.*?)\s*-->\s*$`)
 
 // ProcessFile processes a template file, recursively resolving all include directives.
-// Include paths are resolved relative to the current working directory.
+// Relative include paths are resolved relative to the directory of the file containing the directive.
 // Directives inside fenced code blocks are treated as literal text and not expanded.
 func ProcessFile(path string) (string, error) {
 	absPath, err := filepath.Abs(path)
@@ -34,30 +36,34 @@ func processFile(absPath string, ancestors []string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("include error (%s): %w", absPath, err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
-	chain := append(ancestors, absPath)
+	// Build a new chain slice with its own backing array so recursive calls cannot
+	// accidentally modify each other's ancestor lists via shared capacity.
+	chain := slices.Concat(ancestors, []string{absPath})
 
 	var sb strings.Builder
 	scanner := bufio.NewScanner(file)
-	inCodeFence := false
+	// Use a 1 MB buffer to handle files with long lines (e.g. large embedded diagrams).
+	scanner.Buffer(make([]byte, 1024*1024), 1024*1024)
+
+	// fenceType is "" when outside a code fence, or "```"/"~~~" when inside one.
+	// Per CommonMark: backtick fences are closed only by backticks, tilde fences only by tildes.
+	fenceType := ""
 
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		// Track fenced code blocks so include directives inside them are treated as literal text.
-		if strings.HasPrefix(line, "```") || strings.HasPrefix(line, "~~~") {
-			inCodeFence = !inCodeFence
-		}
+		// Detect fence open/close. CommonMark allows up to 3 spaces of indentation.
+		prevFenceType := fenceType
+		fenceType = nextFenceType(line, fenceType)
 
-		if !inCodeFence {
+		// Only process include directives when the line is normal text (not a fence
+		// marker and not inside a fence block).
+		if prevFenceType == "" && fenceType == "" {
 			matches := includePattern.FindStringSubmatch(line)
 			if len(matches) > 1 {
-				includePath := matches[1]
-				absInclude, err := filepath.Abs(includePath)
-				if err != nil {
-					return "", fmt.Errorf("failed to resolve include path (%s): %w", includePath, err)
-				}
+				absInclude := resolveIncludePath(absPath, matches[1])
 
 				content, err := processFile(absInclude, chain)
 				if err != nil {
@@ -76,4 +82,40 @@ func processFile(absPath string, ancestors []string) (string, error) {
 	}
 
 	return sb.String(), scanner.Err()
+}
+
+// nextFenceType returns the updated fence type after processing line.
+// Per CommonMark, a backtick fence is only closed by backticks, and a tilde fence only by tildes.
+// Up to 3 spaces of indentation are allowed on fence markers.
+func nextFenceType(line, fenceType string) string {
+	trimmed := strings.TrimLeft(line, " ")
+	if len(line)-len(trimmed) > 3 {
+		return fenceType // more than 3 spaces of indentation: not a fence marker
+	}
+	switch fenceType {
+	case "":
+		if strings.HasPrefix(trimmed, "```") {
+			return "```"
+		}
+		if strings.HasPrefix(trimmed, "~~~") {
+			return "~~~"
+		}
+	case "```":
+		if strings.HasPrefix(trimmed, "```") {
+			return ""
+		}
+	case "~~~":
+		if strings.HasPrefix(trimmed, "~~~") {
+			return ""
+		}
+	}
+	return fenceType
+}
+
+// resolveIncludePath returns the absolute path for includePath relative to the containing file.
+func resolveIncludePath(absContainingFile, includePath string) string {
+	if filepath.IsAbs(includePath) {
+		return includePath
+	}
+	return filepath.Join(filepath.Dir(absContainingFile), includePath)
 }

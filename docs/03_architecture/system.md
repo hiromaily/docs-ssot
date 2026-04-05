@@ -118,7 +118,7 @@ targets:
 
 The document generation flow works like this:
 
-<!-- @include: docs/03_architecture/diagrams/pipeline-flow.md -->
+<!-- @include: diagrams/pipeline-flow.md -->
 
 ---
 

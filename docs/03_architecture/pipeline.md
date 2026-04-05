@@ -18,7 +18,7 @@ The pipeline consists of the following stages:
 
 ### Pipeline Flow
 
-<!-- @include: docs/03_architecture/diagrams/pipeline-flow.md -->
+<!-- @include: diagrams/pipeline-flow.md -->
 
 ---
 
@@ -109,7 +109,7 @@ These files are generated files and should not be edited directly.
 
 The include resolver processes directives recursively. The following diagram shows the exact resolution algorithm:
 
-<!-- @include: docs/03_architecture/diagrams/include-resolution.md -->
+<!-- @include: diagrams/include-resolution.md -->
 
 ---
 

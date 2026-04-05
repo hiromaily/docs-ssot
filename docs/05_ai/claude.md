@@ -17,7 +17,7 @@ The generator reads template files and expands include directives like:
 
 ```
 
-<!-- @include: docs/01_project/overview.md -->
+<!-- @include: ../01_project/overview.md -->
 
 ```
 

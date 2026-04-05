@@ -18,7 +18,7 @@ Documentation is built using three main parts:
 The generator reads template files and expands include directives like:
 
 ```markdown
-<!-- @include: docs/01_project/overview.md -->
+<!-- @include: ../01_project/overview.md -->
 ```
 
 Included files may also include other files (recursive includes).

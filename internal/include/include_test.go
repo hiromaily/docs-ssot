@@ -116,3 +116,56 @@ func TestProcessFile_IncludeInsideCodeFence(t *testing.T) {
 		t.Errorf("got:\n%q\nwant:\n%q", got, want)
 	}
 }
+
+func TestProcessFile_RelativeIncludePath(t *testing.T) {
+	dir := t.TempDir()
+
+	writeFile(t, filepath.Join(dir, "sub", "child.md"), "child content\n")
+	// Use a relative path from the root file's directory
+	writeFile(t, filepath.Join(dir, "root.md"), "before\n<!-- @include: sub/child.md -->\nafter\n")
+
+	got, err := include.ProcessFile(filepath.Join(dir, "root.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	want := "before\nchild content\nafter\n"
+	if got != want {
+		t.Errorf("got:\n%q\nwant:\n%q", got, want)
+	}
+}
+
+func TestProcessFile_MixedFenceTypes(t *testing.T) {
+	dir := t.TempDir()
+
+	// A tilde fence should NOT be closed by backticks — the include inside remains literal.
+	// child.md does NOT exist; if the include were expanded it would error.
+	writeFile(t, filepath.Join(dir, "root.md"), "~~~\n<!-- @include: missing.md -->\n~~~\nafter\n")
+
+	got, err := include.ProcessFile(filepath.Join(dir, "root.md"))
+	if err != nil {
+		t.Fatalf("include inside tilde fence should not be expanded, got error: %v", err)
+	}
+
+	want := "~~~\n<!-- @include: missing.md -->\n~~~\nafter\n"
+	if got != want {
+		t.Errorf("got:\n%q\nwant:\n%q", got, want)
+	}
+}
+
+func TestProcessFile_IncludeInlineNotExpanded(t *testing.T) {
+	dir := t.TempDir()
+
+	// Directive embedded within other text should NOT be expanded (regex is anchored).
+	writeFile(t, filepath.Join(dir, "root.md"), "Note: <!-- @include: missing.md --> end\n")
+
+	got, err := include.ProcessFile(filepath.Join(dir, "root.md"))
+	if err != nil {
+		t.Fatalf("inline directive should not be expanded, got error: %v", err)
+	}
+
+	want := "Note: <!-- @include: missing.md --> end\n"
+	if got != want {
+		t.Errorf("got:\n%q\nwant:\n%q", got, want)
+	}
+}

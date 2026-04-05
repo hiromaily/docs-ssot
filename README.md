@@ -173,7 +173,7 @@ Split large documents into small reusable Markdown files and include them where 
 Example:
 
 ```md
-<!-- @include: docs/01_project/overview.md -->
+<!-- @include: ../01_project/overview.md -->
 ```
 
 This allows documentation to be modular and reusable across multiple documents.
@@ -414,13 +414,10 @@ Everything else is handled through Markdown structure and file organization.
 
 ## Development
 
-## Setup
+### Setup
 
 ```sh
-# build go files
 make build
-
-# run `docs-ssot` build
 make docs
 ```
 
@@ -428,29 +425,86 @@ make docs
 
 ## AI
 
-# Claude specific design patterns
+### AI Context
+
+This repository uses docs-ssot, a documentation single source of truth system.
+
+All documentation is written as small modular Markdown files under the `docs/` directory.
+Final documents such as README.md and CLAUDE.md are generated from template files.
+
+### How Documentation Works
+
+Documentation is built using three main parts:
+
+1. docs/ (Markdown source files)
+2. template/ (document structure)
+3. generator (include resolver and builder)
+
+The generator reads template files and expands include directives like:
+
+```
+
+<!-- @include: ../01_project/overview.md -->
+
+```
+
+Included files may also include other files (recursive includes).
+
+### Important Rules
+
+When editing documentation:
+
+- Do NOT edit README.md directly
+- Do NOT edit CLAUDE.md directly
+- Edit files under docs/ instead
+- Templates define document structure
+- docs directory contains the source of truth
+
+### Directory Roles
+
+```
+
+docs/       → documentation source (SSOT)
+template/   → document templates
+internal/   → generator implementation
+cmd/        → CLI entrypoint
+README.md   → generated output
+CLAUDE.md   → generated output for AI context
+
+```
+
+### Documentation Philosophy
+
+This project follows these principles:
+
+- Single Source of Truth
+- Modular documentation
+- Documentation as Code
+- Generated documents
+- Reusable Markdown modules
+- Template-based composition
 
 ## Reference
 
-## Commands Reference
+# Commands Reference
 
-This document describes the available CLI commands for `docs-ssot`.
+This document describes the available CLI commands for docs-ssot.
 
-### Overview
+## Overview
 
 The CLI provides commands for generating documents from templates and managing documentation sources.
 
 ---
 
-### docs build
+## docs build
 
 Generate final documents (e.g., README.md, CLAUDE.md) from templates.
 
-```sh
+```
 docs-ssot build
 ```
 
-#### What it does
+### What it does
 
 - Reads template files
 - Resolves `@include` directives
@@ -459,11 +513,11 @@ docs-ssot build
 
 ---
 
-### docs include
+## docs include
 
 Resolve include directives and print the expanded result.
 
-```sh
+```
 docs-ssot include template/README.tpl.md
 ```
 
@@ -471,15 +525,15 @@ Useful for debugging template expansion.
 
 ---
 
-### docs validate
+## docs validate
 
 Validate documentation structure.
 
-```sh
+```
 docs-ssot validate
 ```
 
-#### Validation includes
+### Validation includes
 
 - Missing include files
 - Circular includes
@@ -488,41 +542,42 @@ docs-ssot validate
 
 ---
 
-### docs clean
+## docs clean
 
 Remove generated files.
 
-```sh
+```
 docs-ssot clean
 ```
 
 Example files removed:
 
 - README.md
-- AGENTS.md
 - CLAUDE.md
 - generated docs
 
 ---
 
-### Typical Workflow
+## Typical Workflow
 
-```sh
+```
 docs-ssot validate
 docs-ssot build
 ```
 
 Or during development:
 
-```sh
+```
+
 docs-ssot include template/README.tpl.md
+
 ```
 
 ---
 
-### Recommended Makefile Shortcuts
+## Recommended Makefile Shortcuts
 
-```sh
+```
 make docs
 make docs-build
 make docs-validate
