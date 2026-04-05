@@ -86,7 +86,10 @@ func processFile(absPath string, ancestors []string, absOutputPath string) (stri
 				}
 				continue
 			}
-			sb.WriteString(rewriteLinksInDirs(line, sourceDir, outputDir) + "\n")
+			if strings.ContainsAny(line, "[!") {
+				line = rewriteLinksInDirs(line, sourceDir, outputDir)
+			}
+			sb.WriteString(line + "\n")
 		} else {
 			sb.WriteString(line + "\n")
 		}

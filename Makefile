@@ -98,6 +98,8 @@ update-git-tag:
 	@git push origin "v${new}"
 	@echo "Git tag v${new} pushed to origin"
 
+COMMIT ?= HEAD
+
 # e.g. make retag TAG=v0.1
 .PHONY: retag
 retag:
