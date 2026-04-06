@@ -38,7 +38,13 @@ Responsible for resolving include directives.
 
 This is the core component of the system.
 
-#### 3. Link Path Resolver (Planning)
+#### 3. Link Path Rewriter
+
+Responsible for rewriting relative links and image URLs in processed files.
+
+- Adjusts link paths to be correct relative to the output file location
+- Handles both Markdown links and image references
+- Ensures links work regardless of source file depth
 
 ---
 
@@ -105,7 +111,7 @@ targets:
   - input: template/README.tpl.md
     output: README.md
 
-- input: template/AGENTS.tpl.md
+  - input: template/AGENTS.tpl.md
     output: AGENTS.md
 
   - input: template/CLAUDE.tpl.md
@@ -144,8 +150,8 @@ The system is designed with the following principles:
 Instead of implementing a full template engine, the system performs only four operations:
 
 1. Load templates
-2. Expand includes
-3. resolve link path
+2. Expand includes (with heading level adjustment)
+3. Rewrite relative link paths
 4. Write documents
 
 Everything else is handled through Markdown structure and file organization.

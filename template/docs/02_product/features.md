@@ -48,13 +48,18 @@ This prevents:
 - inconsistent information
 - outdated README sections
 
-### 5. Recursive Includes (Planning)
+### 5. Recursive Includes
 
 Included Markdown files can themselves include other files, allowing hierarchical document composition.
 
 This enables building large documents from small components.
 
-### 6. Docs as Code Workflow
+### 6. Duplicate Detection
+
+The `check` command scans source Markdown files and detects near-duplicate sections using TF-IDF cosine similarity.
+This helps identify SSOT violations where the same information has been written in multiple places.
+
+### 7. Docs as Code Workflow
 
 Documentation becomes a build artifact:
 

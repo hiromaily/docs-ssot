@@ -131,7 +131,7 @@ The system expands includes recursively until no include directives remain.
 
 The algorithm used for recursive resolution:
 
-<!-- @include: docs/03_architecture/diagrams/include-resolution.md -->
+<!-- @include: diagrams/include-resolution.md -->
 
 ---
 
@@ -161,7 +161,7 @@ Includes must not fail silently.
 
 ### Path Rules
 
-- Paths are relative to the project root
+- Paths are resolved relative to the file containing the directive
 - Only `.md` files can be included
 - Include directives must be on their own line
 - Includes are expanded before document generation

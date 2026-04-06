@@ -99,67 +99,59 @@ This ensures:
 - Scalable documentation structure
 - AI-friendly documentation organization
 
-## Vision
-
-Documentation should be treated as a system, not as static files.
-
-In many projects, documentation becomes fragmented, duplicated, and inconsistent.
-The same information is rewritten across README files, design documents, and internal notes.
-
-`docs-ssot` aims to solve this by applying the **Single Source of Truth (SSOT)** principle to Markdown documentation.
-
-### Core Ideas
-
-- **Write once, reuse everywhere**
-  - Each piece of information exists in exactly one place
-  - Reused via includes across multiple documents
-
-- **Modular documentation**
-  - Split documentation into small, composable Markdown files
-  - Treat each file as a reusable unit
-
-- **Docs as Code**
-  - Documentation follows the same principles as software:
-    - modularity
-    - composition
-    - build pipelines
-
-- **Generated outputs**
-  - Final documents (README, AGENTS.md, CLAUDE.md, etc.) are build artifacts
-  - Never edited manually
-
-### Why this matters
-
-Without SSOT:
-
-- Documentation diverges
-- Updates are error-prone
-- Context is duplicated and inconsistent
-
-With `docs-ssot`:
-
-- Documentation stays consistent
-- Changes propagate automatically
-- Different audiences (users, developers, AI) get tailored outputs from the same source
-
-### Goal
-
-To build a lightweight documentation system where:
-
-- Markdown is the source of truth
-- Templates define structure
-- A generator composes final documents
-
-Turning documentation into a **maintainable, scalable system**.
-
 ---
 
-## Product
+## Setup
 
-## Concept
+### Prerequisites
 
-Instead of maintaining large README files, this project splits documents into
-small reusable markdown modules and composes them into final documents.
+- Go 1.26+
+- make
+
+### Install
+
+```sh
+go install github.com/hiromaily/docs-ssot/cmd/docs-ssot@latest
+```
+
+Or build from source:
+
+```sh
+git clone https://github.com/hiromaily/docs-ssot.git
+cd docs-ssot
+make build
+```
+
+The binary is output to `bin/docs-ssot`.
+
+### Quick Start
+
+1. Create source Markdown files under `template/docs/`
+2. Create template files under `template/` (e.g., `README.tpl.md`)
+3. Define build targets in `docsgen.yaml`:
+
+```yaml
+targets:
+  - input: template/README.tpl.md
+    output: README.md
+```
+
+4. Generate documents:
+
+```sh
+docs-ssot build
+```
+
+### Development Setup
+
+```sh
+make install-dev   # Install lefthook and golangci-lint
+make build         # Build the binary
+make docs          # Generate documentation
+make test          # Run tests
+```
+
+---
 
 ## Features
 
@@ -211,13 +203,18 @@ This prevents:
 - inconsistent information
 - outdated README sections
 
-### 5. Recursive Includes (Planning)
+### 5. Recursive Includes
 
 Included Markdown files can themselves include other files, allowing hierarchical document composition.
 
 This enables building large documents from small components.
 
-### 6. Docs as Code Workflow
+### 6. Duplicate Detection
+
+The `check` command scans source Markdown files and detects near-duplicate sections using TF-IDF cosine similarity.
+This helps identify SSOT violations where the same information has been written in multiple places.
+
+### 7. Docs as Code Workflow
 
 Documentation becomes a build artifact:
 
@@ -234,7 +231,7 @@ This makes documentation maintainable, scalable, and version-controlled like cod
 
 ## Architecture
 
-## Architecture Overview
+### Architecture Overview
 
 The system consists of:
 
@@ -242,7 +239,7 @@ The system consists of:
 - Markdown modules
 - Template files
 
-## System Architecture
+### System Architecture
 
 `docs-ssot` is composed of three main layers:
 
@@ -254,11 +251,11 @@ The generator reads template files, resolves include directives, and produces fi
 
 ---
 
-### `docs-ssot` CLI Core Components
+#### `docs-ssot` CLI Core Components
 
 Internally, the generator is intentionally simple and built around three core components:
 
-#### 1. Template Loader
+##### 1. Template Loader
 
 Responsible for loading template files.
 
@@ -269,7 +266,7 @@ Templates define the structure of generated documents.
 
 ---
 
-#### 2. Include Resolver
+##### 2. Include Resolver
 
 Responsible for resolving include directives.
 
@@ -282,11 +279,17 @@ Responsible for resolving include directives.
 
 This is the core component of the system.
 
-#### 3. Link Path Resolver (Planning)
+##### 3. Link Path Rewriter
+
+Responsible for rewriting relative links and image URLs in processed files.
+
+- Adjusts link paths to be correct relative to the output file location
+- Handles both Markdown links and image references
+- Ensures links work regardless of source file depth
 
 ---
 
-#### 4. Document Builder
+##### 4. Document Builder
 
 Responsible for generating final output files.
 
@@ -297,9 +300,9 @@ Responsible for generating final output files.
 
 ---
 
-### Components
+#### Components
 
-### docs/
+#### docs/
 
 The docs directory contains the Single Source of Truth Markdown files.
 Each file represents a small, reusable piece of documentation.
@@ -313,7 +316,7 @@ These files should:
 
 ---
 
-### template/
+#### template/
 
 Template files define document structure.
 
@@ -332,7 +335,7 @@ Templates decide:
 
 ---
 
-### Generator (docs-ssot)
+#### Generator (docs-ssot)
 
 The generator is a CLI tool that orchestrates the core components:
 
@@ -340,7 +343,7 @@ The generator is a CLI tool that orchestrates the core components:
 2. Resolve includes (Include Resolver)
 3. Write output (Document Builder)
 
-### `docsgen.yaml` Config file
+#### `docsgen.yaml` Config file
 
 Configuration for input file and output file.
 
@@ -349,7 +352,7 @@ targets:
   - input: template/README.tpl.md
     output: README.md
 
-- input: template/AGENTS.tpl.md
+  - input: template/AGENTS.tpl.md
     output: AGENTS.md
 
   - input: template/CLAUDE.tpl.md
@@ -358,7 +361,7 @@ targets:
 
 ---
 
-## Document Build Flow
+### Document Build Flow
 
 The document generation flow works like this:
 
@@ -381,7 +384,7 @@ flowchart TD
 
 ---
 
-### Design Principles
+#### Design Principles
 
 The system is designed with the following principles:
 
@@ -396,94 +399,20 @@ The system is designed with the following principles:
 
 ---
 
-### Design Philosophy
+#### Design Philosophy
 
 `docs-ssot` is intentionally minimal.
 
 Instead of implementing a full template engine, the system performs only four operations:
 
 1. Load templates
-2. Expand includes
-3. resolve link path
+2. Expand includes (with heading level adjustment)
+3. Rewrite relative link paths
 4. Write documents
 
 Everything else is handled through Markdown structure and file organization.
 
 ---
-
-## Development
-
-### Setup
-
-```sh
-make build
-make docs
-```
-
----
-
-## AI
-
-### AI Context
-
-This repository uses docs-ssot, a documentation single source of truth system.
-
-All documentation is written as small modular Markdown files under the `docs/` directory.
-Final documents such as README.md and CLAUDE.md are generated from template files.
-
-### How Documentation Works
-
-Documentation is built using three main parts:
-
-1. docs/ (Markdown source files)
-2. template/ (document structure)
-3. generator (include resolver and builder)
-
-The generator reads template files and expands include directives like:
-
-```
-
-<!-- @include: ../01_project/overview.md -->
-
-```
-
-Included files may also include other files (recursive includes).
-
-### Important Rules
-
-When editing documentation:
-
-- Do NOT edit README.md directly
-- Do NOT edit CLAUDE.md directly
-- Edit files under docs/ instead
-- Templates define document structure
-- docs directory contains the source of truth
-
-### Directory Roles
-
-```
-
-docs/       → documentation source (SSOT)
-template/   → document templates
-internal/   → generator implementation
-cmd/        → CLI entrypoint
-README.md   → generated output
-CLAUDE.md   → generated output for AI context
-
-```
-
-### Documentation Philosophy
-
-This project follows these principles:
-
-- Single Source of Truth
-- Modular documentation
-- Documentation as Code
-- Generated documents
-- Reusable Markdown modules
-- Template-based composition
-
-## Reference
 
 ## Commands Reference
 
@@ -671,3 +600,393 @@ make docs-check                               # check docs for SSOT violations (
 make docs-check ARGS="--threshold 0.75"       # check with custom flags
 make docs-version                             # print the build version
 ```
+
+---
+
+## Include Specification
+
+This document defines the include directive specification used by `docs-ssot`.
+
+### Overview
+
+The include directive allows Markdown files and templates to include other Markdown files.
+Includes are expanded recursively to build final generated documents.
+
+---
+
+### Include Directive Syntax
+
+```
+<!-- @include: path [level=<delta>] -->
+```
+
+Example:
+
+```
+<!-- @include: docs/01_project/overview.md -->
+```
+
+The directive must be written inside an HTML comment.
+
+An optional `level` parameter adjusts the heading depth of the included content:
+
+```
+<!-- @include: docs/03_architecture/overview.md level=+1 -->
+<!-- @include: docs/03_architecture/overview.md level=-1 -->
+<!-- @include: docs/03_architecture/overview.md level=+2 -->
+```
+
+| Parameter | Meaning |
+|-----------|---------|
+| `level=+1` | Deepen all headings by one level (`##` → `###`) |
+| `level=+2` | Deepen all headings by two levels (`##` → `####`) |
+| `level=-1` | Shallow all headings by one level (`###` → `##`) |
+| `level=0` | No change (same as omitting the parameter) |
+
+Heading levels are clamped to the valid range `[1, 6]`.
+Headings inside fenced code blocks in the included file are not adjusted.
+
+---
+
+### Supported Include Paths
+
+The include directive supports multiple path formats.
+
+#### 1. Single File Include
+
+```
+<!-- @include: docs/01_project/overview.md -->
+```
+
+Includes a single Markdown file.
+
+#### 2. Directory Include
+
+```
+<!-- @include: docs/02_product/ -->
+```
+
+Includes all `.md` files in the directory (non-recursive).
+Files are included in sorted filename order.
+The trailing `/` in the path is required to trigger directory mode.
+Subdirectories are skipped; only `.md` files directly in the specified directory are included.
+
+#### 3. Glob Include
+
+```
+<!-- @include: docs/02_product/*.md -->
+```
+
+Includes all files matching the glob pattern.
+Files are included in sorted (lexical) order.
+Glob metacharacters (`*`, `?`, `[`) in the path trigger glob mode.
+If the pattern matches no files, no content is inserted (no error).
+Subdirectories matched by the pattern are skipped; only regular files are included.
+
+---
+
+#### 4. Recursive Glob Include
+
+```
+<!-- @include: docs/**/*.md -->
+```
+
+Includes all files matching the recursive glob pattern.
+`**` matches zero or more path segments, so `docs/**/*.md` matches both `docs/file.md` and `docs/sub/deep/file.md`.
+Files are included in sorted (lexical) path order.
+If the root directory does not exist or no files match, no content is inserted (no error).
+Directories are skipped; only regular files are included.
+
+---
+
+### Include Order
+
+When including multiple files (directory or glob), files are included in alphabetical order.
+
+Recommended file naming:
+
+```
+01_overview.md
+02_features.md
+03_usecases.md
+```
+
+This ensures deterministic document structure.
+
+---
+
+### Recursive Includes
+
+Included files may contain include directives themselves.
+
+Example:
+
+```
+A.md includes B.md
+B.md includes C.md
+```
+
+Final expanded document:
+
+```
+A + B + C
+```
+
+The system expands includes recursively until no include directives remain.
+
+The algorithm used for recursive resolution:
+
+```mermaid
+flowchart TD
+    A[processFile called with path] --> B{Path in ancestor chain?}
+    B -- Yes --> C[Error: circular include]
+    B -- No --> D[Open file, add to ancestors]
+    D --> E[Read next line]
+    E --> F{Code fence toggle?}
+    F -- Yes --> G[Flip inCodeFence flag]
+    G --> H[Write line as-is]
+    F -- No --> I{Include directive match\nAND not in code fence?}
+    I -- No --> H
+    I -- Yes --> J[Resolve include path]
+    J --> K[Call processFile recursively]
+    K --> L[Append expanded content]
+    L --> M{More lines?}
+    H --> M
+    M -- Yes --> E
+    M -- No --> N[Return assembled string]
+```
+
+---
+
+### Circular Include Detection
+
+Circular includes are detected and treated as errors.
+
+Example:
+
+```
+A.md includes B.md
+B.md includes C.md
+C.md includes A.md
+```
+
+This must result in an error.
+
+---
+
+### Missing File Handling
+
+If an included file does not exist, the generator must return an error and stop the build.
+
+Includes must not fail silently.
+
+---
+
+### Path Rules
+
+- Paths are resolved relative to the file containing the directive
+- Only `.md` files can be included
+- Include directives must be on their own line
+- Includes are expanded before document generation
+
+---
+
+### Summary
+
+Supported include formats:
+
+| Format | Description |
+|-------|-------------|
+| file.md | Single file |
+| dir/ | All markdown files in directory |
+| *.md | Glob include |
+| **/*.md | Recursive glob include |
+
+Rules:
+
+- Includes are expanded recursively
+- Files are included in sorted order
+- Circular includes are errors
+- Missing files are errors
+- Only Markdown files can be included
+
+---
+
+## AI Agent Configuration Landscape (April 2026)
+
+AI coding agents (Claude Code, Codex, Cursor, GitHub Copilot) each require configuration files to understand project context. These files fall into four layers:
+
+### Layer 1 — Persistent Instructions
+
+Files the agent reads every session to understand project rules and architecture.
+
+| Tool | Primary file | Scoped files |
+|------|-------------|-------------|
+| Claude Code | `CLAUDE.md` | Subdirectory `CLAUDE.md`, `.claude/CLAUDE.md`, `CLAUDE.local.md` |
+| Codex | `AGENTS.md` | Nested `AGENTS.md` per directory, `AGENTS.override.md` |
+| Cursor | `.cursor/rules/*.mdc` | Per-file via `globs` frontmatter |
+| Copilot | `.github/copilot-instructions.md` | `.github/instructions/*.instructions.md`, `AGENTS.md` |
+
+### Layer 2 — Scoped Rules
+
+Topic-specific or path-gated rules that supplement the primary instruction file.
+
+| Tool | Location | Format |
+|------|----------|--------|
+| Claude Code | `.claude/rules/*.md` | Markdown, optionally path-gated |
+| Codex | Nested `AGENTS.md` hierarchy | Markdown, directory-scoped |
+| Cursor | `.cursor/rules/*.mdc` | MDC (Markdown + YAML frontmatter) |
+| Copilot | `.github/instructions/*.instructions.md` | Markdown + `applyTo` frontmatter |
+
+### Layer 3 — Reusable Workflows (Skills / Commands)
+
+Packaged multi-step procedures the agent invokes on demand or automatically.
+
+| Tool | Skills location | Command location | Trend |
+|------|----------------|-----------------|-------|
+| Claude Code | `.claude/skills/<name>/SKILL.md` | `.claude/commands/*.md` (legacy) | Commands integrated into skills |
+| Codex | `.agents/skills/<name>/SKILL.md` | `~/.codex/prompts/*.md` (deprecated) | Custom prompts deprecated, skills preferred |
+| Cursor | `.cursor/skills/<name>/SKILL.md` | Slash commands | Commands migrating to skills |
+| Copilot | `.github/skills/<name>/SKILL.md` | `.github/prompts/*.prompt.md` | Prompt files for explicit invocation |
+
+### Layer 4 — Agent Execution Settings
+
+Runtime configuration controlling model selection, permissions, subagents, and external connections.
+
+| Tool | Settings file | Subagents | Hooks |
+|------|--------------|-----------|-------|
+| Claude Code | `.claude/settings.json` | `.claude/agents/*.md` | Hooks in `settings.json` |
+| Codex | `.codex/config.toml` | `.codex/agents/*.toml` | `.codex/hooks.json` |
+| Cursor | `.cursor/cli.json` | `.cursor/agents/*.md` | — |
+| Copilot | VS Code / GitHub settings | `.github/agents/*.agent.md` | — |
+
+---
+
+### Key Trends
+
+1. **`AGENTS.md` is the de facto cross-tool standard** — supported by Claude, Codex, Cursor, and Copilot
+2. **Claude Code has the richest configuration** — skills, agents, commands, memory, hooks, settings
+3. **Cursor is evolving from IDE to Agent-first** — rules and commands are migrating to skills
+4. **Copilot is GitHub-native** — deeply integrated with issues, PRs, and the `.github/` directory
+5. **Skills are converging** — all four tools support `SKILL.md`-based skills with YAML frontmatter
+6. **Commands are being deprecated or merged into skills** across all platforms
+
+---
+
+<!-- Status legend:
+- (Released): Tagged and released.
+- (Ready for Release): Implemented but not yet tagged; planned for release once all WIP items are complete.
+- No status: Planned for implementation.
+-->
+
+## Roadmap
+
+### v0.1 (Released)
+
+- Single file include directive (`<!-- @include: path -->`)
+- Recursive include resolution (included files may themselves contain include directives)
+- Circular include detection (circular references produce a build error)
+- Code fence passthrough (include directives inside fenced code blocks are treated as literal text)
+- Multiple output targets via `docsgen.yaml`
+- README, CLAUDE.md, AGENTS.md generation
+- Link path rewriting — relative links and image URLs in all processed files are rewritten to be correct relative to the output file location
+
+### v0.2 (Release)
+
+- Heading level adjustment — optional `level=±N` parameter on include directives shifts the heading depth of included content (e.g. `<!-- @include: file.md level=+1 -->`)
+- Directory include (`<!-- @include: docs/dir/ -->`) — include all `.md` files in a directory (sorted by filename)
+- Glob include (`<!-- @include: docs/*.md -->`) — include files matching a glob pattern
+- Recursive glob include (`<!-- @include: docs/**/*.md -->`) — include files matching a recursive glob; `**` matches zero or more path segments
+
+### v0.3 (Release)
+
+- `validate` command — dry-run over all templates; reports unresolvable includes without writing output files; exits non-zero on failure
+- `include` command — expand includes in a given file and print to stdout (debugging tool)
+- `version` command — print the build version
+
+### v0.4
+
+- ssot validator
+
+### v0.5
+
+- Diff / up-to-date check — exit non-zero if generated files differ from committed versions (CI use)
+- Dry-run mode — preview changes without writing output files
+- ~~Watch mode — automatically rebuild on source file changes~~
+- Variable substitution — allow `{{ variable }}` placeholders expanded at build time
+- Front matter support — parse and strip/merge YAML front matter from included files
+- Conditional includes — include or exclude sections based on build-time flags
+
+### v0.6
+
+- HTML output — convert generated Markdown to HTML
+- PDF output — convert generated Markdown to PDF
+- TOC generation — automatically insert a table of contents
+
+---
+
+## Feature Status
+
+This document is the single source of truth for the feature roadmap and implementation status of `docs-ssot`.
+Other architecture documents should reference this file rather than duplicating status information.
+
+### Include Resolver Features
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Single file include | Implemented | `<!-- @include: path/to/file.md -->` |
+| Recursive include | Implemented | Included files may themselves contain include directives |
+| Circular include detection | Implemented | Circular references produce a build error |
+| Missing file error | Implemented | Missing included file stops the build with an error |
+| Code fence passthrough | Implemented | Include directives inside fenced code blocks are treated as literal text |
+| Directory include | Implemented | Include all `.md` files in a directory (sorted by filename); trailing `/` in path triggers directory mode |
+| Glob include | Implemented | Include files matching a glob pattern (e.g. `*.md`); glob metacharacters (`*`, `?`, `[`) in path trigger glob mode |
+| Recursive glob include | Implemented | Include files matching a recursive glob (e.g. `**/*.md`); `**` matches zero or more path segments |
+| Link path rewriting | Implemented | Relative links and image URLs in all files are rewritten to be correct relative to the output file location |
+| Heading level adjustment | Implemented | Optional `level=±N` parameter on include directives shifts heading depth of included content |
+| Include from URL | Planned | Fetch and include a remote Markdown file |
+
+### Generator Features
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Multiple output targets | Implemented | One `docsgen.yaml` can define many template → output pairs |
+| Template-based generation | Implemented | Templates in `template/` define output structure |
+| Deterministic output | Implemented | Same input always produces identical output |
+| Variable substitution | Planned | Allow `{{ variable }}` placeholders expanded at build time |
+| Conditional includes | Planned | Include or exclude sections based on build-time flags |
+| Front matter support | Planned | Parse and strip/merge YAML front matter from included files |
+
+### CLI and Workflow Features
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| `build` command | Implemented | Generates all output targets defined in `docsgen.yaml` |
+| `check` command | Implemented | Scans docs for near-duplicate sections using TF-IDF cosine similarity; reports potential SSOT violations |
+| `include` command | Implemented | Expands includes in a file and prints the result to stdout; useful for debugging |
+| `validate` command | Implemented | Dry-run over all templates; reports unresolvable includes without writing any output files |
+| `version` command | Implemented | Prints the build version |
+| Watch mode | Planned | Automatically rebuild on source file changes |
+| Dry-run mode | Planned | Preview changes without writing output files |
+| Diff / up-to-date check | Planned | Exit non-zero if generated files differ from committed versions (useful for CI) |
+| Custom config file path | Planned | Allow specifying a non-default config file via CLI flag |
+
+### Output Header Features
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Auto-generated file header | Planned | Prepend a `<!-- ⚠️ AUTO-GENERATED FILE — DO NOT EDIT -->` banner to all generated files |
+
+### Output Format Features
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Markdown output | Implemented | Generated files are standard Markdown |
+| HTML output | Planned | Convert generated Markdown to HTML |
+| PDF output | Planned | Convert generated Markdown to PDF |
+
+---
+
+## License
+
+MIT

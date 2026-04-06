@@ -1,8 +1,8 @@
-# Testing
+## Testing
 
 This document describes the testing strategy for docs-ssot.
 
-## Overview
+### Overview
 
 The project includes tests for the documentation generator, include resolver, and pipeline processing.
 
@@ -10,7 +10,7 @@ Testing ensures that documentation generation is deterministic, correct, and saf
 
 ---
 
-## What We Test
+### What We Test
 
 The following components should be tested:
 
@@ -37,7 +37,7 @@ The following components should be tested:
 
 ---
 
-## Test Types
+### Test Types
 
 ### Unit Tests
 
@@ -75,7 +75,7 @@ Test steps:
 
 ---
 
-## Example Test Cases
+### Example Test Cases
 
 ### Include Resolver
 
@@ -95,7 +95,7 @@ Test steps:
 
 ---
 
-## Deterministic Output
+### Deterministic Output
 
 Generated documents must always be deterministic:
 
@@ -108,7 +108,7 @@ This is important for Git diffs and CI.
 
 ---
 
-## CI Testing
+### CI Testing
 
 Tests should run in CI on every pull request.
 
@@ -124,7 +124,7 @@ This ensures that generated files are always up to date.
 
 ---
 
-## Recommended Test Command
+### Recommended Test Command
 
 ```sh
 make test

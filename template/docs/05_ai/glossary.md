@@ -1,8 +1,8 @@
-# Glossary
+## Glossary
 
 This glossary defines important terms used in this project so that AI agents and contributors use consistent terminology.
 
-## Documentation System Terms
+### Documentation System Terms
 
 ### SSOT (Single Source of Truth)
 
@@ -108,7 +108,7 @@ The system must detect and prevent circular includes.
 
 ---
 
-## Project Structure Terms
+### Project Structure Terms
 
 ### Modular Documentation
 
@@ -131,7 +131,7 @@ Instead, templates define structure and content is included from source files.
 
 ---
 
-## AI Documentation Terms
+### AI Documentation Terms
 
 ### CLAUDE.md
 

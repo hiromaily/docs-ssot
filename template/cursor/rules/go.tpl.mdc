@@ -1,0 +1,7 @@
+---
+description: Go language conventions, error handling, and toolchain rules
+globs:
+  - "**/*.go"
+---
+
+<!-- @include: ../../docs/07_rules/go.md -->
