@@ -1,3 +1,6 @@
+index:
+  output: template/INDEX.md
+
 targets:
   # ── Documents ──────────────────────────────────────────────
   - input: template/pages/README.tpl.md

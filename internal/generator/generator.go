@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/hiromaily/docs-ssot/internal/config"
+	"github.com/hiromaily/docs-ssot/internal/index"
 	"github.com/hiromaily/docs-ssot/internal/processor"
 )
 
@@ -30,6 +31,7 @@ func Build(configPath string) error {
 		}
 
 		if dir := filepath.Dir(t.Output); dir != "." {
+			//nolint:gosec // generated documentation directory
 			if err := os.MkdirAll(dir, 0o755); err != nil {
 				return fmt.Errorf("failed to create output directory %s: %w", dir, err)
 			}
@@ -41,7 +43,37 @@ func Build(configPath string) error {
 		}
 	}
 
+	// Generate INDEX.md if configured
+	if cfg.Index.Output != "" {
+		if err := generateIndex(cfg); err != nil {
+			return err
+		}
+	}
+
 	return nil
+}
+
+// generateIndex generates the INDEX.md file from the template directory.
+func generateIndex(cfg *config.Config) error {
+	templateDir := index.DetectTemplateDir(cfg)
+	data, err := index.Generate(templateDir, cfg)
+	if err != nil {
+		return fmt.Errorf("index generation: %w", err)
+	}
+
+	content := index.Render(data)
+
+	_, _ = fmt.Fprintln(os.Stdout, "Generating:", cfg.Index.Output)
+
+	if dir := filepath.Dir(cfg.Index.Output); dir != "." {
+		//nolint:gosec // generated documentation directory
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			return fmt.Errorf("failed to create index output directory %s: %w", dir, err)
+		}
+	}
+
+	//nolint:gosec // generated index file is intended to be world-readable
+	return os.WriteFile(cfg.Index.Output, []byte(content), 0o644)
 }
 
 // Validate performs a dry run over all templates in the given config file, checking that all

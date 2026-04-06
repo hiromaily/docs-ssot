@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/hiromaily/docs-ssot/internal/mdutil"
 )
 
 // linkPattern matches Markdown inline links and images: [text](url) and ![alt](url).
@@ -44,7 +46,7 @@ func (l LinkTransformer) Transform(content string) (string, error) {
 	for scanner.Scan() {
 		line := scanner.Text()
 		prevFenceType := fenceType
-		fenceType = nextFenceType(line, fenceType)
+		fenceType = mdutil.NextFenceType(line, fenceType)
 		if prevFenceType == "" && fenceType == "" && strings.ContainsAny(line, "[!") {
 			line = rewriteLinksInLine(line, l.SourceDir, l.OutputDir)
 		}

@@ -12,8 +12,13 @@ type Target struct {
 	Output string `yaml:"output"`
 }
 
+type Index struct {
+	Output string `yaml:"output"`
+}
+
 type Config struct {
 	Targets []Target `yaml:"targets"`
+	Index   Index    `yaml:"index"`
 }
 
 func Load(path string) (*Config, error) {

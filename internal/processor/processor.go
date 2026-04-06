@@ -12,8 +12,9 @@ import (
 	"path/filepath"
 	"regexp"
 	"slices"
-	"strconv"
 	"strings"
+
+	"github.com/hiromaily/docs-ssot/internal/mdutil"
 )
 
 // includePattern matches an include directive that occupies its own line (with optional surrounding whitespace).
@@ -90,7 +91,7 @@ func processFile(absPath string, ancestors []string, absOutputPath string) (stri
 
 		// Detect fence open/close. CommonMark allows up to 3 spaces of indentation.
 		prevFenceType := fenceType
-		fenceType = nextFenceType(line, fenceType)
+		fenceType = mdutil.NextFenceType(line, fenceType)
 
 		// Only process include directives when the line is normal text
 		// (not a fence marker and not inside a fence block).
@@ -102,7 +103,7 @@ func processFile(absPath string, ancestors []string, absOutputPath string) (stri
 					return "", err
 				}
 
-				includePath, levelDelta := parseIncludeArgs(matches[1])
+				includePath, levelDelta := mdutil.ParseIncludeArgs(matches[1])
 				content, includeErr := resolveInclude(absPath, includePath, levelDelta, chain, absOutputPath)
 				if includeErr != nil {
 					return "", includeErr
@@ -128,7 +129,7 @@ func processFile(absPath string, ancestors []string, absOutputPath string) (stri
 // resolveInclude dispatches an include directive to the appropriate handler based on the path,
 // applies optional heading-level adjustment, and returns the assembled content.
 func resolveInclude(absContainingFile, includePath string, levelDelta int, chain []string, absOutputPath string) (string, error) {
-	absInclude := resolveIncludePath(absContainingFile, includePath)
+	absInclude := mdutil.ResolveIncludePath(absContainingFile, includePath)
 
 	var (
 		content string
@@ -156,71 +157,6 @@ func resolveInclude(absContainingFile, includePath string, levelDelta int, chain
 	}
 
 	return content, nil
-}
-
-// nextFenceType returns the updated fence type after processing line.
-// fenceType is "" when outside a fence, or the opening fence string (e.g. "```", "~~~~") when inside.
-// Per CommonMark:
-//   - A backtick fence is only closed by backticks; a tilde fence only by tildes.
-//   - A closing fence must have at least as many fence characters as the opening fence.
-//   - A closing fence must contain only fence characters and optional trailing spaces.
-//   - Up to 3 spaces of indentation are allowed on fence markers.
-func nextFenceType(line, fenceType string) string {
-	trimmed := strings.TrimLeft(line, " ")
-	if len(line)-len(trimmed) > 3 {
-		return fenceType // more than 3 spaces of indentation: not a fence marker
-	}
-	if fenceType == "" {
-		// Opening fence: starts with ``` or ~~~
-		if strings.HasPrefix(trimmed, "```") || strings.HasPrefix(trimmed, "~~~") {
-			char := trimmed[0]
-			i := 0
-			for i < len(trimmed) && trimmed[i] == char {
-				i++
-			}
-			return trimmed[:i] // store the exact opening fence (length matters for closing)
-		}
-	} else {
-		// Closing fence: same character type, at least as many chars, trailing spaces only
-		char := fenceType[0]
-		i := 0
-		for i < len(trimmed) && trimmed[i] == char {
-			i++
-		}
-		if i >= len(fenceType) && strings.TrimRight(trimmed[i:], " ") == "" {
-			return ""
-		}
-	}
-	return fenceType
-}
-
-// parseIncludeArgs parses the argument string captured from an include directive.
-// The expected form is: <path> [level=<delta>]
-// The path may contain spaces; parameters are identified by trailing "level=±N" tokens.
-// Returns the file path and optional level delta (0 if absent or unparseable).
-func parseIncludeArgs(args string) (string, int) {
-	args = strings.TrimSpace(args)
-	if args == "" {
-		return "", 0
-	}
-	var level int
-	// Scan from the end: if the last space-separated token is a known parameter, consume it.
-	if idx := strings.LastIndex(args, " level="); idx != -1 {
-		n, err := strconv.Atoi(args[idx+len(" level="):])
-		if err == nil {
-			level = n
-			args = strings.TrimSpace(args[:idx])
-		}
-	}
-	return args, level
-}
-
-// resolveIncludePath returns the absolute path for includePath relative to the containing file.
-func resolveIncludePath(absContainingFile, includePath string) string {
-	if filepath.IsAbs(includePath) {
-		return includePath
-	}
-	return filepath.Join(filepath.Dir(absContainingFile), includePath)
 }
 
 // processGlob includes all files matched by the glob pattern (sorted lexically) by processing each in order.
@@ -255,7 +191,7 @@ func processGlob(pattern string, ancestors []string, absOutputPath string) (stri
 // Files are included in lexical path order. No error is returned when the root directory does not exist
 // or no files match the pattern.
 func processRecursiveGlob(pattern string, ancestors []string, absOutputPath string) (string, error) {
-	root := findGlobRoot(pattern)
+	root := mdutil.FindGlobRoot(pattern)
 
 	if _, statErr := os.Stat(root); statErr != nil {
 		if errors.Is(statErr, os.ErrNotExist) {
@@ -275,7 +211,7 @@ func processRecursiveGlob(pattern string, ancestors []string, absOutputPath stri
 			return nil
 		}
 		pathParts := strings.Split(filepath.ToSlash(path), "/")
-		matched, matchErr := matchGlobParts(patParts, pathParts)
+		matched, matchErr := mdutil.MatchGlobParts(patParts, pathParts)
 		if matchErr != nil {
 			return fmt.Errorf("include error (recursive glob %s): %w", pattern, matchErr)
 		}
@@ -302,50 +238,6 @@ func processRecursiveGlob(pattern string, ancestors []string, absOutputPath stri
 		}
 	}
 	return sb.String(), nil
-}
-
-// findGlobRoot returns the deepest ancestor directory of pattern that contains no glob metacharacters.
-func findGlobRoot(pattern string) string {
-	dir := filepath.Dir(pattern)
-	for strings.ContainsAny(dir, "*?[") {
-		parent := filepath.Dir(dir)
-		if parent == dir {
-			return "."
-		}
-		dir = parent
-	}
-	return dir
-}
-
-// matchGlobParts recursively matches pattern segments against path segments.
-// A "**" segment matches zero or more consecutive path segments.
-func matchGlobParts(pat, path []string) (bool, error) {
-	for len(pat) > 0 {
-		if pat[0] == "**" {
-			if len(pat) == 1 {
-				return true, nil // ** at end matches any remaining path
-			}
-			// Try consuming zero path segments (skip **)
-			if ok, err := matchGlobParts(pat[1:], path); err != nil || ok {
-				return ok, err
-			}
-			// Try consuming one path segment and retrying with the same **
-			if len(path) == 0 {
-				return false, nil
-			}
-			return matchGlobParts(pat, path[1:])
-		}
-		if len(path) == 0 {
-			return false, nil
-		}
-		matched, err := filepath.Match(pat[0], path[0])
-		if err != nil || !matched {
-			return false, err
-		}
-		pat = pat[1:]
-		path = path[1:]
-	}
-	return len(path) == 0, nil
 }
 
 // processDirectory includes all .md files in absDir (sorted by filename) by processing each in order.
