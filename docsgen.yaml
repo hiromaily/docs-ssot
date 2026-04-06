@@ -1,74 +1,78 @@
 targets:
   # ── Documents ──────────────────────────────────────────────
-  - input: template/README.tpl.md
+  - input: template/pages/README.tpl.md
     output: README.md
 
-  - input: template/AGENTS.tpl.md
+  - input: template/pages/AGENTS.tpl.md
     output: AGENTS.md
 
-  - input: template/CLAUDE.tpl.md
+  - input: template/pages/CLAUDE.tpl.md
     output: CLAUDE.md
 
   # ── Claude Code: rules ─────────────────────────────────────
-  - input: template/claude/rules/general.tpl.md
+  - input: template/ai-agents/claude/rules/general.tpl.md
     output: .claude/rules/general.md
 
-  - input: template/claude/rules/docs.tpl.md
+  - input: template/ai-agents/claude/rules/docs.tpl.md
     output: .claude/rules/docs.md
 
-  - input: template/claude/rules/git.tpl.md
+  - input: template/ai-agents/claude/rules/git.tpl.md
     output: .claude/rules/git.md
 
-  - input: template/claude/rules/go.tpl.md
+  - input: template/ai-agents/claude/rules/go.tpl.md
     output: .claude/rules/go.md
 
-  - input: template/claude/rules/go-test.tpl.md
+  - input: template/ai-agents/claude/rules/go-test.tpl.md
     output: .claude/rules/go-test.md
 
   # ── Claude Code: commands ──────────────────────────────────
-  - input: template/claude/commands/fix-pr-reviews.tpl.md
+  - input: template/ai-agents/claude/commands/fix-pr-reviews.tpl.md
     output: .claude/commands/fix-pr-reviews.md
 
   # ── Cursor: rules ──────────────────────────────────────────
-  - input: template/cursor/rules/general.tpl.mdc
+  - input: template/ai-agents/cursor/rules/general.tpl.mdc
     output: .cursor/rules/general.mdc
 
-  - input: template/cursor/rules/docs.tpl.mdc
+  - input: template/ai-agents/cursor/rules/docs.tpl.mdc
     output: .cursor/rules/docs.mdc
 
-  - input: template/cursor/rules/git.tpl.mdc
+  - input: template/ai-agents/cursor/rules/git.tpl.mdc
     output: .cursor/rules/git.mdc
 
-  - input: template/cursor/rules/go.tpl.mdc
+  - input: template/ai-agents/cursor/rules/go.tpl.mdc
     output: .cursor/rules/go.mdc
 
-  - input: template/cursor/rules/go-test.tpl.mdc
+  - input: template/ai-agents/cursor/rules/go-test.tpl.mdc
     output: .cursor/rules/go-test.mdc
 
   # ── Cursor: skills ─────────────────────────────────────────
-  - input: template/cursor/skills/fix-pr-reviews/SKILL.tpl.md
+  - input: template/ai-agents/cursor/skills/fix-pr-reviews/SKILL.tpl.md
     output: .cursor/skills/fix-pr-reviews/SKILL.md
 
+  # ── Codex: AGENTS.md (with rules) ────────────────────────────
+  - input: template/ai-agents/codex/AGENTS.tpl.md
+    output: AGENTS-codex.md
+
   # ── Codex: skills ──────────────────────────────────────────
-  - input: template/codex/skills/fix-pr-reviews/SKILL.tpl.md
+  - input: template/ai-agents/codex/skills/fix-pr-reviews/SKILL.tpl.md
     output: .agents/skills/fix-pr-reviews/SKILL.md
 
   # ── Copilot: instructions ──────────────────────────────────
-  - input: template/copilot/instructions/general.tpl.md
+  - input: template/ai-agents/copilot/instructions/general.tpl.md
     output: .github/instructions/general.instructions.md
 
-  - input: template/copilot/instructions/docs.tpl.md
+  - input: template/ai-agents/copilot/instructions/docs.tpl.md
     output: .github/instructions/docs.instructions.md
 
-  - input: template/copilot/instructions/git.tpl.md
+  - input: template/ai-agents/copilot/instructions/git.tpl.md
     output: .github/instructions/git.instructions.md
 
-  - input: template/copilot/instructions/go.tpl.md
+  - input: template/ai-agents/copilot/instructions/go.tpl.md
     output: .github/instructions/go.instructions.md
 
-  - input: template/copilot/instructions/go-test.tpl.md
+  - input: template/ai-agents/copilot/instructions/go-test.tpl.md
     output: .github/instructions/go-test.instructions.md
 
   # ── Copilot: skills ────────────────────────────────────────
-  - input: template/copilot/skills/fix-pr-reviews/SKILL.tpl.md
+  - input: template/ai-agents/copilot/skills/fix-pr-reviews/SKILL.tpl.md
     output: .github/skills/fix-pr-reviews/SKILL.md

@@ -1,0 +1,6 @@
+---
+description: Git branch, commit, and merge conventions
+alwaysApply: true
+---
+
+<!-- @include: ../../../docs/rules/git.md -->

@@ -1,7 +1,0 @@
----
-description: Go test conventions — parallelism, table-driven tests, assertions
-globs:
-  - "**/*_test.go"
----
-
-<!-- @include: ../../docs/07_rules/go-test.md -->
