@@ -1,58 +1,74 @@
-### AI Context
+## Claude Code
 
-This repository uses docs-ssot, a documentation single source of truth system.
+Claude Code has the most comprehensive configuration system among AI coding agents.
 
-All documentation is written as small modular Markdown files under the `docs/` directory.
-Final documents such as README.md and CLAUDE.md are generated from template files.
+### File Overview
 
-### How Documentation Works
+| Category | File | Scope |
+|----------|------|-------|
+| Instructions | `CLAUDE.md` | Project-wide context and rules |
+| Instructions | `CLAUDE.local.md` | Personal overrides (gitignored) |
+| Instructions | `.claude/CLAUDE.md` | Alternative project instructions |
+| Rules | `.claude/rules/*.md` | Topic-scoped or path-gated rules |
+| Rules | `~/.claude/rules/*.md` | User-level global rules |
+| Skills | `.claude/skills/<name>/SKILL.md` | Reusable workflows |
+| Skills | `~/.claude/skills/<name>/SKILL.md` | User-level global skills |
+| Commands | `.claude/commands/*.md` | Legacy custom commands (integrated into skills) |
+| Subagents | `.claude/agents/*.md` | Project-scoped custom subagents |
+| Subagents | `~/.claude/agents/*.md` | User-level custom subagents |
+| Settings | `.claude/settings.json` | Permissions, hooks, MCP servers |
+| Settings | `.claude/settings.local.json` | Personal settings overrides |
+| Settings | `~/.claude/settings.json` | User-level global settings |
 
-Documentation is built using three main parts:
+### Instruction Hierarchy
 
-1. docs/ (Markdown source files)
-2. template/ (document structure)
-3. generator (include resolver and builder)
+Claude Code merges instructions from multiple scopes (global > project > subdirectory):
 
-The generator reads template files and expands include directives like:
+1. `~/.claude/CLAUDE.md` (user-level)
+2. `CLAUDE.md` (project root)
+3. Subdirectory `CLAUDE.md` files (deeper = more specific)
 
+### Rules
+
+`.claude/rules/*.md` files provide topic-specific or path-gated instructions. They supplement `CLAUDE.md` without duplicating its content.
+
+Rules have no required frontmatter. They are plain Markdown files that Claude reads automatically.
+
+### Skills
+
+Skills are the primary mechanism for reusable workflows. Custom commands (`.claude/commands/*.md`) are integrated into skills — both create slash commands, but skills offer richer configuration.
+
+#### Skill Frontmatter
+
+```yaml
+---
+name: deploy                        # Optional. Creates /deploy slash command
+description: Deploy to production   # Recommended. Used for auto-invocation matching
+argument-hint: [env]                # Optional. Shown in completion UI
+disable-model-invocation: true      # Optional. Prevents auto-invocation (manual /name only)
+user-invocable: true                # Optional. Whether it appears in slash command menu
+allowed-tools:                      # Optional. Restricts available tools during skill execution
+  - Read
+  - Edit
+  - Bash(make *)
+model: opus                         # Optional. Override model for this skill
+effort: high                        # Optional. Reasoning effort level
+context: fork                       # Optional. Run in forked subagent context
+---
 ```
 
-<!-- @include: ../01_project/overview.md -->
+Claude has the most feature-rich skill frontmatter of all tools.
 
-```
+### Subagents
 
-Included files may also include other files (recursive includes).
+Custom subagents are defined as Markdown files in `.claude/agents/`. Each file defines a specialized agent with its own system prompt, available tools, and model configuration.
 
-### Important Rules
+### Settings
 
-When editing documentation:
+`.claude/settings.json` controls:
 
-- Do NOT edit README.md directly
-- Do NOT edit CLAUDE.md directly
-- Edit files under docs/ instead
-- Templates define document structure
-- docs directory contains the source of truth
-
-### Directory Roles
-
-```
-
-docs/       → documentation source (SSOT)
-template/   → document templates
-internal/   → generator implementation
-cmd/        → CLI entrypoint
-README.md   → generated output
-CLAUDE.md   → generated output for AI context
-
-```
-
-### Documentation Philosophy
-
-This project follows these principles:
-
-- Single Source of Truth
-- Modular documentation
-- Documentation as Code
-- Generated documents
-- Reusable Markdown modules
-- Template-based composition
+- Permissions and approval policies
+- Hook definitions (pre/post tool execution)
+- MCP server connections
+- Environment variables
+- Model defaults

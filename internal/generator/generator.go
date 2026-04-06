@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/hiromaily/docs-ssot/internal/config"
 	"github.com/hiromaily/docs-ssot/internal/processor"
@@ -26,6 +27,12 @@ func Build(configPath string) error {
 		content, err := processor.ProcessFile(t.Input, t.Output)
 		if err != nil {
 			return err
+		}
+
+		if dir := filepath.Dir(t.Output); dir != "." {
+			if err := os.MkdirAll(dir, 0o755); err != nil {
+				return fmt.Errorf("failed to create output directory %s: %w", dir, err)
+			}
 		}
 
 		//nolint:gosec // generated documentation files are intended to be world-readable
