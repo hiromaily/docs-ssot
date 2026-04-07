@@ -110,6 +110,26 @@ docs-index:
 docs-version:
 	go run ./cmd/docs-ssot version
 
+###############################################################################
+# VitePress documentation site
+###############################################################################
+
+.PHONY: install-docs
+install-docs:
+	cd docs && bun install
+
+.PHONY: vitepress-dev
+vitepress-dev:
+	cd docs && bun run dev
+
+.PHONY: vitepress-build
+vitepress-build:
+	cd docs && bun run build
+
+.PHONY: vitepress-preview
+vitepress-preview:
+	cd docs && bun run preview
+
 #------------------------------------------------------------------------------
 # Release
 #------------------------------------------------------------------------------

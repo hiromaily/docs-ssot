@@ -28,6 +28,9 @@ targets:
   - input: template/pages/ai-agents/claude/rules/go-test.tpl.md
     output: .claude/rules/go-test.md
 
+  - input: template/pages/ai-agents/claude/rules/vitepress.tpl.md
+    output: .claude/rules/vitepress.md
+
   # ── Claude Code: skills ─────────────────────────────────────
   - input: template/pages/ai-agents/claude/skills/check-ssot/skill.tpl.md
     output: .claude/skills/check-ssot/skill.md
@@ -51,6 +54,9 @@ targets:
 
   - input: template/pages/ai-agents/cursor/rules/go-test.tpl.mdc
     output: .cursor/rules/go-test.mdc
+
+  - input: template/pages/ai-agents/cursor/rules/vitepress.tpl.mdc
+    output: .cursor/rules/vitepress.mdc
 
   # ── Cursor: skills ─────────────────────────────────────────
   - input: template/pages/ai-agents/cursor/skills/fix-pr-reviews/SKILL.tpl.md
@@ -79,6 +85,9 @@ targets:
 
   - input: template/pages/ai-agents/copilot/instructions/go-test.tpl.md
     output: .github/instructions/go-test.instructions.md
+
+  - input: template/pages/ai-agents/copilot/instructions/vitepress.tpl.md
+    output: .github/instructions/vitepress.instructions.md
 
   # ── Copilot: skills ────────────────────────────────────────
   - input: template/pages/ai-agents/copilot/skills/fix-pr-reviews/SKILL.tpl.md

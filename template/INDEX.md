@@ -48,6 +48,7 @@
 | sections/ai/rules/git.md | claude, codex, copilot, cursor |
 | sections/ai/rules/go-test.md | claude, codex, copilot, cursor |
 | sections/ai/rules/go.md | claude, codex, copilot, cursor |
+| sections/ai/rules/vitepress.md | claude, codex, copilot, cursor |
 
 ## Commands
 

@@ -55,6 +55,8 @@
 
 <!-- @include: ../../../sections/ai/rules/go-test.md -->
 
+<!-- @include: ../../../sections/ai/rules/vitepress.md -->
+
 ---
 
 <!-- @include: ../../../sections/ai/glossary.md level=-1 -->

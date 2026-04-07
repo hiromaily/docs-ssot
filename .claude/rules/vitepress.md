@@ -1,0 +1,53 @@
+---
+paths: ["docs/**"]
+---
+
+# VitePress Documentation Site Rules
+
+## Package Manager: Bun Only
+
+This project uses **Bun** as the JavaScript package manager and runtime for the VitePress documentation site. Do not use npm, pnpm, or yarn.
+
+```sh
+# ✅ Correct
+cd docs && bun install
+cd docs && bun run dev
+cd docs && bun run build
+
+# ❌ Wrong
+cd docs && npm install
+cd docs && pnpm install
+cd docs && yarn install
+```
+
+The lockfile is `docs/bun.lock`. Do not create `package-lock.json`, `pnpm-lock.yaml`, or `yarn.lock`.
+
+## VitePress Commands
+
+Use the Makefile targets for VitePress operations:
+
+| Command | Purpose |
+|---------|---------|
+| `make install-docs` | Install VitePress dependencies |
+| `make vitepress-dev` | Start development server |
+| `make vitepress-build` | Build static site |
+| `make vitepress-preview` | Preview production build |
+
+## Content Source: template/sections/
+
+VitePress pages use `@include` directives to pull content from `template/sections/`. Do not duplicate content into `docs/` pages — each page should be a thin wrapper:
+
+```markdown
+# Page Title
+
+<!--@include: ../../template/sections/category/file.md-->
+```
+
+This ensures the VitePress site, README.md, CLAUDE.md, and all other generated files share the same source content.
+
+## Adding a New VitePress Page
+
+1. Create a `.md` file in the appropriate `docs/` subdirectory
+2. Add an `@include` directive pointing to the source in `template/sections/`
+3. Register the page in `docs/.vitepress/config.ts` (sidebar and/or nav)
+4. Run `make vitepress-build` to verify
