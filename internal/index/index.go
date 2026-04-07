@@ -29,10 +29,10 @@ type TemplateInfo struct {
 // IndexData contains all data needed to render an INDEX.md.
 type IndexData struct {
 	Pages    []TemplateInfo      // page templates (pages/*.tpl.md)
-	Sections map[string][]string // docs/sections/** file -> list of referencing template labels
-	Rules    map[string][]string // docs/rules/** file -> list of referencing template labels
-	Commands map[string][]string // docs/commands/** file -> list of referencing template labels
-	Orphans  []string            // docs/** files not referenced by any template
+	Sections map[string][]string // sections/** file -> list of referencing template labels
+	Rules    map[string][]string // sections/ai/rules/** file -> list of referencing template labels
+	Commands map[string][]string // sections/ai/commands/** file -> list of referencing template labels
+	Orphans  []string            // sections/** files not referenced by any template
 }
 
 // Generate scans the template directory, parses include directives, builds
@@ -44,9 +44,9 @@ func Generate(templateDir string, cfg *config.Config) (*IndexData, error) {
 		return nil, fmt.Errorf("scanning templates: %w", err)
 	}
 
-	// 2. Collect all docs files
-	docsDir := filepath.Join(templateDir, "docs")
-	allDocs, err := scanDocsFiles(docsDir, templateDir)
+	// 2. Collect all section files
+	sectionsDir := filepath.Join(templateDir, "sections")
+	allDocs, err := scanDocsFiles(sectionsDir, templateDir)
 	if err != nil {
 		return nil, fmt.Errorf("scanning docs: %w", err)
 	}
@@ -349,18 +349,18 @@ func buildReverseMap(templates []TemplateInfo) map[string][]string {
 func templateLabel(t TemplateInfo) string {
 	path := t.Path
 
-	// Page templates: use output name without extension
-	if strings.HasPrefix(path, "pages/") {
-		name := strings.TrimSuffix(filepath.Base(t.Output), filepath.Ext(t.Output))
-		return name
-	}
-
 	// AI agent templates: use tool name (e.g. "claude", "cursor")
-	if after, ok := strings.CutPrefix(path, "ai-agents/"); ok {
+	if after, ok := strings.CutPrefix(path, "pages/ai-agents/"); ok {
 		parts := strings.SplitN(after, "/", 2)
 		if len(parts) > 0 {
 			return parts[0]
 		}
+	}
+
+	// Page templates: use output name without extension
+	if strings.HasPrefix(path, "pages/") {
+		name := strings.TrimSuffix(filepath.Base(t.Output), filepath.Ext(t.Output))
+		return name
 	}
 
 	return filepath.Base(path)
@@ -374,9 +374,9 @@ func classify(allDocs []string, reverseMap map[string][]string, templates []Temp
 		Commands: make(map[string][]string),
 	}
 
-	// Extract page templates
+	// Extract page templates (direct pages, not ai-agent configs)
 	for _, t := range templates {
-		if strings.HasPrefix(t.Path, "pages/") {
+		if strings.HasPrefix(t.Path, "pages/") && !strings.HasPrefix(t.Path, "pages/ai-agents/") {
 			data.Pages = append(data.Pages, t)
 		}
 	}
@@ -390,12 +390,12 @@ func classify(allDocs []string, reverseMap map[string][]string, templates []Temp
 		}
 
 		switch {
-		case strings.HasPrefix(f, "docs/sections/"):
-			data.Sections[f] = refs
-		case strings.HasPrefix(f, "docs/rules/"):
+		case strings.HasPrefix(f, "sections/ai/rules/"):
 			data.Rules[f] = refs
-		case strings.HasPrefix(f, "docs/commands/"):
+		case strings.HasPrefix(f, "sections/ai/commands/"):
 			data.Commands[f] = refs
+		case strings.HasPrefix(f, "sections/"):
+			data.Sections[f] = refs
 		default:
 			// docs files not in sections/rules/commands still get listed in sections
 			data.Sections[f] = refs

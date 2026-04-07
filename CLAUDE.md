@@ -471,7 +471,7 @@ This includes:
 
 ### Step 6 — Output Generation
 
-The final document is written to where defined at [docsgen.yaml](./template/docsgen.yaml):
+The final document is written to where defined at [docsgen.yaml](./docsgen.yaml):
 
 ```
 README.md

@@ -3,62 +3,62 @@
 -->
 # Project Context
 
-<!-- @include: ../docs/sections/project/overview.md -->
+<!-- @include: ../sections/project/overview.md -->
 
 ---
 
-<!-- @include: ../docs/sections/ai/agents.md -->
+<!-- @include: ../sections/ai/agents.md -->
 
 ---
 
 # Repository Structure
 
-<!-- @include: ../docs/sections/reference/directory.md -->
+<!-- @include: ../sections/reference/directory.md -->
 
 ---
 
 # Architecture
 
-<!-- @include: ../docs/sections/architecture/overview.md -->
+<!-- @include: ../sections/architecture/overview.md -->
 
-<!-- @include: ../docs/sections/architecture/system.md -->
+<!-- @include: ../sections/architecture/system.md -->
 
-<!-- @include: ../docs/sections/architecture/pipeline.md -->
+<!-- @include: ../sections/architecture/pipeline.md -->
 
 ---
 
-<!-- @include: ../docs/sections/architecture/includes.md level=-1 -->
+<!-- @include: ../sections/architecture/includes.md level=-1 -->
 
 ---
 
 # Development Guide
 
-<!-- @include: ../docs/sections/development/setup.md -->
+<!-- @include: ../sections/development/setup.md -->
 
-<!-- @include: ../docs/sections/development/test.md -->
+<!-- @include: ../sections/development/test.md -->
 
-<!-- @include: ../docs/sections/development/lint.md -->
+<!-- @include: ../sections/development/lint.md -->
 
 ---
 
-<!-- @include: ../docs/sections/reference/commands.md level=-1 -->
+<!-- @include: ../sections/reference/commands.md level=-1 -->
 
 ---
 
 # AI Agent Configuration
 
-<!-- @include: ../docs/sections/ai/overview.md -->
+<!-- @include: ../sections/ai/overview.md -->
 
-<!-- @include: ../docs/sections/ai/claude.md -->
+<!-- @include: ../sections/ai/claude.md -->
 
-<!-- @include: ../docs/sections/ai/cross-tool-mapping.md -->
+<!-- @include: ../sections/ai/cross-tool-mapping.md -->
 
-<!-- @include: ../docs/sections/ai/best-practices.md -->
-
----
-
-<!-- @include: ../docs/sections/architecture/features.md level=-1 -->
+<!-- @include: ../sections/ai/best-practices.md -->
 
 ---
 
-<!-- @include: ../docs/sections/ai/glossary.md level=-1 -->
+<!-- @include: ../sections/architecture/features.md level=-1 -->
+
+---
+
+<!-- @include: ../sections/ai/glossary.md level=-1 -->
