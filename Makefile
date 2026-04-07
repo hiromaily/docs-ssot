@@ -102,6 +102,10 @@ docs-include:
 docs-check:
 	go run ./cmd/docs-ssot check --root template/docs $(ARGS)
 
+.PHONY: docs-index
+docs-index:
+	go run ./cmd/docs-ssot index
+
 .PHONY: docs-version
 docs-version:
 	go run ./cmd/docs-ssot version

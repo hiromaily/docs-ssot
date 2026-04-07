@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"regexp"
 	"strings"
+
+	"github.com/hiromaily/docs-ssot/internal/mdutil"
 )
 
 // headingPattern matches CommonMark ATX headings: up to 3 optional leading spaces,
@@ -39,7 +41,7 @@ func adjustHeadingLevels(content string, delta int) (string, error) {
 	for scanner.Scan() {
 		line := scanner.Text()
 		prevFenceType := fenceType
-		fenceType = nextFenceType(line, fenceType)
+		fenceType = mdutil.NextFenceType(line, fenceType)
 		if prevFenceType == "" && fenceType == "" {
 			line = shiftHeading(line, delta)
 		}
