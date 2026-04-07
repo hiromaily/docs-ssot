@@ -1,6 +1,7 @@
 import { defineConfig } from "vitepress";
 
 export default defineConfig({
+  base: "/docs-ssot/",
   title: "docs-ssot",
   description: "Documentation SSOT Generator",
   themeConfig: {
