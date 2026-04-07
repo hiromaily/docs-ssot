@@ -116,9 +116,14 @@ func SplitString(content string, sectionLevel int) ([]Section, error) {
 	return sections, nil
 }
 
-// joinBody joins lines into a single string, trimming leading/trailing blank lines
-// but preserving internal blank lines.
+// joinBody joins lines into a single string, removing leading/trailing blank lines
+// while preserving internal blank lines and per-line indentation.
 func joinBody(lines []string) string {
-	text := strings.Join(lines, "\n")
-	return strings.TrimSpace(text)
+	for len(lines) > 0 && strings.TrimSpace(lines[0]) == "" {
+		lines = lines[1:]
+	}
+	for len(lines) > 0 && strings.TrimSpace(lines[len(lines)-1]) == "" {
+		lines = lines[:len(lines)-1]
+	}
+	return strings.Join(lines, "\n")
 }

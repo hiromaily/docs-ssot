@@ -52,6 +52,9 @@ type sectionFile struct {
 	OutputPath string
 	// MergedWith is non-empty if this section was merged into another section's file.
 	MergedWith string
+	// IndexInFile is the zero-based position of this section within its source file.
+	// Used as a unique key to distinguish sections with identical headings.
+	IndexInFile int
 }
 
 // Run executes the migrate command, decomposing input files into SSOT sections.
@@ -124,11 +127,18 @@ func parseAllFiles(files []string, sectionLevel int) ([]fileSections, error) {
 }
 
 func planSectionFiles(allSections []fileSections, outputDir, templateDir string) ([]*sectionFile, error) {
+	// Convert templateDir to absolute once to ensure filepath.Rel works correctly
+	// even if templateDir and outputDir have mixed relative/absolute forms.
+	absTemplateDir, err := filepath.Abs(templateDir)
+	if err != nil {
+		return nil, fmt.Errorf("abs path %s: %w", templateDir, err)
+	}
+
 	slugCount := map[string]int{}
 	var planned []*sectionFile
 
 	for _, fs := range allSections {
-		for _, s := range fs.Sections {
+		for i, s := range fs.Sections {
 			if s.Title == "" {
 				// Preamble (content before first heading) — skip for section files,
 				// will be inlined in the template.
@@ -147,19 +157,25 @@ func planSectionFiles(allSections []fileSections, outputDir, templateDir string)
 
 			outPath := filepath.Join(outputDir, cat, slug+".md")
 
-			// Compute relative path from template dir to section file dynamically.
-			relPath, err := filepath.Rel(templateDir, outPath)
+			// Compute relative path from template dir to section file using absolute paths
+			// so that filepath.Rel succeeds regardless of whether the inputs are relative or absolute.
+			absOutPath, err := filepath.Abs(outPath)
 			if err != nil {
-				return nil, fmt.Errorf("compute relative path from %s to %s: %w", templateDir, outPath, err)
+				return nil, fmt.Errorf("abs path %s: %w", outPath, err)
+			}
+			relPath, err := filepath.Rel(absTemplateDir, absOutPath)
+			if err != nil {
+				return nil, fmt.Errorf("compute relative path from %s to %s: %w", absTemplateDir, absOutPath, err)
 			}
 
 			planned = append(planned, &sectionFile{
-				Source:     fs.Source,
-				Section:    s,
-				Category:   cat,
-				Slug:       slug,
-				RelPath:    relPath,
-				OutputPath: outPath,
+				Source:      fs.Source,
+				Section:     s,
+				Category:    cat,
+				Slug:        slug,
+				RelPath:     relPath,
+				OutputPath:  outPath,
+				IndexInFile: i,
 			})
 		}
 	}
@@ -302,7 +318,7 @@ func writeTemplateFiles(w io.Writer, cfg Config, allSections []fileSections, pla
 				continue
 			}
 
-			sf := lookup[lookupKey(fs.Source, s.Title)]
+			sf := lookup[lookupKey(fs.Source, i)]
 			if sf == nil {
 				// Should not happen, but fallback to inline.
 				lines = append(lines, s.RawHeading)
@@ -408,13 +424,13 @@ func verifyRoundTrip(w io.Writer, cfg Config) {
 func buildLookup(planned []*sectionFile) map[string]*sectionFile {
 	m := make(map[string]*sectionFile, len(planned))
 	for _, sf := range planned {
-		m[lookupKey(sf.Source, sf.Section.Title)] = sf
+		m[lookupKey(sf.Source, sf.IndexInFile)] = sf
 	}
 	return m
 }
 
-func lookupKey(source, title string) string {
-	return source + ":" + title
+func lookupKey(source string, index int) string {
+	return fmt.Sprintf("%s:%d", source, index)
 }
 
 // ToSlug converts a heading title into a kebab-case filename slug.
