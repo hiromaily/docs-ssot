@@ -149,11 +149,18 @@ func planSectionFiles(allSections []fileSections, outputDir, templateDir string)
 			slug := ToSlug(s.Title)
 
 			// Disambiguate duplicate slugs within the same category.
-			key := cat + "/" + slug
-			if n := slugCount[key]; n > 0 {
-				slug = fmt.Sprintf("%s-%d", slug, n+1)
+			// Iteratively check the final candidate slug to avoid collisions between
+			// a disambiguated slug (e.g. "setup-2") and a section whose title slugifies
+			// to the same string (e.g. "Setup 2" → "setup-2").
+			baseSlug := slug
+			for n := 1; ; n++ {
+				key := cat + "/" + slug
+				if _, exists := slugCount[key]; !exists {
+					slugCount[key] = 1
+					break
+				}
+				slug = fmt.Sprintf("%s-%d", baseSlug, n+1)
 			}
-			slugCount[key]++
 
 			outPath := filepath.Join(outputDir, cat, slug+".md")
 
@@ -386,6 +393,18 @@ func writeConfigIfNeeded(w io.Writer, cfg Config) error {
 func verifyRoundTrip(w io.Writer, cfg Config) {
 	_, _ = fmt.Fprintln(w, "Verifying round-trip...")
 
+	// Read original content before building so we compare against the pre-build
+	// state, not the newly generated output (generator.Build overwrites input files).
+	originals := make(map[string][]byte, len(cfg.InputFiles))
+	for _, f := range cfg.InputFiles {
+		data, err := os.ReadFile(f)
+		if err != nil {
+			_, _ = fmt.Fprintf(w, "Round-trip verification: SKIP (cannot read %s: %v)\n", f, err)
+			return
+		}
+		originals[f] = data
+	}
+
 	if err := generator.Build(cfg.ConfigFile); err != nil {
 		_, _ = fmt.Fprintf(w, "Round-trip verification: SKIP (build error: %v)\n", err)
 		return
@@ -393,14 +412,6 @@ func verifyRoundTrip(w io.Writer, cfg Config) {
 
 	allMatch := true
 	for _, f := range cfg.InputFiles {
-		original, err := os.ReadFile(f)
-		if err != nil {
-			_, _ = fmt.Fprintf(w, "  WARNING: cannot read original %s: %v\n", f, err)
-			allMatch = false
-			continue
-		}
-
-		// The build output overwrites the original files, so read it again.
 		generated, err := os.ReadFile(f)
 		if err != nil {
 			_, _ = fmt.Fprintf(w, "  WARNING: cannot read generated %s: %v\n", f, err)
@@ -408,7 +419,7 @@ func verifyRoundTrip(w io.Writer, cfg Config) {
 			continue
 		}
 
-		if string(original) != string(generated) {
+		if string(originals[f]) != string(generated) {
 			_, _ = fmt.Fprintf(w, "  WARNING: %s differs after round-trip\n", f)
 			allMatch = false
 		}

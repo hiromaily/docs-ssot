@@ -13,8 +13,9 @@ import (
 	"github.com/hiromaily/docs-ssot/internal/mdutil"
 )
 
-// headingRe matches ATX-style headings: one or more # followed by a space.
-var headingRe = regexp.MustCompile(`^(#{1,6})\s+(.+)$`)
+// headingRe matches ATX-style headings: up to 3 spaces of leading indentation
+// (per CommonMark spec), one or more # followed by a space.
+var headingRe = regexp.MustCompile(`^\s{0,3}(#{1,6})\s+(.+)$`)
 
 // Section represents a single section extracted from a Markdown file.
 type Section struct {
