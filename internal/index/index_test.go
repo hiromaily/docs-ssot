@@ -83,9 +83,9 @@ func TestGenerate_BasicStructure(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Should have 2 page templates
-	if len(data.Pages) != 2 {
-		t.Errorf("pages count = %d, want 2", len(data.Pages))
+	// Should have 6 page templates (2 regular + 4 ai-agents)
+	if len(data.Pages) != 6 {
+		t.Errorf("pages count = %d, want 6", len(data.Pages))
 	}
 
 	// Sections should include project and architecture files
