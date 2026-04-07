@@ -3,4 +3,4 @@ description: Git branch, commit, and merge conventions
 alwaysApply: true
 ---
 
-<!-- @include: ../../../../sections/ai/rules/git.md -->
+<!-- @include: ../../../../sections/ai/rules/git.md level=-1 -->

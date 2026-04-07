@@ -1,12 +1,12 @@
-# General Development Rules for docs-ssot
+## General Development Rules for docs-ssot
 
-## Project Purpose
+### Project Purpose
 
 `docs-ssot` is a CLI tool that generates documentation files (README.md, CLAUDE.md, AGENTS.md) from modular Markdown source files using a template-based composition system. It implements the Single Source of Truth (SSOT) principle for documentation.
 
 ---
 
-## Critical Rule: Never Edit Generated Files
+### Critical Rule: Never Edit Generated Files
 
 The following files are **build artifacts** — do NOT edit them directly:
 
@@ -18,7 +18,7 @@ Always edit the source files in `docs/` and regenerate with `make docs`.
 
 ---
 
-## Repository Structure
+### Repository Structure
 
 ```
 docs-ssot/
@@ -45,7 +45,7 @@ docs-ssot/
 
 ---
 
-## Go Package Responsibilities
+### Go Package Responsibilities
 
 | Package | File | Responsibility |
 |---|---|---|
@@ -54,7 +54,7 @@ docs-ssot/
 | `generator` | `internal/generator/generator.go` | Iterate targets, call include resolver, write output |
 | `processor` | `internal/processor/processor.go` | Include resolution, transformer pipeline (ProcessFile, Transformer, Apply) |
 
-### Include Directive Pattern
+#### Include Directive Pattern
 
 ```go
 var includePattern = regexp.MustCompile(`^\s*<!--\s*@include:\s*(.*?)\s*-->\s*$`)
@@ -86,7 +86,7 @@ When the path contains glob metacharacters (`*`, `?`, `[`) but not `**`, all fil
 
 ---
 
-## Build Pipeline
+### Build Pipeline
 
 ```
 docsgen.yaml
@@ -99,7 +99,7 @@ Recursive expansion is supported: included files may themselves contain include 
 
 ---
 
-## Common Commands
+### Common Commands
 
 ```sh
 make build          # Compile: go build -o bin/docs-ssot ./cmd/docs-ssot
@@ -114,7 +114,7 @@ make clean          # Remove bin/ and generated README.md, CLAUDE.md
 
 ---
 
-## How to Add New Documentation
+### How to Add New Documentation
 
 1. Create a new `.md` file in the appropriate `docs/` subdirectory.
 2. Add an include directive where needed in the relevant `template/*.tpl.md` file:
@@ -126,7 +126,7 @@ make clean          # Remove bin/ and generated README.md, CLAUDE.md
 
 ---
 
-## How to Add a New Output Target
+### How to Add a New Output Target
 
 1. Create a new template file in `template/`, e.g., `template/MYFILE.tpl.md`.
 2. Add a new entry in `docsgen.yaml`:
@@ -138,7 +138,7 @@ make clean          # Remove bin/ and generated README.md, CLAUDE.md
 
 ---
 
-## Current Limitations (Planned for Future)
+### Current Limitations (Planned for Future)
 - **No variable substitution**: No `{{ variable }}` placeholder support.
 
 When implementing include-related features, the primary file to modify is `internal/processor/processor.go`.
@@ -146,7 +146,7 @@ To add a new content transformation, implement the `Transformer` interface in `i
 
 ---
 
-## Code Quality Requirements
+### Code Quality Requirements
 
 - **Go version**: 1.26.1
 - **Linter**: `golangci-lint` via `go tool golangci-lint` (configured in `.golangci.yml`)
@@ -158,7 +158,7 @@ To add a new content transformation, implement the `Transformer` interface in `i
 
 ---
 
-## Testing Strategy
+### Testing Strategy
 
 - Unit tests: cover include parsing, path resolution, circular detection, file loading.
 - Integration tests: run generator on `testdata/`, compare output with `expected/` fixtures.
@@ -174,7 +174,7 @@ git diff --exit-code README.md CLAUDE.md AGENTS.md
 
 ---
 
-## Module Info
+### Module Info
 
 - **Module path**: `github.com/hiromaily/docs-ssot`
 - **Key dependency**: `gopkg.in/yaml.v3` for YAML config parsing

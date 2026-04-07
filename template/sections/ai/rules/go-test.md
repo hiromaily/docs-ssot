@@ -1,8 +1,8 @@
-# Go Test Rules
+## Go Test Rules
 
 These rules apply to all `*_test.go` files in `mcp-server/`. Read them before writing any test.
 
-## Package declaration
+### Package declaration
 
 Choose based on whether the test needs unexported symbols:
 
@@ -11,7 +11,7 @@ Choose based on whether the test needs unexported symbols:
 
 Do not mix both styles in the same directory.
 
-## Parallelism
+### Parallelism
 
 Every test function and every `t.Run` subtest **must** call `t.Parallel()` as its first statement. This is enforced by the `tparallel` linter.
 
@@ -30,7 +30,7 @@ Exception: tests that mutate OS-level global state (environment variables, worki
 
 In Go 1.22+, the loop variable in `for _, tc := range tests` is scoped per iteration — `tc := tc` capture workarounds are not needed and must not be added.
 
-## Table-driven tests
+### Table-driven tests
 
 Use table-driven tests with `t.Run` when two or more cases share the same function signature and assertion pattern. Do not write individual `TestFoo_CaseA`, `TestFoo_CaseB` functions for structurally identical cases — merge them into one table.
 
@@ -56,11 +56,11 @@ for _, tc := range tests {
 
 For 2D matrix tests (e.g. `sourceType × effort`), use `tc.sourceType+"/"+tc.effort` as the subtest name — the `/` creates a hierarchy that makes `-run` filtering precise.
 
-## Subtest naming
+### Subtest naming
 
 Use lowercase, underscore-separated names: `"flag_override"`, `"jira_bug"`, `"default_empty_inputs"`. Names must be unique within the table. Avoid names that are just a number or a raw enum value with no context.
 
-## Struct comparison
+### Struct comparison
 
 Use `reflect.DeepEqual` to compare structs, slices, or maps in one assertion rather than checking each field individually. Import `"reflect"` in the import block.
 
@@ -72,7 +72,7 @@ if !reflect.DeepEqual(got, want) {
 
 When a `want` struct only sets the fields a constructor should populate, unset fields default to zero values — this implicitly asserts cross-variant fields are zero without extra `if` statements.
 
-## Fatal vs. Error
+### Fatal vs. Error
 
 - `t.Fatalf` / `t.Fatal`: use when subsequent assertions would panic or be meaningless if this check fails (e.g., checking `len(slice)` before indexing).
 - `t.Errorf` / `t.Error`: use for independent assertions that should all run even if one fails.
@@ -87,7 +87,7 @@ if findings[0].Severity != SeverityMinor {
 }
 ```
 
-## Error message format
+### Error message format
 
 Follow `got X, want Y` order. Include the inputs that produced the result so a failing test is self-explanatory without reading the source:
 
@@ -95,7 +95,7 @@ Follow `got X, want Y` order. Include the inputs that produced the result so a f
 t.Errorf("fn(%q, %q) = %q, want %q", input1, input2, got, want)
 ```
 
-## Temporary directories
+### Temporary directories
 
 Use `t.TempDir()` for scratch directories. The directory and its contents are deleted automatically after the test. Never call `os.MkdirAll` or `os.Remove` manually.
 
@@ -104,7 +104,7 @@ dir := t.TempDir()
 path := filepath.Join(dir, "state.json")
 ```
 
-## Test helpers
+### Test helpers
 
 Mark helper functions with `t.Helper()` so failure lines point to the call site, not the helper body. Name helpers with a verb (`loadState`, `writeFileForTest`, `newManager`).
 
@@ -123,7 +123,7 @@ func loadState(t *testing.T, workspace string) State {
 }
 ```
 
-## Cleanup
+### Cleanup
 
 Use `t.Cleanup` to register teardown logic that must run regardless of test outcome. Prefer it over deferred calls when the cleanup needs access to `t` for error reporting.
 
@@ -132,7 +132,7 @@ srv := startTestServer(t)
 t.Cleanup(func() { srv.Close() })
 ```
 
-## Stateful object setup
+### Stateful object setup
 
 For packages with stateful objects, define a `newFoo()` factory that returns a fresh zero-state instance. Call `t.TempDir()` in the test body, not in the factory.
 
@@ -152,11 +152,11 @@ func TestSomething(t *testing.T) {
 }
 ```
 
-## Context
+### Context
 
 Use `t.Context()` instead of `context.Background()`. The test context is cancelled when the test ends, which surfaces context-leak bugs early. See also `golang.md`.
 
-## Testdata fixtures
+### Testdata fixtures
 
 Place fixture files in a `testdata/` directory adjacent to the test file (e.g., `orchestrator/testdata/`). Go tooling ignores this directory during regular builds. Use a helper to build the path:
 
@@ -168,7 +168,7 @@ func testdataPath(name string) string {
 
 Name fixtures after their content, not their index: `review-design-approve.md`, not `fixture1.md`.
 
-## Race detector
+### Race detector
 
 Run tests with the race detector when testing concurrent code or stateful managers:
 
@@ -178,7 +178,7 @@ cd mcp-server && go test -race ./...
 
 The CI pipeline always runs with `-race`. If a test is not safe to run with `-race`, it is a bug — fix the production code, not the test.
 
-## What not to do
+### What not to do
 
 - Do not use `assert` or `require` from testify — use the stdlib `testing` package only.
 - Do not use `os.Exit` or `log.Fatal` — use `t.Fatalf`.

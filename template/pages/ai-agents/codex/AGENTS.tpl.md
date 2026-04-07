@@ -45,15 +45,15 @@
 
 # Development Rules
 
-<!-- @include: ../../../sections/ai/rules/general.md level=+1 -->
+<!-- @include: ../../../sections/ai/rules/general.md -->
 
-<!-- @include: ../../../sections/ai/rules/docs.md level=+1 -->
+<!-- @include: ../../../sections/ai/rules/docs.md -->
 
-<!-- @include: ../../../sections/ai/rules/git.md level=+1 -->
+<!-- @include: ../../../sections/ai/rules/git.md -->
 
-<!-- @include: ../../../sections/ai/rules/go.md level=+1 -->
+<!-- @include: ../../../sections/ai/rules/go.md -->
 
-<!-- @include: ../../../sections/ai/rules/go-test.md level=+1 -->
+<!-- @include: ../../../sections/ai/rules/go-test.md -->
 
 ---
 

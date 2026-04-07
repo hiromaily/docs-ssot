@@ -33,6 +33,8 @@
 
 <!-- @include: ../sections/ai/overview.md -->
 
+<!-- @include: ../sections/ai/hooks.md level=+1 -->
+
 ---
 
 <!-- @include: ../sections/project/roadmap.md -->

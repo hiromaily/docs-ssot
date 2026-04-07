@@ -28,6 +28,10 @@ targets:
   - input: template/pages/ai-agents/claude/rules/go-test.tpl.md
     output: .claude/rules/go-test.md
 
+  # ── Claude Code: skills ─────────────────────────────────────
+  - input: template/pages/ai-agents/claude/skills/check-ssot/skill.tpl.md
+    output: .claude/skills/check-ssot/skill.md
+
   # ── Claude Code: commands ──────────────────────────────────
   - input: template/pages/ai-agents/claude/commands/fix-pr-reviews.tpl.md
     output: .claude/commands/fix-pr-reviews.md

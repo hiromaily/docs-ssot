@@ -3,4 +3,4 @@ description: General development rules for docs-ssot project
 alwaysApply: true
 ---
 
-<!-- @include: ../../../../sections/ai/rules/general.md -->
+<!-- @include: ../../../../sections/ai/rules/general.md level=-1 -->

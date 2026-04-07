@@ -51,6 +51,8 @@
 
 <!-- @include: ../sections/ai/claude.md -->
 
+<!-- @include: ../sections/ai/hooks.md -->
+
 <!-- @include: ../sections/ai/cross-tool-mapping.md -->
 
 <!-- @include: ../sections/ai/best-practices.md -->
