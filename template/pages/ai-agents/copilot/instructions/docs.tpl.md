@@ -2,4 +2,4 @@
 applyTo: "**/*.md"
 ---
 
-<!-- @include: ../../../../sections/ai/rules/docs.md -->
+<!-- @include: ../../../../sections/ai/rules/docs.md level=-1 -->

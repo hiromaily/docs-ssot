@@ -1,6 +1,6 @@
-# Documentation Rules for docs-ssot
+## Documentation Rules for docs-ssot
 
-## SSOT Principle: Only Edit Source Files
+### SSOT Principle: Only Edit Source Files
 
 This project generates documentation from source files. The pipeline is:
 
@@ -12,7 +12,7 @@ template/docs/**/*.md  +  template/*.tpl.md  +  docsgen.yaml
           README.md / AGENTS.md / CLAUDE.md
 ```
 
-### Generated Files — Never Edit Directly
+#### Generated Files — Never Edit Directly
 
 The following are **build artifacts** and must NOT be modified:
 
@@ -24,7 +24,7 @@ If you need to change content in these files, find the source file under `docs/`
 
 ---
 
-## Source Files — Where to Make Changes
+### Source Files — Where to Make Changes
 
 All documentation content lives under `docs/`. Edit files here:
 
@@ -37,7 +37,7 @@ All documentation content lives under `docs/`. Edit files here:
 | `docs/05_ai/` | AI tool-specific instructions (Claude, Cursor, Codex, etc.) |
 | `docs/06_reference/` | Commands reference, directory structure |
 
-### Templates — Structure Only
+#### Templates — Structure Only
 
 Template files in `template/` define document structure using include directives. Modify templates only to change document structure (add/remove/reorder sections), not content.
 
@@ -49,7 +49,7 @@ template/CLAUDE.tpl.md
 
 ---
 
-## Adding New Content
+### Adding New Content
 
 1. Create or edit the appropriate file under `docs/`.
 2. If it's a new file, add an include directive in the relevant `template/*.tpl.md`:
@@ -61,7 +61,7 @@ template/CLAUDE.tpl.md
 
 ---
 
-## Include Directive Format
+### Include Directive Format
 
 Include directives follow the [VitePress](https://vitepress.dev/) style:
 
@@ -112,7 +112,7 @@ Other rules:
 
 ---
 
-## Markdown Style Rules
+### Markdown Style Rules
 
 - Each source file should cover one topic or section only (modular, single-responsibility).
 - Do not duplicate content across multiple source files — the SSOT principle applies to docs too.
@@ -122,9 +122,40 @@ Other rules:
 - Prefer relative links when linking between docs source files.
 - Do not hardcode generated file paths (e.g., `README.md`) in source docs — they are build artifacts.
 
+#### Heading Level Convention for Section Files
+
+All source files under `template/sections/` **must start at heading level 2 (`##`)**. Do not use `#` (h1) in section files.
+
+```markdown
+<!-- ✅ Correct -->
+## My Section Title
+
+### Subsection
+
+<!-- ❌ Wrong -->
+# My Section Title
+
+## Subsection
+```
+
+**Why:** Section files are designed to be embedded into larger documents (README.md, CLAUDE.md, AGENTS.md) where `#` is reserved for the document's top-level structure. Starting at `##` means:
+
+- Most includes need no `level` parameter — sections embed naturally
+- Templates stay clean and predictable
+- No need to check each file's heading level before including
+
+When a section file is used as a standalone output (e.g., `.claude/rules/*.md`), the template uses `level=-1` to shift `##` → `#`:
+
+```markdown
+<!-- In standalone template -->
+<!-- @include: ../sections/ai/rules/general.md level=-1 -->
+```
+
+Files with no headings (e.g., diagram fragments) are also acceptable — the rule applies only to files that contain headings.
+
 ---
 
-## After Editing
+### After Editing
 
 Always regenerate and verify:
 

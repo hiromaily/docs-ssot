@@ -2,4 +2,4 @@
 applyTo: "**/*"
 ---
 
-<!-- @include: ../../../../sections/ai/rules/general.md -->
+<!-- @include: ../../../../sections/ai/rules/general.md level=-1 -->

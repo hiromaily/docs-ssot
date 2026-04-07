@@ -127,6 +127,37 @@ Other rules:
 - Prefer relative links when linking between docs source files.
 - Do not hardcode generated file paths (e.g., `README.md`) in source docs — they are build artifacts.
 
+### Heading Level Convention for Section Files
+
+All source files under `template/sections/` **must start at heading level 2 (`##`)**. Do not use `#` (h1) in section files.
+
+```markdown
+<!-- ✅ Correct -->
+## My Section Title
+
+### Subsection
+
+<!-- ❌ Wrong -->
+# My Section Title
+
+## Subsection
+```
+
+**Why:** Section files are designed to be embedded into larger documents (README.md, CLAUDE.md, AGENTS.md) where `#` is reserved for the document's top-level structure. Starting at `##` means:
+
+- Most includes need no `level` parameter — sections embed naturally
+- Templates stay clean and predictable
+- No need to check each file's heading level before including
+
+When a section file is used as a standalone output (e.g., `.claude/rules/*.md`), the template uses `level=-1` to shift `##` → `#`:
+
+```markdown
+<!-- In standalone template -->
+<!-- @include: ../sections/ai/rules/general.md level=-1 -->
+```
+
+Files with no headings (e.g., diagram fragments) are also acceptable — the rule applies only to files that contain headings.
+
 ---
 
 ## After Editing

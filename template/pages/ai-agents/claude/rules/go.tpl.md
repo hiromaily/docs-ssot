@@ -2,4 +2,4 @@
 paths: ["**/*.go"]
 ---
 
-<!-- @include: ../../../../sections/ai/rules/go.md -->
+<!-- @include: ../../../../sections/ai/rules/go.md level=-1 -->

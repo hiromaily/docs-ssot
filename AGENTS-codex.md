@@ -1296,6 +1296,37 @@ Other rules:
 - Prefer relative links when linking between docs source files.
 - Do not hardcode generated file paths (e.g., `README.md`) in source docs — they are build artifacts.
 
+#### Heading Level Convention for Section Files
+
+All source files under `template/sections/` **must start at heading level 2 (`##`)**. Do not use `#` (h1) in section files.
+
+```markdown
+<!-- ✅ Correct -->
+## My Section Title
+
+### Subsection
+
+<!-- ❌ Wrong -->
+# My Section Title
+
+## Subsection
+```
+
+**Why:** Section files are designed to be embedded into larger documents (README.md, CLAUDE.md, AGENTS.md) where `#` is reserved for the document's top-level structure. Starting at `##` means:
+
+- Most includes need no `level` parameter — sections embed naturally
+- Templates stay clean and predictable
+- No need to check each file's heading level before including
+
+When a section file is used as a standalone output (e.g., `.claude/rules/*.md`), the template uses `level=-1` to shift `##` → `#`:
+
+```markdown
+<!-- In standalone template -->
+<!-- @include: ../sections/ai/rules/general.md level=-1 -->
+```
+
+Files with no headings (e.g., diagram fragments) are also acceptable — the rule applies only to files that contain headings.
+
 ---
 
 ### After Editing
@@ -1676,6 +1707,56 @@ The CI pipeline always runs with `-race`. If a test is not safe to run with `-ra
 - Do not share mutable package-level variables between parallel tests.
 - Do not add `tc := tc` loop capture — it is unnecessary in Go 1.22+ and adds noise.
 - `json.Marshal` errors may be discarded with `_` in test code; in production code they must be checked.
+
+## VitePress Documentation Site Rules
+
+### Package Manager: Bun Only
+
+This project uses **Bun** as the JavaScript package manager and runtime for the VitePress documentation site. Do not use npm, pnpm, or yarn.
+
+```sh
+# ✅ Correct
+cd docs && bun install
+cd docs && bun run dev
+cd docs && bun run build
+
+# ❌ Wrong
+cd docs && npm install
+cd docs && pnpm install
+cd docs && yarn install
+```
+
+The lockfile is `docs/bun.lock`. Do not create `package-lock.json`, `pnpm-lock.yaml`, or `yarn.lock`.
+
+### VitePress Commands
+
+Use the Makefile targets for VitePress operations:
+
+| Command | Purpose |
+|---------|---------|
+| `make install-docs` | Install VitePress dependencies |
+| `make vitepress-dev` | Start development server |
+| `make vitepress-build` | Build static site |
+| `make vitepress-preview` | Preview production build |
+
+### Content Source: template/sections/
+
+VitePress pages use `@include` directives to pull content from `template/sections/`. Do not duplicate content into `docs/` pages — each page should be a thin wrapper:
+
+```markdown
+# Page Title
+
+<!--@include: ../../template/sections/category/file.md-->
+```
+
+This ensures the VitePress site, README.md, CLAUDE.md, and all other generated files share the same source content.
+
+### Adding a New VitePress Page
+
+1. Create a `.md` file in the appropriate `docs/` subdirectory
+2. Add an `@include` directive pointing to the source in `template/sections/`
+3. Register the page in `docs/.vitepress/config.ts` (sidebar and/or nav)
+4. Run `make vitepress-build` to verify
 
 ---
 

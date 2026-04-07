@@ -1,0 +1,7 @@
+---
+description: VitePress documentation site — Bun only, @include from template/sections
+globs:
+  - "docs/**"
+---
+
+<!-- @include: ../../../../sections/ai/rules/vitepress.md level=-1 -->

@@ -1,6 +1,6 @@
-# Git Practices
+## Git Practices
 
-## Branch rules
+### Branch rules
 
 - **Never commit directly to `main`.** All changes must go on a feature branch and be merged via PR.
   If you realise you are on `main` with uncommitted changes, stash them, create a branch, then pop:
@@ -17,7 +17,7 @@
   ```
   Branching from a stale `main` causes the new branch to miss upstream commits, leading to conflicts and missing content when rebasing later.
 
-## Branch naming
+### Branch naming
 
 Use the prefix that matches the change type:
 
@@ -31,7 +31,7 @@ Use the prefix that matches the change type:
 
 Example: `feature/human-interaction-points`, `fix/jq-precedence-bug`
 
-## Commit messages
+### Commit messages
 
 This repository uses [Conventional Commits](https://www.conventionalcommits.org/):
 
@@ -47,13 +47,13 @@ Examples from this repo:
 - `perf(pre-tool-hook): combine dual jq calls into single invocations`
 - `chore: forge artifacts for refactor-scripts-maintainability`
 
-## Resolving merge conflicts
+### Resolving merge conflicts
 
 - **Check `git status` before any commit or branch operation.** Unmerged paths block rebases and cause misleading errors.
 - **Never commit to `main` to resolve a conflict mid-pull.** If `git pull` fails with conflicts, resolve them, then complete the merge with `git commit` — do not create new commits on top before the merge is finished.
 - **Keep the more complete/advanced version when resolving state.json conflicts.** Pipeline state files (`state.json`) record progression; always keep the version with more completed phases.
 
-## Staging discipline
+### Staging discipline
 
 - **Stage only files relevant to the current branch's purpose.** If unrelated files are staged (e.g., state.json updates mixed with a README change), unstage them before committing:
   ```bash
@@ -61,7 +61,7 @@ Examples from this repo:
   ```
 - **Verify `git diff --stat HEAD` before every commit** to confirm only the intended files are included.
 
-## Rebase hygiene
+### Rebase hygiene
 
 - **Rebase feature branches onto `main` after `main` is updated**, especially if `main` received upstream commits after the branch was created:
   ```bash
@@ -71,7 +71,7 @@ Examples from this repo:
   ```
 - **Never rebase a branch that has already been pushed and reviewed** without coordinating with reviewers — it rewrites history.
 
-## General
+### General
 
 - **Check `git status` and `git log --oneline -5` after every non-trivial operation** to confirm the repository is in the expected state.
 - **Do not use `--force` push to `main` or `master`** under any circumstances.

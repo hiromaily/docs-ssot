@@ -1,4 +1,4 @@
-# Fix PR review comments
+## Fix PR review comments
 
 For the current branch, determine the PR number with `gh pr view --json number`.
 

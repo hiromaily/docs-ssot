@@ -32,3 +32,8 @@ go.work.sum
 # Editor/IDE
 # .idea/
 # .vscode/
+
+# VitePress
+docs/.vitepress/dist
+docs/.vitepress/cache
+docs/node_modules
