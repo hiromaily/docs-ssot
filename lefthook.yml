@@ -18,3 +18,12 @@ pre-push:
       root: "."
       glob: "**/*.go"
       run: make go-test
+    docs-gen:
+      root: "."
+      glob: "{template/**/*.{md,mdc,tpl.md,tpl.mdc},docsgen.yaml}"
+      run: |
+        make docs
+        if ! git diff --quiet README.md CLAUDE.md AGENTS.md AGENTS-codex.md .claude/ .cursor/ .github/ .agents/; then
+          echo "ERROR: Generated files are out of date. Run 'make docs' and commit the changes." >&2
+          exit 1
+        fi
