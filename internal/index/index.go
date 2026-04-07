@@ -374,9 +374,9 @@ func classify(allDocs []string, reverseMap map[string][]string, templates []Temp
 		Commands: make(map[string][]string),
 	}
 
-	// Extract page templates (direct pages, not ai-agent configs)
+	// Extract page templates
 	for _, t := range templates {
-		if strings.HasPrefix(t.Path, "pages/") && !strings.HasPrefix(t.Path, "pages/ai-agents/") {
+		if strings.HasPrefix(t.Path, "pages/") {
 			data.Pages = append(data.Pages, t)
 		}
 	}
@@ -394,10 +394,7 @@ func classify(allDocs []string, reverseMap map[string][]string, templates []Temp
 			data.Rules[f] = refs
 		case strings.HasPrefix(f, "sections/ai/commands/"):
 			data.Commands[f] = refs
-		case strings.HasPrefix(f, "sections/"):
-			data.Sections[f] = refs
 		default:
-			// docs files not in sections/rules/commands still get listed in sections
 			data.Sections[f] = refs
 		}
 	}
