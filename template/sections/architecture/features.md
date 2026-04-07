@@ -39,6 +39,7 @@ Other architecture documents should reference this file rather than duplicating 
 | `include` command | Implemented | Expands includes in a file and prints the result to stdout; useful for debugging |
 | `validate` command | Implemented | Dry-run over all templates; reports unresolvable includes without writing any output files |
 | `version` command | Implemented | Prints the build version |
+| `migrate` command | Implemented | Decomposes existing Markdown files into SSOT section structure with duplicate detection and round-trip verification |
 | Watch mode | Planned | Automatically rebuild on source file changes |
 | Dry-run mode | Planned | Preview changes without writing output files |
 | Diff / up-to-date check | Planned | Exit non-zero if generated files differ from committed versions (useful for CI) |

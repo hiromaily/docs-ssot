@@ -20,7 +20,7 @@ var rootCmd = &cobra.Command{
 
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "docsgen.yaml", "path to configuration file")
-	rootCmd.AddCommand(buildCmd, checkCmd, includeCmd, indexCmd, validateCmd, versionCmd)
+	rootCmd.AddCommand(buildCmd, checkCmd, includeCmd, indexCmd, migrateCmd, validateCmd, versionCmd)
 }
 
 // Execute initialises the CLI with the given build version and runs the root command.
