@@ -3,4 +3,4 @@ paths:
   - "**/*.md"
 ---
 
-<!-- @include: ../../../../docs/rules/docs.md -->
+<!-- @include: ../../../../sections/ai/rules/docs.md -->

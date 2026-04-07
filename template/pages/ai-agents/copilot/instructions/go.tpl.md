@@ -2,4 +2,4 @@
 applyTo: "**/*.go"
 ---
 
-<!-- @include: ../../../../docs/rules/go.md -->
+<!-- @include: ../../../../sections/ai/rules/go.md -->

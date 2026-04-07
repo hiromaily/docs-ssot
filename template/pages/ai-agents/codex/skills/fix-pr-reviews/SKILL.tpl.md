@@ -5,4 +5,4 @@ description: Fix PR review comments for the current branch by reading inline com
 
 # Fix PR review comments
 
-<!-- @include: ../../../../../docs/commands/fix-pr-reviews.md -->
+<!-- @include: ../../../../../sections/ai/commands/fix-pr-reviews.md -->

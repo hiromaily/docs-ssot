@@ -3,43 +3,43 @@
 -->
 # docs-ssot
 
-<!-- @include: ../docs/sections/project/overview.md -->
+<!-- @include: ../sections/project/overview.md -->
 
 ---
 
-<!-- @include: ../docs/sections/development/setup.md -->
+<!-- @include: ../sections/development/setup.md -->
 
 ---
 
-<!-- @include: ../docs/sections/product/features.md -->
+<!-- @include: ../sections/product/features.md -->
 
 ---
 
 ## Architecture
 
-<!-- @include: ../docs/sections/architecture/overview.md level=+1 -->
+<!-- @include: ../sections/architecture/overview.md level=+1 -->
 
-<!-- @include: ../docs/sections/architecture/system.md level=+1 -->
-
----
-
-<!-- @include: ../docs/sections/reference/commands.md -->
+<!-- @include: ../sections/architecture/system.md level=+1 -->
 
 ---
 
-<!-- @include: ../docs/sections/architecture/includes.md -->
+<!-- @include: ../sections/reference/commands.md -->
 
 ---
 
-<!-- @include: ../docs/sections/ai/overview.md -->
+<!-- @include: ../sections/architecture/includes.md -->
 
 ---
 
-<!-- @include: ../docs/sections/project/roadmap.md -->
+<!-- @include: ../sections/ai/overview.md -->
 
 ---
 
-<!-- @include: ../docs/sections/architecture/features.md -->
+<!-- @include: ../sections/project/roadmap.md -->
+
+---
+
+<!-- @include: ../sections/architecture/features.md -->
 
 ---
 

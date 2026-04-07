@@ -1,1 +1,1 @@
-<!-- @include: ../../../../docs/commands/fix-pr-reviews.md -->
+<!-- @include: ../../../../sections/ai/commands/fix-pr-reviews.md -->

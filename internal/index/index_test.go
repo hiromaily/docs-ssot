@@ -26,48 +26,48 @@ func setupTemplateTree(t *testing.T) (templateDir string, cfg *config.Config) {
 	dir := t.TempDir()
 	templateDir = filepath.Join(dir, "template")
 
-	// docs/sections/
-	writeFile(t, filepath.Join(templateDir, "docs", "sections", "project", "overview.md"), "# Overview\n")
-	writeFile(t, filepath.Join(templateDir, "docs", "sections", "project", "vision.md"), "# Vision\n")
-	writeFile(t, filepath.Join(templateDir, "docs", "sections", "architecture", "system.md"), "# System\n")
+	// sections/
+	writeFile(t, filepath.Join(templateDir, "sections", "project", "overview.md"), "# Overview\n")
+	writeFile(t, filepath.Join(templateDir, "sections", "project", "vision.md"), "# Vision\n")
+	writeFile(t, filepath.Join(templateDir, "sections", "architecture", "system.md"), "# System\n")
 
-	// docs/rules/
-	writeFile(t, filepath.Join(templateDir, "docs", "rules", "general.md"), "# General Rules\n")
-	writeFile(t, filepath.Join(templateDir, "docs", "rules", "git.md"), "# Git Rules\n")
+	// sections/ai/rules/
+	writeFile(t, filepath.Join(templateDir, "sections", "ai", "rules", "general.md"), "# General Rules\n")
+	writeFile(t, filepath.Join(templateDir, "sections", "ai", "rules", "git.md"), "# Git Rules\n")
 
-	// docs/commands/
-	writeFile(t, filepath.Join(templateDir, "docs", "commands", "fix-pr-reviews.md"), "# Fix PR Reviews\n")
+	// sections/ai/commands/
+	writeFile(t, filepath.Join(templateDir, "sections", "ai", "commands", "fix-pr-reviews.md"), "# Fix PR Reviews\n")
 
 	// pages/
 	writeFile(t, filepath.Join(templateDir, "pages", "README.tpl.md"),
-		"# README\n<!-- @include: ../docs/sections/project/overview.md -->\n<!-- @include: ../docs/sections/architecture/system.md -->\n")
+		"# README\n<!-- @include: ../sections/project/overview.md -->\n<!-- @include: ../sections/architecture/system.md -->\n")
 
 	writeFile(t, filepath.Join(templateDir, "pages", "CLAUDE.tpl.md"),
-		"# CLAUDE\n<!-- @include: ../docs/sections/project/overview.md -->\n<!-- @include: ../docs/sections/project/vision.md -->\n<!-- @include: ../docs/sections/architecture/system.md -->\n")
+		"# CLAUDE\n<!-- @include: ../sections/project/overview.md -->\n<!-- @include: ../sections/project/vision.md -->\n<!-- @include: ../sections/architecture/system.md -->\n")
 
-	// ai-agents/claude/rules/
-	writeFile(t, filepath.Join(templateDir, "ai-agents", "claude", "rules", "general.tpl.md"),
-		"<!-- @include: ../../../docs/rules/general.md -->\n")
+	// pages/ai-agents/claude/rules/
+	writeFile(t, filepath.Join(templateDir, "pages", "ai-agents", "claude", "rules", "general.tpl.md"),
+		"<!-- @include: ../../../../sections/ai/rules/general.md -->\n")
 
-	writeFile(t, filepath.Join(templateDir, "ai-agents", "claude", "rules", "git.tpl.md"),
-		"<!-- @include: ../../../docs/rules/git.md -->\n")
+	writeFile(t, filepath.Join(templateDir, "pages", "ai-agents", "claude", "rules", "git.tpl.md"),
+		"<!-- @include: ../../../../sections/ai/rules/git.md -->\n")
 
-	// ai-agents/claude/commands/
-	writeFile(t, filepath.Join(templateDir, "ai-agents", "claude", "commands", "fix-pr-reviews.tpl.md"),
-		"<!-- @include: ../../../docs/commands/fix-pr-reviews.md -->\n")
+	// pages/ai-agents/claude/commands/
+	writeFile(t, filepath.Join(templateDir, "pages", "ai-agents", "claude", "commands", "fix-pr-reviews.tpl.md"),
+		"<!-- @include: ../../../../sections/ai/commands/fix-pr-reviews.md -->\n")
 
-	// ai-agents/cursor/rules/
-	writeFile(t, filepath.Join(templateDir, "ai-agents", "cursor", "rules", "general.tpl.mdc"),
-		"---\ndescription: general\nalwaysApply: true\n---\n<!-- @include: ../../../docs/rules/general.md -->\n")
+	// pages/ai-agents/cursor/rules/
+	writeFile(t, filepath.Join(templateDir, "pages", "ai-agents", "cursor", "rules", "general.tpl.mdc"),
+		"---\ndescription: general\nalwaysApply: true\n---\n<!-- @include: ../../../../sections/ai/rules/general.md -->\n")
 
 	cfg = &config.Config{
 		Targets: []config.Target{
 			{Input: filepath.Join(templateDir, "pages", "README.tpl.md"), Output: "README.md"},
 			{Input: filepath.Join(templateDir, "pages", "CLAUDE.tpl.md"), Output: "CLAUDE.md"},
-			{Input: filepath.Join(templateDir, "ai-agents", "claude", "rules", "general.tpl.md"), Output: ".claude/rules/general.md"},
-			{Input: filepath.Join(templateDir, "ai-agents", "claude", "rules", "git.tpl.md"), Output: ".claude/rules/git.md"},
-			{Input: filepath.Join(templateDir, "ai-agents", "claude", "commands", "fix-pr-reviews.tpl.md"), Output: ".claude/commands/fix-pr-reviews.md"},
-			{Input: filepath.Join(templateDir, "ai-agents", "cursor", "rules", "general.tpl.mdc"), Output: ".cursor/rules/general.mdc"},
+			{Input: filepath.Join(templateDir, "pages", "ai-agents", "claude", "rules", "general.tpl.md"), Output: ".claude/rules/general.md"},
+			{Input: filepath.Join(templateDir, "pages", "ai-agents", "claude", "rules", "git.tpl.md"), Output: ".claude/rules/git.md"},
+			{Input: filepath.Join(templateDir, "pages", "ai-agents", "claude", "commands", "fix-pr-reviews.tpl.md"), Output: ".claude/commands/fix-pr-reviews.md"},
+			{Input: filepath.Join(templateDir, "pages", "ai-agents", "cursor", "rules", "general.tpl.mdc"), Output: ".cursor/rules/general.mdc"},
 		},
 	}
 
@@ -114,7 +114,7 @@ func TestGenerate_OrphanDetection(t *testing.T) {
 	templateDir, cfg := setupTemplateTree(t)
 
 	// Add an orphan file
-	writeFile(t, filepath.Join(templateDir, "docs", "sections", "project", "orphan.md"), "# Orphan\n")
+	writeFile(t, filepath.Join(templateDir, "sections", "project", "orphan.md"), "# Orphan\n")
 
 	data, err := index.Generate(templateDir, cfg)
 	if err != nil {
@@ -140,7 +140,7 @@ func TestGenerate_MultipleReferences(t *testing.T) {
 	}
 
 	// docs/sections/project/overview.md is referenced by both README and CLAUDE pages
-	overviewKey := "docs/sections/project/overview.md"
+	overviewKey := "sections/project/overview.md"
 	refs, ok := data.Sections[overviewKey]
 	if !ok {
 		t.Fatalf("expected %q in sections", overviewKey)
@@ -161,7 +161,7 @@ func TestGenerate_RulesReferencedByMultipleTools(t *testing.T) {
 	}
 
 	// docs/rules/general.md should be referenced by both claude and cursor
-	generalKey := "docs/rules/general.md"
+	generalKey := "sections/ai/rules/general.md"
 	refs, ok := data.Rules[generalKey]
 	if !ok {
 		t.Fatalf("expected %q in rules", generalKey)
@@ -177,11 +177,11 @@ func TestGenerate_GlobInclude(t *testing.T) {
 	dir := t.TempDir()
 	templateDir := filepath.Join(dir, "template")
 
-	writeFile(t, filepath.Join(templateDir, "docs", "sections", "ai", "claude.md"), "# Claude\n")
-	writeFile(t, filepath.Join(templateDir, "docs", "sections", "ai", "cursor.md"), "# Cursor\n")
+	writeFile(t, filepath.Join(templateDir, "sections", "ai", "claude.md"), "# Claude\n")
+	writeFile(t, filepath.Join(templateDir, "sections", "ai", "cursor.md"), "# Cursor\n")
 
 	writeFile(t, filepath.Join(templateDir, "pages", "README.tpl.md"),
-		"<!-- @include: ../docs/sections/ai/*.md -->\n")
+		"<!-- @include: ../sections/ai/*.md -->\n")
 
 	cfg := &config.Config{
 		Targets: []config.Target{
@@ -209,11 +209,11 @@ func TestGenerate_DirectoryInclude(t *testing.T) {
 	dir := t.TempDir()
 	templateDir := filepath.Join(dir, "template")
 
-	writeFile(t, filepath.Join(templateDir, "docs", "sections", "product", "concept.md"), "# Concept\n")
-	writeFile(t, filepath.Join(templateDir, "docs", "sections", "product", "features.md"), "# Features\n")
+	writeFile(t, filepath.Join(templateDir, "sections", "product", "concept.md"), "# Concept\n")
+	writeFile(t, filepath.Join(templateDir, "sections", "product", "features.md"), "# Features\n")
 
 	writeFile(t, filepath.Join(templateDir, "pages", "README.tpl.md"),
-		"<!-- @include: ../docs/sections/product/ -->\n")
+		"<!-- @include: ../sections/product/ -->\n")
 
 	cfg := &config.Config{
 		Targets: []config.Target{
@@ -240,11 +240,11 @@ func TestGenerate_RecursiveGlobInclude(t *testing.T) {
 	dir := t.TempDir()
 	templateDir := filepath.Join(dir, "template")
 
-	writeFile(t, filepath.Join(templateDir, "docs", "sections", "a.md"), "a\n")
-	writeFile(t, filepath.Join(templateDir, "docs", "sections", "sub", "b.md"), "b\n")
+	writeFile(t, filepath.Join(templateDir, "sections", "a.md"), "a\n")
+	writeFile(t, filepath.Join(templateDir, "sections", "sub", "b.md"), "b\n")
 
 	writeFile(t, filepath.Join(templateDir, "pages", "README.tpl.md"),
-		"<!-- @include: ../docs/sections/**/*.md -->\n")
+		"<!-- @include: ../sections/**/*.md -->\n")
 
 	cfg := &config.Config{
 		Targets: []config.Target{
@@ -321,7 +321,7 @@ func TestRender_OrphansListed(t *testing.T) {
 	t.Parallel()
 	templateDir, cfg := setupTemplateTree(t)
 
-	writeFile(t, filepath.Join(templateDir, "docs", "sections", "orphan.md"), "# Orphan\n")
+	writeFile(t, filepath.Join(templateDir, "sections", "orphan.md"), "# Orphan\n")
 
 	data, err := index.Generate(templateDir, cfg)
 	if err != nil {
@@ -411,11 +411,11 @@ func TestGenerate_IncludeInsideCodeFenceIgnored(t *testing.T) {
 	dir := t.TempDir()
 	templateDir := filepath.Join(dir, "template")
 
-	writeFile(t, filepath.Join(templateDir, "docs", "sections", "guide.md"), "# Guide\n")
+	writeFile(t, filepath.Join(templateDir, "sections", "guide.md"), "# Guide\n")
 
 	// Template has an include inside a code fence — should NOT count as a reference
 	writeFile(t, filepath.Join(templateDir, "pages", "README.tpl.md"),
-		"```md\n<!-- @include: ../docs/sections/guide.md -->\n```\n")
+		"```md\n<!-- @include: ../sections/guide.md -->\n```\n")
 
 	cfg := &config.Config{
 		Targets: []config.Target{
