@@ -33,7 +33,7 @@ targets:
 
   # ── Claude Code: skills ─────────────────────────────────────
   - input: template/pages/ai-agents/claude/skills/check-ssot/skill.tpl.md
-    output: .claude/skills/check-ssot/skill.md
+    output: .claude/skills/check-ssot/SKILL.md
 
   # ── Claude Code: commands ──────────────────────────────────
   - input: template/pages/ai-agents/claude/commands/fix-pr-reviews.tpl.md

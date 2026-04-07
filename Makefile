@@ -87,6 +87,10 @@ test:
 docs:
 	go run ./cmd/docs-ssot build
 
+.PHONY: docs-index
+docs-index:
+	go run ./cmd/docs-ssot index
+
 .PHONY: docs-validate
 docs-validate:
 	go run ./cmd/docs-ssot validate
@@ -102,9 +106,11 @@ docs-include:
 docs-check:
 	go run ./cmd/docs-ssot check --root template/docs $(ARGS)
 
-.PHONY: docs-index
-docs-index:
-	go run ./cmd/docs-ssot index
+# Usage: make docs-migrate FILES="README.md CLAUDE.md"
+# Usage: make docs-migrate FILES="README.md" ARGS="--dry-run"
+.PHONY: docs-migrate
+docs-migrate:
+	go run ./cmd/docs-ssot migrate $(ARGS) $(FILES)
 
 .PHONY: docs-version
 docs-version:
