@@ -1,0 +1,7 @@
+---
+description: Documentation SSOT rules — how to edit and regenerate docs
+globs:
+  - "**/*.md"
+---
+
+<!-- @include: ../../../../docs/rules/docs.md -->

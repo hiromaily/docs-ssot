@@ -1,0 +1,6 @@
+---
+description: General development rules for docs-ssot project
+alwaysApply: true
+---
+
+<!-- @include: ../../../../docs/rules/general.md -->
