@@ -106,6 +106,12 @@ docs-check:
 docs-index:
 	go run ./cmd/docs-ssot index
 
+# Usage: make docs-migrate FILES="README.md CLAUDE.md"
+# Usage: make docs-migrate FILES="README.md" ARGS="--dry-run"
+.PHONY: docs-migrate
+docs-migrate:
+	go run ./cmd/docs-ssot migrate $(ARGS) $(FILES)
+
 .PHONY: docs-version
 docs-version:
 	go run ./cmd/docs-ssot version
