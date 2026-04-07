@@ -62,5 +62,9 @@
 | --- | --- |
 | sections/architecture/diagrams/include-resolution.md | Not referenced by any template |
 | sections/architecture/diagrams/pipeline-flow.md | Not referenced by any template |
+| sections/development/contributing.md | Not referenced by any template |
+| sections/development/troubleshooting.md | Not referenced by any template |
 | sections/product/concept.md | Not referenced by any template |
+| sections/product/faq.md | Not referenced by any template |
+| sections/project/changelog.md | Not referenced by any template |
 | sections/project/vision.md | Not referenced by any template |

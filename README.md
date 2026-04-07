@@ -99,6 +99,8 @@ This ensures:
 - Scalable documentation structure
 - AI-friendly documentation organization
 
+> **Documentation Site:** <https://hiromaily.github.io/docs-ssot/>
+
 ---
 
 ## Setup
