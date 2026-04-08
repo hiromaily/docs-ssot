@@ -972,6 +972,7 @@ The CLI provides commands for generating documents from templates and managing d
 | `docs-ssot check` | Check docs for SSOT violations by detecting near-duplicate sections |
 | `docs-ssot include <file>` | Resolve includes and print expanded result to stdout |
 | `docs-ssot migrate [files...]` | Decompose existing Markdown files into SSOT section structure |
+| `docs-ssot migrate --from <tool>` | Migrate AI tool configs from one tool to others |
 | `docs-ssot validate` | Validate documentation structure without generating output |
 | `docs-ssot version` | Print the build version |
 
@@ -1177,6 +1178,91 @@ git diff README.md CLAUDE.md
 
 ---
 
+### Agent-aware migration (`--from`)
+
+With `--from`, `migrate` scans AI tool configuration files (rules, skills, commands, subagents) from the specified tool and generates SSOT sections with per-tool templates for the target tools.
+
+```
+docs-ssot migrate --from <tool> [--to <tools>] [flags]
+```
+
+#### What it does
+
+1. **Scans** the source tool's configuration directory for rules, skills, commands, and subagents
+2. **Strips** frontmatter from source files and shifts H1→H2 headings
+3. **Creates section files** under `template/sections/ai/<type>/<slug>.md`
+4. **Generates templates** for each target tool with appropriate frontmatter
+5. **Updates `docsgen.yaml`** with new build targets
+6. **Verifies round-trip** by building and comparing against originals
+
+#### Flags
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--from` | (required) | Source AI tool to migrate from (`claude`, `cursor`, `copilot`) |
+| `--to` | all except `--from` | Target tools, comma-separated (`cursor,copilot,codex`) |
+| `--convert-commands` | `false` | Convert legacy commands to skills during migration |
+| `--infer-globs` | `false` | Infer path-gated globs from rule slug names |
+| `--dry-run` | `false` | Print the migration plan without writing files |
+
+#### Examples
+
+Migrate Claude configs to all other tools:
+
+```
+docs-ssot migrate --from claude
+```
+
+Migrate to specific tools only:
+
+```
+docs-ssot migrate --from claude --to cursor,codex
+```
+
+Preview migration plan:
+
+```
+docs-ssot migrate --from claude --dry-run
+```
+
+Migrate with path inference and command conversion:
+
+```
+docs-ssot migrate --from claude --to cursor --infer-globs --convert-commands
+```
+
+Combine agent and file migration:
+
+```
+docs-ssot migrate --from claude --to cursor README.md CLAUDE.md
+```
+
+#### Output
+
+```
+Detected source tool: claude (5 files)
+Target tools: cursor, copilot, codex
+
+Creating sections:
+  template/sections/ai/rules/architecture.md
+  template/sections/ai/rules/testing.md
+  template/sections/ai/skills/deploy.md
+  template/sections/ai/subagents/critic.md
+  template/sections/ai/subagents/debugger.md
+
+Creating templates (3 tools × 5 files):
+  cursor: 5 templates
+  copilot: 5 templates
+  codex: 4 templates
+
+Updated docsgen.yaml (14 new targets)
+Verifying round-trip...
+Round-trip verification: OK
+Agent migration complete.
+```
+
+---
+
 ## docs include
 
 Resolve include directives and print the expanded result to stdout.
@@ -1264,6 +1350,8 @@ make docs-check                               # check docs for SSOT violations (
 make docs-check ARGS="--threshold 0.75"       # check with custom flags
 make docs-migrate FILES="README.md CLAUDE.md" # migrate existing docs to SSOT structure
 make docs-migrate FILES="README.md" ARGS="--dry-run"  # preview migration plan
+make docs-migrate-from FROM=claude             # migrate Claude configs to all other tools
+make docs-migrate-from FROM=claude TO=cursor   # migrate Claude to Cursor only
 make docs-version                             # print the build version
 ```
 
@@ -1678,7 +1766,7 @@ Other architecture documents should reference this file rather than duplicating 
 | Deterministic output | Implemented | Same input always produces identical output |
 | Variable substitution | Planned | Allow `{{ variable }}` placeholders expanded at build time |
 | Conditional includes | Planned | Include or exclude sections based on build-time flags |
-| Front matter support | Planned | Parse and strip/merge YAML front matter from included files |
+| Front matter support | Partial | Parse and strip YAML front matter implemented in `frontmatter` package; merge/pass-through not yet supported |
 
 ## CLI and Workflow Features
 
@@ -1694,6 +1782,24 @@ Other architecture documents should reference this file rather than duplicating 
 | Dry-run mode | Planned | Preview changes without writing output files |
 | Diff / up-to-date check | Planned | Exit non-zero if generated files differ from committed versions (useful for CI) |
 | Custom config file path | Planned | Allow specifying a non-default config file via CLI flag |
+
+## Agent Migration Features (`migrate --from`)
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| AI tool detection | Implemented | Scans `.claude/`, `.cursor/`, `.github/`, `.codex/`, `AGENTS.md` to detect configured tools |
+| `--from` / `--to` flags | Implemented | Specify source and target tools; `--to` defaults to all tools except source |
+| Rules migration | Implemented | Rules converted with tool-specific frontmatter (`.mdc` for Cursor, `applyTo` for Copilot, `@include` for Codex) |
+| Skills migration | Implemented | Skills generated for all target tools with `name` + `description`; Claude preserves extra fields (`model`, `effort`, `allowed-tools`) |
+| Subagent migration | Implemented | `.claude/agents/*.md` scanned and migrated to `.cursor/agents/`, `.github/agents/`, `.codex/agents/` |
+| Command migration | Implemented | Claude commands migrated (Claude-only by default); convertible to skills via `--convert-commands` |
+| `--convert-commands` | Implemented | Converts legacy `.claude/commands/` to cross-tool skills during migration |
+| `--infer-globs` | Implemented | Infers path-gated rules from slug names (e.g., `go` → `**/*.go`, `frontend-*` → `frontend/**`) |
+| Frontmatter parsing | Implemented | Full YAML parsing via `yaml.Unmarshal`; handles multi-line values (lists, maps) |
+| CRLF handling | Implemented | Normalizes `\r\n` to `\n` before parsing |
+| Config deduplication | Implemented | `docsgen.yaml` targets deduplicated on re-run (idempotent) |
+| Round-trip verification | Implemented | Builds output and compares against source content after migration |
+| Codex combined AGENTS.md | Implemented | All rules aggregated into single `AGENTS.tpl.md` via `@include` directives |
 
 ## Output Header Features
 

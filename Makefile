@@ -112,6 +112,13 @@ docs-check:
 docs-migrate:
 	go run ./cmd/docs-ssot migrate $(ARGS) $(FILES)
 
+# Usage: make docs-migrate-from FROM=claude
+# Usage: make docs-migrate-from FROM=claude TO=cursor,codex
+# Usage: make docs-migrate-from FROM=claude ARGS="--dry-run --infer-globs"
+.PHONY: docs-migrate-from
+docs-migrate-from:
+	go run ./cmd/docs-ssot migrate --from $(FROM) $(if $(TO),--to $(TO)) $(ARGS)
+
 .PHONY: docs-version
 docs-version:
 	go run ./cmd/docs-ssot version

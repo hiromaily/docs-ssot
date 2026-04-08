@@ -1,0 +1,6 @@
+# Test artifacts from round-trip verification (generator.Build writes to CWD)
+.claude/
+.cursor/
+.agents/
+.github/
+AGENTS.md
