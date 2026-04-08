@@ -1778,7 +1778,7 @@ Other architecture documents should reference this file rather than duplicating 
 | `validate` command | Implemented | Dry-run over all templates; reports unresolvable includes without writing any output files |
 | `version` command | Implemented | Prints the build version |
 | `migrate` command | Implemented | Decomposes existing Markdown files into SSOT section structure with duplicate detection and round-trip verification |
-| `migrate --agents` mode | Implemented | Scans AI tool configs (Claude, Cursor, Copilot, Codex) and generates multi-tool SSOT templates from a single tool's configuration |
+| `migrate --from` mode | Implemented | Migrates AI tool configs from one tool to others (`--from claude --to cursor,codex`); supports subagents, path-gated rules (`--infer-globs`), command conversion (`--convert-commands`) |
 | Watch mode | Planned | Automatically rebuild on source file changes |
 | Dry-run mode | Planned | Preview changes without writing output files |
 | Diff / up-to-date check | Planned | Exit non-zero if generated files differ from committed versions (useful for CI) |
