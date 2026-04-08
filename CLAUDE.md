@@ -925,7 +925,7 @@ Run `make install-dev` to set up hooks.
 
 # Commands Reference
 
-# Commands
+## Commands
 
 | Command | Description |
 |---------|-------------|
@@ -937,7 +937,7 @@ Run `make install-dev` to set up hooks.
 | `docs-ssot validate` | Validate documentation structure without generating output |
 | `docs-ssot version` | Print the build version |
 
-# docs-ssot build
+## docs-ssot build
 
 Generate final documents (e.g., README.md, CLAUDE.md) from templates.
 
@@ -945,13 +945,13 @@ Generate final documents (e.g., README.md, CLAUDE.md) from templates.
 docs-ssot build
 ```
 
-## What it does
+### What it does
 
 - Reads template files
 - Resolves `@include` directives
 - Expands included Markdown files
 - Writes final generated documents
-# docs-ssot check
+## docs-ssot check
 
 Check docs for SSOT violations by detecting near-duplicate sections across Markdown files.
 
@@ -961,7 +961,7 @@ docs-ssot check [flags]
 
 Uses TF-IDF cosine similarity to compare sections at the specified heading level. Sections scoring above the threshold are reported as potential SSOT violations — places where the same information exists in multiple source files.
 
-## Flags
+### Flags
 
 | Flag | Default | Description |
 |------|---------|-------------|
@@ -972,7 +972,7 @@ Uses TF-IDF cosine similarity to compare sections at the specified heading level
 | `--format` | `text` | Output format: `text` or `json` |
 | `--exclude` | — | Exclude path pattern (repeatable) |
 
-## Examples
+### Examples
 
 Basic check with default settings:
 
@@ -992,7 +992,7 @@ Compare at H3 level, exclude changelogs, output JSON:
 docs-ssot check --section-level 3 --exclude docs/changelog/** --format json
 ```
 
-## Output
+### Output
 
 Text output (one block per similar pair):
 
@@ -1009,10 +1009,10 @@ B snippet: Access tokens must be renewed prior to expiry...
 
 A score of `1.0` means identical content; `0.82` (default threshold) catches near-duplicates while filtering loosely related content.
 
-## Exit behaviour
+### Exit behaviour
 
 Exits `0` whether or not duplicates are found. Use `--format json` and inspect `result_count` in CI pipelines.
-# docs-ssot include
+## docs-ssot include
 
 Resolve include directives and print the expanded result to stdout.
 
@@ -1023,11 +1023,11 @@ docs-ssot include <file>
 Example:
 
 ```
-docs-ssot include template/README.tpl.md
+docs-ssot include template/pages/README.tpl.md
 ```
 
 Useful for debugging template expansion without writing any output files.
-# Agent-aware migration (--from)
+## Agent-aware migration (--from)
 
 With `--from`, `migrate` scans AI tool configuration files (rules, skills, commands, subagents) from the specified tool and generates SSOT sections with per-tool templates for the target tools.
 
@@ -1035,7 +1035,7 @@ With `--from`, `migrate` scans AI tool configuration files (rules, skills, comma
 docs-ssot migrate --from <tool> [--to <tools>] [flags]
 ```
 
-## What it does
+### What it does
 
 1. **Scans** the source tool's configuration directory for rules, skills, commands, and subagents
 2. **Strips** frontmatter from source files and shifts H1→H2 headings
@@ -1044,7 +1044,7 @@ docs-ssot migrate --from <tool> [--to <tools>] [flags]
 5. **Updates `docsgen.yaml`** with new build targets
 6. **Verifies round-trip** by building and comparing against originals
 
-## Flags
+### Flags
 
 | Flag | Default | Description |
 |------|---------|-------------|
@@ -1054,7 +1054,7 @@ docs-ssot migrate --from <tool> [--to <tools>] [flags]
 | `--infer-globs` | `false` | Infer path-gated globs from rule slug names |
 | `--dry-run` | `false` | Print the migration plan without writing files |
 
-## Examples
+### Examples
 
 Migrate Claude configs to all other tools:
 
@@ -1086,7 +1086,7 @@ Combine agent and file migration:
 docs-ssot migrate --from claude --to cursor README.md CLAUDE.md
 ```
 
-## Output
+### Output
 
 ```
 Detected source tool: claude (5 files)
@@ -1109,7 +1109,7 @@ Verifying round-trip...
 Round-trip verification: OK
 Agent migration complete.
 ```
-# docs-ssot migrate
+## docs-ssot migrate
 
 Decompose existing monolithic Markdown files (e.g., README.md, CLAUDE.md) into the docs-ssot section structure.
 
@@ -1119,7 +1119,7 @@ docs-ssot migrate [files...] [flags]
 
 This is the primary adoption command. It takes existing documentation files and converts them into modular, reusable sections with template files that reproduce the original document structure via `@include` directives.
 
-## What it does
+### What it does
 
 1. **Splits** each input file by H2 headings into candidate sections
 2. **Categorises** sections into directories (`project/`, `development/`, `architecture/`, `reference/`, `product/`, `misc/`) based on heading keyword heuristics
@@ -1129,7 +1129,7 @@ This is the primary adoption command. It takes existing documentation files and 
 6. **Creates `docsgen.yaml`** if it does not already exist
 7. **Verifies round-trip** by running `build` and comparing output against originals
 
-## Section categorisation
+### Section categorisation
 
 Sections are assigned to categories based on heading keywords:
 
@@ -1146,7 +1146,7 @@ Sections are assigned to categories based on heading keywords:
 | FAQ, Troubleshooting | `product/` |
 | (fallback) | `misc/` |
 
-## Duplicate handling
+### Duplicate handling
 
 When the same content appears in multiple input files:
 
@@ -1154,7 +1154,7 @@ When the same content appears in multiple input files:
 2. Pairs scoring above the threshold are merged into a single section file
 3. Both templates reference the shared section via `@include`
 
-## Flags
+### Flags
 
 | Flag | Default | Description |
 |------|---------|-------------|
@@ -1164,7 +1164,7 @@ When the same content appears in multiple input files:
 | `--threshold` | `0.82` | Similarity threshold for duplicate detection (0.0–1.0) |
 | `--dry-run` | `false` | Print the migration plan without writing files |
 
-## Examples
+### Examples
 
 Migrate existing README and CLAUDE.md:
 
@@ -1190,7 +1190,7 @@ Split at H1 boundaries instead of H2:
 docs-ssot migrate --section-level 1 README.md
 ```
 
-## Output
+### Output
 
 ```
 Parsed README.md: 8 sections
@@ -1211,7 +1211,7 @@ Round-trip verification: OK
 Migration complete.
 ```
 
-## Post-migration workflow
+### Post-migration workflow
 
 After `migrate`, the user's workflow becomes:
 
@@ -1225,7 +1225,7 @@ docs-ssot build
 # Verify
 git diff README.md CLAUDE.md
 ```
-# docs-ssot validate
+## docs-ssot validate
 
 Validate documentation structure without generating any output files.
 
@@ -1235,13 +1235,13 @@ docs-ssot validate
 
 Performs a dry run over all templates in `docsgen.yaml`.
 
-## Validation checks
+### Validation checks
 
 - Missing include files
 - Circular includes
 - Invalid paths
 
-## Output
+### Output
 
 Success:
 
@@ -1256,14 +1256,14 @@ ERROR: include error (/path/to/file.md): open /path/to/file.md: no such file or 
 ```
 
 Exits with a non-zero status code when any error is found.
-# docs-ssot version
+## docs-ssot version
 
 Print the build version.
 
 ```
 docs-ssot version
 ```
-# Typical Workflow
+## Typical Workflow
 
 ```
 docs-ssot validate
@@ -1273,17 +1273,17 @@ docs-ssot build
 Or during development:
 
 ```
-docs-ssot include template/README.tpl.md
+docs-ssot include template/pages/README.tpl.md
 ```
 
 ---
 
-# Recommended Makefile Shortcuts
+## Recommended Makefile Shortcuts
 
 ```
 make docs                                     # generate all output targets
 make docs-validate                            # validate all templates
-make docs-include FILE=template/README.tpl.md # expand and print a template
+make docs-include FILE=template/pages/README.tpl.md # expand and print a template
 make docs-check                               # check docs for SSOT violations (default settings)
 make docs-check ARGS="--threshold 0.75"       # check with custom flags
 make docs-migrate FILES="README.md CLAUDE.md" # migrate existing docs to SSOT structure

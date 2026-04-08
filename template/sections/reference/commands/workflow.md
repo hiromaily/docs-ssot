@@ -8,7 +8,7 @@ docs-ssot build
 Or during development:
 
 ```
-docs-ssot include template/README.tpl.md
+docs-ssot include template/pages/README.tpl.md
 ```
 
 ---
@@ -18,7 +18,7 @@ docs-ssot include template/README.tpl.md
 ```
 make docs                                     # generate all output targets
 make docs-validate                            # validate all templates
-make docs-include FILE=template/README.tpl.md # expand and print a template
+make docs-include FILE=template/pages/README.tpl.md # expand and print a template
 make docs-check                               # check docs for SSOT violations (default settings)
 make docs-check ARGS="--threshold 0.75"       # check with custom flags
 make docs-migrate FILES="README.md CLAUDE.md" # migrate existing docs to SSOT structure

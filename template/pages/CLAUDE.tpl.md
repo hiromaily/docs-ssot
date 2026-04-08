@@ -51,9 +51,9 @@
 
 # Commands Reference
 
-<!-- @include: ../sections/reference/commands-summary.md level=-1 -->
+<!-- @include: ../sections/reference/commands-summary.md -->
 
-<!-- @include: ../sections/reference/commands/ level=-1 -->
+<!-- @include: ../sections/reference/commands/ -->
 
 ---
 

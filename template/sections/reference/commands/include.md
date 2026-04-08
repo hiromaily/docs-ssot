@@ -9,7 +9,7 @@ docs-ssot include <file>
 Example:
 
 ```
-docs-ssot include template/README.tpl.md
+docs-ssot include template/pages/README.tpl.md
 ```
 
 Useful for debugging template expansion without writing any output files.
