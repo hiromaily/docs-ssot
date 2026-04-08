@@ -31,6 +31,10 @@ type AgentConfig struct {
 	DryRun bool
 	// ConfigFile is the path to docsgen.yaml.
 	ConfigFile string
+	// ConvertCommands converts legacy commands to skills during migration.
+	ConvertCommands bool
+	// InferGlobs attempts to infer path-gated rules from slug names.
+	InferGlobs bool
 }
 
 // agentSection tracks a single agent file and its planned output locations.
@@ -78,7 +82,7 @@ func RunAgents(w io.Writer, cfg AgentConfig) error {
 	}
 
 	// Step 4: Plan section file paths.
-	planSections(sections, cfg.OutputDir)
+	planSections(sections, cfg)
 
 	// Step 5: Plan template files.
 	templates := planTemplates(sections, cfg)
@@ -141,11 +145,16 @@ func readSourceFiles(root string, files []agentscan.AgentFile) ([]agentSection, 
 	return sections, nil
 }
 
-func planSections(sections []agentSection, outputDir string) {
+func planSections(sections []agentSection, cfg AgentConfig) {
 	for i := range sections {
 		s := &sections[i]
-		typeDir := string(s.Source.Type) + "s" // "rules", "skills", "commands"
-		s.SectionPath = filepath.Join(outputDir, "ai", typeDir, s.Source.Slug+".md")
+		effectiveType := s.Source.Type
+		// Convert commands to skills if requested.
+		if cfg.ConvertCommands && effectiveType == agentscan.FileTypeCommand {
+			effectiveType = agentscan.FileTypeSkill
+		}
+		typeDir := string(effectiveType) + "s" // "rules", "skills", "commands", "subagents"
+		s.SectionPath = filepath.Join(cfg.OutputDir, "ai", typeDir, s.Source.Slug+".md")
 	}
 }
 
@@ -156,14 +165,19 @@ func planTemplates(sections []agentSection, cfg AgentConfig) []templateFile {
 	var codexRuleIncludes []string
 
 	for _, s := range sections {
+		effectiveType := s.Source.Type
+		if cfg.ConvertCommands && effectiveType == agentscan.FileTypeCommand {
+			effectiveType = agentscan.FileTypeSkill
+		}
+
 		for _, tool := range cfg.TargetTools {
-			// Commands are Claude-only.
-			if s.Source.Type == agentscan.FileTypeCommand && tool != agentscan.ToolClaude {
+			// Original commands (not converted) are Claude-only.
+			if effectiveType == agentscan.FileTypeCommand && tool != agentscan.ToolClaude {
 				continue
 			}
 
 			// Codex rules go into a combined AGENTS.md — skip individual templates.
-			if tool == agentscan.ToolCodex && s.Source.Type == agentscan.FileTypeRule {
+			if tool == agentscan.ToolCodex && effectiveType == agentscan.FileTypeRule {
 				// Compute include path from AGENTS.md template to section file.
 				tplDir := filepath.Join(cfg.TemplateDir, "ai-agents", "codex")
 				relPath := computeRelPath(tplDir, s.SectionPath)
@@ -192,24 +206,40 @@ func planTemplates(sections []agentSection, cfg AgentConfig) []templateFile {
 }
 
 func buildTemplate(tool agentscan.Tool, s agentSection, cfg AgentConfig) templateFile {
+	effectiveType := s.Source.Type
+	if cfg.ConvertCommands && effectiveType == agentscan.FileTypeCommand {
+		effectiveType = agentscan.FileTypeSkill
+	}
+
+	// Use effective type for path calculation.
+	effectiveSource := s.Source
+	effectiveSource.Type = effectiveType
+
 	tplDir := templateDirForTool(cfg.TemplateDir, tool)
-	tplPath := templatePathForFile(tplDir, tool, s.Source)
+	tplPath := templatePathForFile(tplDir, tool, effectiveSource)
 	relPath := computeRelPath(filepath.Dir(tplPath), s.SectionPath)
 
 	var content string
-	switch s.Source.Type {
+	switch effectiveType {
 	case agentscan.FileTypeRule:
-		content = frontmatter.GenerateRuleTemplate(tool, s.Source.Slug, relPath)
+		var opts frontmatter.RuleTemplateOpts
+		if cfg.InferGlobs {
+			if globs, ok := agentscan.InferGlobs(s.Source.Slug); ok {
+				opts.Globs = globs
+			}
+		}
+		content = frontmatter.GenerateRuleTemplate(tool, s.Source.Slug, relPath, opts)
 	case agentscan.FileTypeSkill:
 		content = frontmatter.GenerateSkillTemplate(tool, s.Source.Slug, relPath, s.Fields)
 	case agentscan.FileTypeCommand:
-		// Commands reuse the rule template format.
 		content = frontmatter.GenerateRuleTemplate(tool, s.Source.Slug, relPath)
+	case agentscan.FileTypeSubagent:
+		content = frontmatter.GenerateSubagentTemplate(tool, s.Source.Slug, relPath, s.Fields)
 	}
 
 	return templateFile{
 		Tool:       tool,
-		Type:       s.Source.Type,
+		Type:       effectiveType,
 		Slug:       s.Source.Slug,
 		OutputPath: tplPath,
 		Content:    content,
@@ -236,6 +266,8 @@ func templatePathForFile(tplDir string, tool agentscan.Tool, f agentscan.AgentFi
 		return filepath.Join(tplDir, "skills", f.Slug, "SKILL.tpl.md")
 	case agentscan.FileTypeCommand:
 		return filepath.Join(tplDir, "commands", f.Slug+".tpl.md")
+	case agentscan.FileTypeSubagent:
+		return filepath.Join(tplDir, "agents", f.Slug+".tpl.md")
 	}
 	return filepath.Join(tplDir, f.Slug+".tpl.md")
 }
@@ -357,6 +389,8 @@ func resolveOutputPath(t templateFile) string { //nolint:gocyclo // inherent in 
 			return filepath.Join(".claude", "skills", t.Slug, "SKILL.md")
 		case agentscan.FileTypeCommand:
 			return filepath.Join(".claude", "commands", t.Slug+".md")
+		case agentscan.FileTypeSubagent:
+			return filepath.Join(".claude", "agents", t.Slug+".md")
 		}
 	case agentscan.ToolCursor:
 		switch t.Type {
@@ -366,6 +400,8 @@ func resolveOutputPath(t templateFile) string { //nolint:gocyclo // inherent in 
 			return filepath.Join(".cursor", "skills", t.Slug, "SKILL.md")
 		case agentscan.FileTypeCommand:
 			return t.OutputPath // commands not supported for Cursor
+		case agentscan.FileTypeSubagent:
+			return filepath.Join(".cursor", "agents", t.Slug+".md")
 		}
 	case agentscan.ToolCopilot:
 		switch t.Type {
@@ -375,6 +411,8 @@ func resolveOutputPath(t templateFile) string { //nolint:gocyclo // inherent in 
 			return filepath.Join(".github", "skills", t.Slug, "SKILL.md")
 		case agentscan.FileTypeCommand:
 			return t.OutputPath // commands not supported for Copilot
+		case agentscan.FileTypeSubagent:
+			return filepath.Join(".github", "agents", t.Slug+".agent.md")
 		}
 	case agentscan.ToolCodex:
 		if t.Slug == "AGENTS" {
@@ -387,6 +425,8 @@ func resolveOutputPath(t templateFile) string { //nolint:gocyclo // inherent in 
 			return filepath.Join(".agents", "skills", t.Slug, "SKILL.md")
 		case agentscan.FileTypeCommand:
 			return t.OutputPath // commands not supported for Codex
+		case agentscan.FileTypeSubagent:
+			return filepath.Join(".codex", "agents", t.Slug+".toml")
 		}
 	}
 	return t.OutputPath

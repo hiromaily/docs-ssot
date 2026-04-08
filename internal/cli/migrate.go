@@ -44,6 +44,8 @@ and generates multi-tool templates from a single tool's configuration.`,
 		agentsMode, _ := flags.GetBool("agents")
 		sourceTool, _ := flags.GetString("source-tool")
 		targetToolsStr, _ := flags.GetString("target-tools")
+		convertCommands, _ := flags.GetBool("convert-commands")
+		inferGlobs, _ := flags.GetBool("infer-globs")
 
 		if sectionLevel < 1 || sectionLevel > 6 {
 			return fmt.Errorf("--section-level must be between 1 and 6, got %d", sectionLevel)
@@ -57,13 +59,15 @@ and generates multi-tool templates from a single tool's configuration.`,
 			}
 
 			agentCfg := migrate.AgentConfig{
-				RootDir:     ".",
-				SourceTool:  sourceTool,
-				TargetTools: targetTools,
-				OutputDir:   outputDir,
-				TemplateDir: templateDir,
-				DryRun:      dryRun,
-				ConfigFile:  configFile,
+				RootDir:         ".",
+				SourceTool:      sourceTool,
+				TargetTools:     targetTools,
+				OutputDir:       outputDir,
+				TemplateDir:     templateDir,
+				DryRun:          dryRun,
+				ConfigFile:      configFile,
+				ConvertCommands: convertCommands,
+				InferGlobs:      inferGlobs,
 			}
 
 			if err := migrate.RunAgents(os.Stdout, agentCfg); err != nil {
@@ -98,6 +102,8 @@ func init() {
 	migrateCmd.Flags().Bool("agents", false, "enable agent-aware migration mode")
 	migrateCmd.Flags().String("source-tool", "auto", "source tool: auto, claude, cursor, copilot")
 	migrateCmd.Flags().String("target-tools", "all", "target tools: all or comma-separated (claude,cursor,copilot,codex)")
+	migrateCmd.Flags().Bool("convert-commands", false, "convert legacy commands to skills during migration")
+	migrateCmd.Flags().Bool("infer-globs", false, "infer path-gated globs from rule slug names")
 }
 
 func parseTargetTools(s string) ([]agentscan.Tool, error) {

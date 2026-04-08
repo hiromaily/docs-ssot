@@ -235,6 +235,144 @@ func TestRunAgents_CodexCombinedAGENTS(t *testing.T) {
 	}
 }
 
+func TestRunAgents_ConvertCommands(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	setupAgentTestFiles(t, dir)
+
+	// Add a command file.
+	cmdsDir := filepath.Join(dir, ".claude", "commands")
+	if err := os.MkdirAll(cmdsDir, 0o750); err != nil {
+		t.Fatal(err)
+	}
+	writeTestFile(t, filepath.Join(cmdsDir, "review.md"), "# Review\n\nthe")
+
+	var buf bytes.Buffer
+	cfg := migrate.AgentConfig{
+		RootDir:         dir,
+		SourceTool:      "claude",
+		TargetTools:     []agentscan.Tool{agentscan.ToolClaude, agentscan.ToolCursor},
+		OutputDir:       filepath.Join(dir, "template/sections"),
+		TemplateDir:     filepath.Join(dir, "template/pages"),
+		DryRun:          true,
+		ConfigFile:      filepath.Join(dir, "docsgen.yaml"),
+		ConvertCommands: true,
+	}
+
+	if err := migrate.RunAgents(&buf, cfg); err != nil {
+		t.Fatalf("RunAgents() error: %v", err)
+	}
+
+	output := buf.String()
+	// Converted command should appear as a skill section, not a command.
+	if !strings.Contains(output, "skills/review.md") {
+		t.Errorf("expected converted command in skills path, got:\n%s", output)
+	}
+	// Cursor should get a skill template (commands aren't supported, but converted ones are).
+	if !strings.Contains(output, "cursor") {
+		t.Errorf("expected cursor templates for converted commands, got:\n%s", output)
+	}
+}
+
+func TestRunAgents_InferGlobs(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+
+	// Create a Go-specific rule.
+	rulesDir := filepath.Join(dir, ".claude", "rules")
+	if err := os.MkdirAll(rulesDir, 0o750); err != nil {
+		t.Fatal(err)
+	}
+	writeTestFile(t, filepath.Join(rulesDir, "go.md"), "# Go Rules\n\nGo coding standards.\n")
+
+	var buf bytes.Buffer
+	cfg := migrate.AgentConfig{
+		RootDir:     dir,
+		SourceTool:  "claude",
+		TargetTools: []agentscan.Tool{agentscan.ToolCursor},
+		OutputDir:   filepath.Join(dir, "template/sections"),
+		TemplateDir: filepath.Join(dir, "template/pages"),
+		DryRun:      false,
+		ConfigFile:  filepath.Join(dir, "docsgen.yaml"),
+		InferGlobs:  true,
+	}
+
+	if err := migrate.RunAgents(&buf, cfg); err != nil {
+		t.Fatalf("RunAgents() error: %v", err)
+	}
+
+	// Cursor template should have globs instead of alwaysApply.
+	cursorTpl := filepath.Join(dir, "template/pages/ai-agents/cursor/rules/go.tpl.mdc")
+	data, err := os.ReadFile(cursorTpl)
+	if err != nil {
+		t.Fatalf("expected Cursor template to exist: %v", err)
+	}
+
+	content := string(data)
+	if !strings.Contains(content, "globs: **/*.go") {
+		t.Errorf("expected inferred globs in Cursor template, got:\n%s", content)
+	}
+	if strings.Contains(content, "alwaysApply") {
+		t.Errorf("expected no alwaysApply when globs are inferred, got:\n%s", content)
+	}
+}
+
+func TestRunAgents_SubagentMigration(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	setupAgentTestFiles(t, dir)
+
+	// Add subagent files.
+	agentsDir := filepath.Join(dir, ".claude", "agents")
+	if err := os.MkdirAll(agentsDir, 0o750); err != nil {
+		t.Fatal(err)
+	}
+	writeTestFile(t, filepath.Join(agentsDir, "critic.md"), "---\nname: critic\ndescription: Adversarial critic\n---\n\n# Critic\n\nChallenges hypotheses.\n")
+
+	var buf bytes.Buffer
+	cfg := migrate.AgentConfig{
+		RootDir:     dir,
+		SourceTool:  "claude",
+		TargetTools: []agentscan.Tool{agentscan.ToolClaude, agentscan.ToolCopilot},
+		OutputDir:   filepath.Join(dir, "template/sections"),
+		TemplateDir: filepath.Join(dir, "template/pages"),
+		DryRun:      false,
+		ConfigFile:  filepath.Join(dir, "docsgen.yaml"),
+	}
+
+	if err := migrate.RunAgents(&buf, cfg); err != nil {
+		t.Fatalf("RunAgents() error: %v", err)
+	}
+
+	// Verify subagent section was created.
+	sectionPath := filepath.Join(dir, "template/sections/ai/subagents/critic.md")
+	if _, err := os.Stat(sectionPath); err != nil {
+		t.Errorf("expected subagent section file to exist: %v", err)
+	}
+
+	// Verify Claude agent template.
+	claudeTpl := filepath.Join(dir, "template/pages/ai-agents/claude/agents/critic.tpl.md")
+	if _, err := os.Stat(claudeTpl); err != nil {
+		t.Errorf("expected Claude agent template to exist: %v", err)
+	}
+	data, err := os.ReadFile(claudeTpl)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(data), "name: critic") {
+		t.Errorf("expected name in Claude agent template, got:\n%s", string(data))
+	}
+
+	// Verify Copilot agent template.
+	copilotTpl := filepath.Join(dir, "template/pages/ai-agents/copilot/agents/critic.tpl.md")
+	if _, err := os.Stat(copilotTpl); err != nil {
+		t.Errorf("expected Copilot agent template to exist: %v", err)
+	}
+}
+
 // helpers
 
 func setupAgentTestFiles(t *testing.T, dir string) {

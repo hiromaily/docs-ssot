@@ -70,9 +70,21 @@ func ShiftH1ToH2(content string) string {
 	return shiftH1ToH2(content)
 }
 
+// RuleTemplateOpts configures rule template generation.
+type RuleTemplateOpts struct {
+	// Globs is an optional inferred glob pattern for path-gated rules.
+	// When set, Cursor uses globs instead of alwaysApply, and Copilot uses it for applyTo.
+	Globs string
+}
+
 // GenerateRuleTemplate generates a tool-specific rule template with appropriate
 // frontmatter and an @include directive for the given section path.
-func GenerateRuleTemplate(tool agentscan.Tool, slug, includePath string) string {
+func GenerateRuleTemplate(tool agentscan.Tool, slug, includePath string, opts ...RuleTemplateOpts) string {
+	var o RuleTemplateOpts
+	if len(opts) > 0 {
+		o = opts[0]
+	}
+
 	var b strings.Builder
 
 	switch tool {
@@ -83,20 +95,69 @@ func GenerateRuleTemplate(tool agentscan.Tool, slug, includePath string) string 
 	case agentscan.ToolCursor:
 		b.WriteString("---\n")
 		b.WriteString("description: " + slugToDescription(slug) + "\n")
-		b.WriteString("alwaysApply: true\n")
+		if o.Globs != "" {
+			b.WriteString("globs: " + o.Globs + "\n")
+		} else {
+			b.WriteString("alwaysApply: true\n")
+		}
 		b.WriteString("---\n")
 		b.WriteString("\n")
 		b.WriteString("<!-- @include: " + includePath + " level=-1 -->\n")
 
 	case agentscan.ToolCopilot:
 		b.WriteString("---\n")
-		b.WriteString("applyTo: \"**/*\"\n")
+		if o.Globs != "" {
+			b.WriteString("applyTo: \"" + o.Globs + "\"\n")
+		} else {
+			b.WriteString("applyTo: \"**/*\"\n")
+		}
 		b.WriteString("---\n")
 		b.WriteString("\n")
 		b.WriteString("<!-- @include: " + includePath + " level=-1 -->\n")
 
 	case agentscan.ToolCodex:
 		// Codex rules are embedded in AGENTS.md via @include.
+		b.WriteString("<!-- @include: " + includePath + " level=-1 -->\n")
+	}
+
+	return b.String()
+}
+
+// GenerateSubagentTemplate generates a tool-specific subagent template.
+func GenerateSubagentTemplate(tool agentscan.Tool, slug, includePath string, sourceFields map[string]string) string {
+	var b strings.Builder
+
+	name := slug
+	description := slugToDescription(slug)
+	if v, ok := sourceFields["name"]; ok {
+		name = v
+	}
+	if v, ok := sourceFields["description"]; ok {
+		description = v
+	}
+
+	switch tool {
+	case agentscan.ToolClaude:
+		// Preserve all original frontmatter for Claude agents.
+		b.WriteString("---\n")
+		b.WriteString("name: " + name + "\n")
+		b.WriteString("description: " + description + "\n")
+		for _, key := range []string{"disallowedTools", "allowedTools", "model", "effort"} {
+			if v, ok := sourceFields[key]; ok {
+				b.WriteString(key + ": " + v + "\n")
+			}
+		}
+		b.WriteString("---\n")
+		b.WriteString("\n")
+		b.WriteString("<!-- @include: " + includePath + " level=-1 -->\n")
+
+	default:
+		// Other tools: name + description only.
+		b.WriteString("---\n")
+		b.WriteString("name: " + name + "\n")
+		b.WriteString("description: " + description + "\n")
+		b.WriteString("---\n")
+		b.WriteString("\n")
 		b.WriteString("<!-- @include: " + includePath + " level=-1 -->\n")
 	}
 

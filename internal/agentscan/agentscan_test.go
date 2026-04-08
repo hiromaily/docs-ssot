@@ -36,6 +36,35 @@ func TestScan_DetectsClaude(t *testing.T) {
 	}
 }
 
+func TestScan_DetectsSubagents(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	setupClaudeFiles(t, dir)
+
+	// Add subagents.
+	agentsDir := filepath.Join(dir, ".claude", "agents")
+	mkdirAll(t, agentsDir)
+	writeFile(t, filepath.Join(agentsDir, "critic.md"), "---\nname: critic\ndescription: Adversarial critic\n---\n\n# Critic\n")
+	writeFile(t, filepath.Join(agentsDir, "debugger.md"), "---\nname: debugger\ndescription: Debugger\n---\n\n# Debugger\n")
+
+	result, err := agentscan.Scan(dir)
+	if err != nil {
+		t.Fatalf("Scan() error: %v", err)
+	}
+
+	subagents := result.FilesByType(agentscan.ToolClaude, agentscan.FileTypeSubagent)
+	if len(subagents) != 2 {
+		t.Errorf("expected 2 Claude subagents, got %d", len(subagents))
+	}
+
+	// Total files should include subagents.
+	claudeFiles := result.FilesForTool(agentscan.ToolClaude)
+	if len(claudeFiles) != 5 { // 2 rules + 1 skill + 2 subagents
+		t.Errorf("expected 5 Claude files, got %d", len(claudeFiles))
+	}
+}
+
 func TestScan_DetectsCursor(t *testing.T) {
 	t.Parallel()
 

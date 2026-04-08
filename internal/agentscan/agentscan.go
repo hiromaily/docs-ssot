@@ -45,9 +45,10 @@ func ParseTool(s string) (Tool, error) {
 type FileType string
 
 const (
-	FileTypeRule    FileType = "rule"
-	FileTypeSkill   FileType = "skill"
-	FileTypeCommand FileType = "command"
+	FileTypeRule     FileType = "rule"
+	FileTypeSkill    FileType = "skill"
+	FileTypeCommand  FileType = "command"
+	FileTypeSubagent FileType = "subagent"
 )
 
 // AgentFile represents a single agent configuration file discovered in the repository.
@@ -155,70 +156,29 @@ func (r *ScanResult) FilesByType(tool Tool, ft FileType) []AgentFile {
 func collectClaude(root string) ([]AgentFile, error) {
 	var files []AgentFile
 
-	// Rules: .claude/rules/*.md
-	rulesDir := filepath.Join(root, ".claude", "rules")
-	if isDir(rulesDir) {
-		entries, err := os.ReadDir(rulesDir)
-		if err != nil {
-			return nil, err
-		}
-		for _, e := range entries {
-			if e.IsDir() || !strings.HasSuffix(e.Name(), ".md") {
-				continue
-			}
-			slug := strings.TrimSuffix(e.Name(), ".md")
-			files = append(files, AgentFile{
-				Tool: ToolClaude,
-				Type: FileTypeRule,
-				Path: filepath.Join(".claude", "rules", e.Name()),
-				Slug: slug,
-			})
-		}
+	rules, err := collectMDFiles(root, filepath.Join(".claude", "rules"), ToolClaude, FileTypeRule, ".md")
+	if err != nil {
+		return nil, err
 	}
+	files = append(files, rules...)
 
-	// Skills: .claude/skills/*/SKILL.md
-	skillsDir := filepath.Join(root, ".claude", "skills")
-	if isDir(skillsDir) {
-		entries, err := os.ReadDir(skillsDir)
-		if err != nil {
-			return nil, err
-		}
-		for _, e := range entries {
-			if !e.IsDir() {
-				continue
-			}
-			skillFile := filepath.Join(skillsDir, e.Name(), "SKILL.md")
-			if fileExists(skillFile) {
-				files = append(files, AgentFile{
-					Tool: ToolClaude,
-					Type: FileTypeSkill,
-					Path: filepath.Join(".claude", "skills", e.Name(), "SKILL.md"),
-					Slug: e.Name(),
-				})
-			}
-		}
+	skills, err := collectSkillDirs(root, filepath.Join(".claude", "skills"), ToolClaude)
+	if err != nil {
+		return nil, err
 	}
+	files = append(files, skills...)
 
-	// Commands: .claude/commands/*.md
-	cmdsDir := filepath.Join(root, ".claude", "commands")
-	if isDir(cmdsDir) {
-		entries, err := os.ReadDir(cmdsDir)
-		if err != nil {
-			return nil, err
-		}
-		for _, e := range entries {
-			if e.IsDir() || !strings.HasSuffix(e.Name(), ".md") {
-				continue
-			}
-			slug := strings.TrimSuffix(e.Name(), ".md")
-			files = append(files, AgentFile{
-				Tool: ToolClaude,
-				Type: FileTypeCommand,
-				Path: filepath.Join(".claude", "commands", e.Name()),
-				Slug: slug,
-			})
-		}
+	agents, err := collectMDFiles(root, filepath.Join(".claude", "agents"), ToolClaude, FileTypeSubagent, ".md")
+	if err != nil {
+		return nil, err
 	}
+	files = append(files, agents...)
+
+	cmds, err := collectMDFiles(root, filepath.Join(".claude", "commands"), ToolClaude, FileTypeCommand, ".md")
+	if err != nil {
+		return nil, err
+	}
+	files = append(files, cmds...)
 
 	return files, nil
 }
@@ -226,49 +186,17 @@ func collectClaude(root string) ([]AgentFile, error) {
 func collectCursor(root string) ([]AgentFile, error) {
 	var files []AgentFile
 
-	// Rules: .cursor/rules/*.mdc
-	rulesDir := filepath.Join(root, ".cursor", "rules")
-	if isDir(rulesDir) {
-		entries, err := os.ReadDir(rulesDir)
-		if err != nil {
-			return nil, err
-		}
-		for _, e := range entries {
-			if e.IsDir() || !strings.HasSuffix(e.Name(), ".mdc") {
-				continue
-			}
-			slug := strings.TrimSuffix(e.Name(), ".mdc")
-			files = append(files, AgentFile{
-				Tool: ToolCursor,
-				Type: FileTypeRule,
-				Path: filepath.Join(".cursor", "rules", e.Name()),
-				Slug: slug,
-			})
-		}
+	rules, err := collectMDFiles(root, filepath.Join(".cursor", "rules"), ToolCursor, FileTypeRule, ".mdc")
+	if err != nil {
+		return nil, err
 	}
+	files = append(files, rules...)
 
-	// Skills: .cursor/skills/*/SKILL.md
-	skillsDir := filepath.Join(root, ".cursor", "skills")
-	if isDir(skillsDir) {
-		entries, err := os.ReadDir(skillsDir)
-		if err != nil {
-			return nil, err
-		}
-		for _, e := range entries {
-			if !e.IsDir() {
-				continue
-			}
-			skillFile := filepath.Join(skillsDir, e.Name(), "SKILL.md")
-			if fileExists(skillFile) {
-				files = append(files, AgentFile{
-					Tool: ToolCursor,
-					Type: FileTypeSkill,
-					Path: filepath.Join(".cursor", "skills", e.Name(), "SKILL.md"),
-					Slug: e.Name(),
-				})
-			}
-		}
+	skills, err := collectSkillDirs(root, filepath.Join(".cursor", "skills"), ToolCursor)
+	if err != nil {
+		return nil, err
 	}
+	files = append(files, skills...)
 
 	return files, nil
 }
@@ -276,50 +204,76 @@ func collectCursor(root string) ([]AgentFile, error) {
 func collectCopilot(root string) ([]AgentFile, error) {
 	var files []AgentFile
 
-	// Instructions: .github/instructions/*.instructions.md
-	instrDir := filepath.Join(root, ".github", "instructions")
-	if isDir(instrDir) {
-		entries, err := os.ReadDir(instrDir)
-		if err != nil {
-			return nil, err
+	rules, err := collectMDFiles(root, filepath.Join(".github", "instructions"), ToolCopilot, FileTypeRule, ".instructions.md")
+	if err != nil {
+		return nil, err
+	}
+	files = append(files, rules...)
+
+	skills, err := collectSkillDirs(root, filepath.Join(".github", "skills"), ToolCopilot)
+	if err != nil {
+		return nil, err
+	}
+	files = append(files, skills...)
+
+	return files, nil
+}
+
+// collectMDFiles collects files with the given extension from a directory.
+func collectMDFiles(root, relDir string, tool Tool, ft FileType, ext string) ([]AgentFile, error) {
+	absDir := filepath.Join(root, relDir)
+	if !isDir(absDir) {
+		return nil, nil
+	}
+
+	entries, err := os.ReadDir(absDir)
+	if err != nil {
+		return nil, err
+	}
+
+	var files []AgentFile
+	for _, e := range entries {
+		if e.IsDir() || !strings.HasSuffix(e.Name(), ext) {
+			continue
 		}
-		for _, e := range entries {
-			if e.IsDir() || !strings.HasSuffix(e.Name(), ".instructions.md") {
-				continue
-			}
-			slug := strings.TrimSuffix(e.Name(), ".instructions.md")
+		slug := strings.TrimSuffix(e.Name(), ext)
+		files = append(files, AgentFile{
+			Tool: tool,
+			Type: ft,
+			Path: filepath.Join(relDir, e.Name()),
+			Slug: slug,
+		})
+	}
+	return files, nil
+}
+
+// collectSkillDirs collects skills from subdirectories containing SKILL.md.
+func collectSkillDirs(root, relDir string, tool Tool) ([]AgentFile, error) {
+	absDir := filepath.Join(root, relDir)
+	if !isDir(absDir) {
+		return nil, nil
+	}
+
+	entries, err := os.ReadDir(absDir)
+	if err != nil {
+		return nil, err
+	}
+
+	var files []AgentFile
+	for _, e := range entries {
+		if !e.IsDir() {
+			continue
+		}
+		skillFile := filepath.Join(absDir, e.Name(), "SKILL.md")
+		if fileExists(skillFile) {
 			files = append(files, AgentFile{
-				Tool: ToolCopilot,
-				Type: FileTypeRule,
-				Path: filepath.Join(".github", "instructions", e.Name()),
-				Slug: slug,
+				Tool: tool,
+				Type: FileTypeSkill,
+				Path: filepath.Join(relDir, e.Name(), "SKILL.md"),
+				Slug: e.Name(),
 			})
 		}
 	}
-
-	// Skills: .github/skills/*/SKILL.md
-	skillsDir := filepath.Join(root, ".github", "skills")
-	if isDir(skillsDir) {
-		entries, err := os.ReadDir(skillsDir)
-		if err != nil {
-			return nil, err
-		}
-		for _, e := range entries {
-			if !e.IsDir() {
-				continue
-			}
-			skillFile := filepath.Join(skillsDir, e.Name(), "SKILL.md")
-			if fileExists(skillFile) {
-				files = append(files, AgentFile{
-					Tool: ToolCopilot,
-					Type: FileTypeSkill,
-					Path: filepath.Join(".github", "skills", e.Name(), "SKILL.md"),
-					Slug: e.Name(),
-				})
-			}
-		}
-	}
-
 	return files, nil
 }
 
