@@ -6,7 +6,7 @@
 
 | Template | Output | Sections included |
 | --- | --- | --- |
-| pages/README.tpl.md | README.md | 10 |
+| pages/README.tpl.md | README.md | 9 |
 | pages/AGENTS.tpl.md | AGENTS.md | 30 |
 | pages/CLAUDE.tpl.md | CLAUDE.md | 30 |
 | pages/ai-agents/claude/rules/general.tpl.md | .claude/rules/general.md | 1 |
@@ -55,7 +55,6 @@
 | sections/architecture/overview.md | AGENTS, CLAUDE, codex |
 | sections/architecture/pipeline.md | CLAUDE |
 | sections/architecture/system.md | AGENTS, CLAUDE, codex |
-| sections/development/contributing.md | README |
 | sections/development/lint.md | AGENTS, CLAUDE, codex |
 | sections/development/setup.md | AGENTS, CLAUDE, codex |
 | sections/development/test.md | AGENTS, CLAUDE, codex |
@@ -105,6 +104,7 @@
 | --- | --- |
 | sections/architecture/diagrams/include-resolution.md | Not referenced by any template |
 | sections/architecture/diagrams/pipeline-flow.md | Not referenced by any template |
+| sections/development/contributing.md | Not referenced by any template |
 | sections/development/troubleshooting.md | Not referenced by any template |
 | sections/product/faq.md | Not referenced by any template |
 | sections/product/features.md | Not referenced by any template |
