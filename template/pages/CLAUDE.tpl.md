@@ -5,6 +5,14 @@
 
 <!-- @include: ../sections/project/overview.md -->
 
+<!-- @include: ../sections/project/background.md -->
+
+<!-- @include: ../sections/project/problem.md -->
+
+<!-- @include: ../sections/project/solution.md -->
+
+<!-- @include: ../sections/project/concept.md -->
+
 ---
 
 <!-- @include: ../sections/ai/agents.md -->
@@ -41,7 +49,11 @@
 
 ---
 
-<!-- @include: ../sections/reference/commands.md level=-1 -->
+# Commands Reference
+
+<!-- @include: ../sections/reference/commands-summary.md level=-1 -->
+
+<!-- @include: ../sections/reference/commands/ level=-1 -->
 
 ---
 
