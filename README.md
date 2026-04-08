@@ -3,6 +3,8 @@
 -->
 # docs-ssot
 
+> **Documentation Site:** <https://hiromaily.github.io/docs-ssot/>
+
 ## Overview
 
 `docs-ssot` is a documentation Single Source of Truth (SSOT) generator.
@@ -98,8 +100,6 @@ This ensures:
 - Easier updates
 - Scalable documentation structure
 - AI-friendly documentation organization
-
-> **Documentation Site:** <https://hiromaily.github.io/docs-ssot/>
 
 ---
 
