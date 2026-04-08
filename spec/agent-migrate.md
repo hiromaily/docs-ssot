@@ -104,7 +104,7 @@ Section files follow H2+ convention. H1 headings in source files are shifted to 
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--from` | — | Source AI tool to migrate from (`claude`, `cursor`, `copilot`) |
+| `--from` | (required) | Source AI tool to migrate from (`claude`, `cursor`, `copilot`) |
 | `--to` | all except `--from` | Target tools, comma-separated (`cursor,copilot,codex`) |
 | `--convert-commands` | `false` | Convert legacy commands to skills during migration |
 | `--infer-globs` | `false` | Infer path-gated globs from rule slug names |

@@ -85,7 +85,7 @@ Examples:
 
 		// Run agent migration if enabled.
 		if agentsMode {
-			targetTools, err := resolveTargetTools(toString, from)
+			targetTools, err := ResolveTargetTools(toString, from)
 			if err != nil {
 				return err
 			}
@@ -153,11 +153,17 @@ func init() {
 	_ = migrateCmd.Flags().MarkHidden("target-tools")
 }
 
-// resolveTargetTools determines the target tools based on --to and --from flags.
-// When --to is empty, all tools except the source tool are used.
-func resolveTargetTools(toString, from string) ([]agentscan.Tool, error) {
+// ResolveTargetTools determines the target tools based on --to and --from flags.
+// When toString is empty, all tools except the source tool are used.
+// If toString explicitly includes the source tool, it is silently excluded.
+func ResolveTargetTools(toString, from string) ([]agentscan.Tool, error) {
 	if toString != "" && toString != "all" {
-		return parseToolList(toString)
+		tools, err := ParseToolList(toString)
+		if err != nil {
+			return nil, err
+		}
+		// Exclude source tool from explicit list.
+		return excludeSource(tools, from)
 	}
 
 	// Default: all tools except the source.
@@ -166,21 +172,31 @@ func resolveTargetTools(toString, from string) ([]agentscan.Tool, error) {
 		return all, nil
 	}
 
+	return excludeSource(all, from)
+}
+
+// excludeSource removes the source tool from the list if present.
+func excludeSource(tools []agentscan.Tool, from string) ([]agentscan.Tool, error) {
+	if from == "" || from == "auto" {
+		return tools, nil
+	}
+
 	sourceTool, err := agentscan.ParseTool(from)
 	if err != nil {
 		return nil, err
 	}
 
-	tools := make([]agentscan.Tool, 0, len(all)-1)
-	for _, t := range all {
+	filtered := make([]agentscan.Tool, 0, len(tools))
+	for _, t := range tools {
 		if t != sourceTool {
-			tools = append(tools, t)
+			filtered = append(filtered, t)
 		}
 	}
-	return tools, nil
+	return filtered, nil
 }
 
-func parseToolList(s string) ([]agentscan.Tool, error) {
+// ParseToolList parses a comma-separated tool list with deduplication.
+func ParseToolList(s string) ([]agentscan.Tool, error) {
 	seen := map[agentscan.Tool]bool{}
 	var tools []agentscan.Tool
 	for name := range strings.SplitSeq(s, ",") {
