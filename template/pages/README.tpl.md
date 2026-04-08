@@ -99,9 +99,24 @@ thing in different places. Fix them before they confuse your AI agents.
 
 <!-- @include: ../sections/product/self-hosting.md -->
 
+> **Documentation Site:** <https://hiromaily.github.io/docs-ssot/>
+
 ---
 
-<!-- @include: ../sections/development/contributing.md -->
+## Contributing
+
+Contributions are welcome!
+
+```sh
+git clone https://github.com/hiromaily/docs-ssot.git
+cd docs-ssot
+make install-dev  # Install hooks and tools
+make build        # Build the binary
+make test         # Run tests
+make docs         # Regenerate documentation
+```
+
+**Important:** Never edit `README.md`, `CLAUDE.md`, or `AGENTS.md` directly — edit source files under `template/sections/` and run `make docs`.
 
 ---
 
