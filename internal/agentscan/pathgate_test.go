@@ -19,12 +19,15 @@ func TestInferGlobs(t *testing.T) {
 		{name: "exact_typescript", slug: "typescript", want: "**/*.{ts,tsx}", wantOK: true},
 		{name: "exact_python", slug: "python", want: "**/*.py", wantOK: true},
 		{name: "exact_proto", slug: "proto", want: "**/*.proto", wantOK: true},
-		{name: "contains_frontend", slug: "app-web-architecture", want: "frontend/app-web/**", wantOK: true},
+		{name: "contains_frontend", slug: "frontend-components", want: "frontend/**", wantOK: true},
 		{name: "contains_backend", slug: "backend-rules", want: "backend/**", wantOK: true},
+		{name: "no_match_app_web", slug: "app-web-architecture", want: "", wantOK: false},
 		{name: "exact_test", slug: "testing", want: "**/*_test.*", wantOK: true},
 		{name: "unknown", slug: "github-flow", want: "", wantOK: false},
 		{name: "unknown_generic", slug: "architecture", want: "", wantOK: false},
 		{name: "case_insensitive", slug: "Go", want: "**/*.go", wantOK: true},
+		{name: "longest_match_wins", slug: "frontend-testing", want: "frontend/**", wantOK: true},
+		{name: "exact_over_substring", slug: "test", want: "**/*_test.*", wantOK: true},
 	}
 
 	for _, tt := range tests {

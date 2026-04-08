@@ -426,7 +426,7 @@ func resolveOutputPath(t templateFile) string { //nolint:gocyclo // inherent in 
 		case agentscan.FileTypeCommand:
 			return t.OutputPath // commands not supported for Codex
 		case agentscan.FileTypeSubagent:
-			return filepath.Join(".codex", "agents", t.Slug+".toml")
+			return filepath.Join(".codex", "agents", t.Slug+".md")
 		}
 	}
 	return t.OutputPath
@@ -485,7 +485,7 @@ func resolveOutputForSource(cfg AgentConfig, sourcePath string) string {
 	// we check the section files themselves since they are the canonical content.
 	slug := strings.TrimSuffix(filepath.Base(sourcePath), filepath.Ext(sourcePath))
 	// Check common section locations.
-	for _, typeDir := range []string{"rules", "skills", "commands"} {
+	for _, typeDir := range []string{"rules", "skills", "commands", "subagents"} {
 		candidate := filepath.Join(cfg.OutputDir, "ai", typeDir, slug+".md")
 		if _, err := os.Stat(candidate); err == nil {
 			return candidate

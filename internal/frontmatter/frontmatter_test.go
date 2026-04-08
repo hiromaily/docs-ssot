@@ -176,6 +176,77 @@ func TestGenerateRuleTemplate_Copilot(t *testing.T) {
 	}
 }
 
+func TestGenerateRuleTemplate_WithGlobs(t *testing.T) {
+	t.Parallel()
+
+	opts := frontmatter.RuleTemplateOpts{Globs: "**/*.go"}
+
+	t.Run("cursor_uses_globs", func(t *testing.T) {
+		t.Parallel()
+		got := frontmatter.GenerateRuleTemplate(agentscan.ToolCursor, "go", "../../sections/ai/rules/go.md", opts)
+		if !strings.Contains(got, "globs: **/*.go") {
+			t.Errorf("expected globs in Cursor template, got:\n%s", got)
+		}
+		if strings.Contains(got, "alwaysApply") {
+			t.Errorf("expected no alwaysApply when globs set, got:\n%s", got)
+		}
+	})
+
+	t.Run("copilot_uses_globs_in_applyTo", func(t *testing.T) {
+		t.Parallel()
+		got := frontmatter.GenerateRuleTemplate(agentscan.ToolCopilot, "go", "../../sections/ai/rules/go.md", opts)
+		if !strings.Contains(got, "applyTo: \"**/*.go\"") {
+			t.Errorf("expected globs in applyTo, got:\n%s", got)
+		}
+	})
+
+	t.Run("claude_ignores_globs", func(t *testing.T) {
+		t.Parallel()
+		got := frontmatter.GenerateRuleTemplate(agentscan.ToolClaude, "go", "../../sections/ai/rules/go.md", opts)
+		if strings.Contains(got, "globs") || strings.Contains(got, "applyTo") {
+			t.Errorf("Claude should not have globs/applyTo, got:\n%s", got)
+		}
+	})
+}
+
+func TestGenerateSubagentTemplate(t *testing.T) {
+	t.Parallel()
+
+	fields := map[string]string{
+		"name":            "critic",
+		"description":     "Adversarial critic",
+		"disallowedTools": "",
+	}
+
+	t.Run("claude_preserves_fields", func(t *testing.T) {
+		t.Parallel()
+		got := frontmatter.GenerateSubagentTemplate(agentscan.ToolClaude, "critic", "../sections/ai/subagents/critic.md", fields)
+		if !strings.Contains(got, "name: critic") {
+			t.Errorf("expected name, got:\n%s", got)
+		}
+		if !strings.Contains(got, "description: Adversarial critic") {
+			t.Errorf("expected description, got:\n%s", got)
+		}
+		if !strings.Contains(got, "disallowedTools:") {
+			t.Errorf("expected disallowedTools preserved for Claude, got:\n%s", got)
+		}
+		if !strings.Contains(got, "@include:") {
+			t.Errorf("expected @include, got:\n%s", got)
+		}
+	})
+
+	t.Run("copilot_only_name_description", func(t *testing.T) {
+		t.Parallel()
+		got := frontmatter.GenerateSubagentTemplate(agentscan.ToolCopilot, "critic", "../sections/ai/subagents/critic.md", fields)
+		if strings.Contains(got, "disallowedTools") {
+			t.Errorf("Copilot should not have disallowedTools, got:\n%s", got)
+		}
+		if !strings.Contains(got, "name: critic") {
+			t.Errorf("expected name, got:\n%s", got)
+		}
+	})
+}
+
 func TestGenerateSkillTemplate(t *testing.T) {
 	t.Parallel()
 

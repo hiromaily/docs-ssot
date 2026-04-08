@@ -118,12 +118,19 @@ func GenerateRuleTemplate(tool agentscan.Tool, slug, includePath string, opts ..
 	case agentscan.ToolCodex:
 		// Codex rules are embedded in AGENTS.md via @include.
 		b.WriteString("<!-- @include: " + includePath + " level=-1 -->\n")
+
+	default:
+		// Fallback: plain include for unknown tools.
+		b.WriteString("<!-- @include: " + includePath + " level=-1 -->\n")
 	}
 
 	return b.String()
 }
 
 // GenerateSubagentTemplate generates a tool-specific subagent template.
+// Note: multi-line YAML fields (e.g., disallowedTools with list values) are preserved
+// as single-line key: value pairs. The simple parseFields parser only captures the
+// first line of list values, so the value may be empty for multi-line fields.
 func GenerateSubagentTemplate(tool agentscan.Tool, slug, includePath string, sourceFields map[string]string) string {
 	var b strings.Builder
 
