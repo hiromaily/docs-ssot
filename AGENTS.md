@@ -9,11 +9,9 @@
 
 It composes files such as README.md, CLAUDE.md, AGENTS.md, and other AI agent instruction files from small modular Markdown files.
 
----
-
 ## Background
 
-AI-assisted development and AI agents are becoming a standard part of software development workflows.  
+AI-assisted development and AI agents are becoming a standard part of software development workflows.
 Different AI tools and agents require different instruction and context files, for example:
 
 - README.md
@@ -35,8 +33,6 @@ Common problems include:
 
 Maintaining multiple documentation files without duplication becomes increasingly difficult.
 
----
-
 ## Problem
 
 Documentation should follow the Single Source of Truth (SSOT) principle, but Markdown alone has limited reuse and composition capabilities.
@@ -51,8 +47,6 @@ Markdown is easy to write but lacks:
 
 As a result, teams often duplicate content across multiple Markdown files.
 
----
-
 ## Solution
 
 `docs-ssot` solves this problem by introducing:
@@ -65,39 +59,10 @@ As a result, teams often duplicate content across multiple Markdown files.
 
 Instead of writing large README files directly, documentation is split into small reusable Markdown modules and assembled into final documents using templates.
 
----
-
 ## Concept
 
-The documentation workflow changes from this:
-
-```
-Manually write:
-
-- README.md
-- AGENTS.md
-- CLAUDE.md
-```
-
-To this:
-
-```
-Write small docs in docs/
-  ↓
-Use templates
-  ↓
-docs-ssot build
-  ↓
-Generate README.md / AGENTS.md / CLAUDE.md
-```
-
-This ensures:
-
-- No duplication
-- Consistent documentation
-- Easier updates
-- Scalable documentation structure
-- AI-friendly documentation organization
+Instead of maintaining large README files, this project splits documents into
+small reusable markdown modules and composes them into final documents.
 
 ---
 
@@ -801,11 +766,7 @@ Run `make install-dev` to set up hooks.
 
 # Commands Reference
 
-This document describes the available CLI commands for docs-ssot.
-
-## Overview
-
-The CLI provides commands for generating documents from templates and managing documentation sources.
+# Commands
 
 | Command | Description |
 |---------|-------------|
@@ -817,9 +778,7 @@ The CLI provides commands for generating documents from templates and managing d
 | `docs-ssot validate` | Validate documentation structure without generating output |
 | `docs-ssot version` | Print the build version |
 
----
-
-## docs build
+# docs-ssot build
 
 Generate final documents (e.g., README.md, CLAUDE.md) from templates.
 
@@ -827,16 +786,13 @@ Generate final documents (e.g., README.md, CLAUDE.md) from templates.
 docs-ssot build
 ```
 
-### What it does
+## What it does
 
 - Reads template files
 - Resolves `@include` directives
 - Expands included Markdown files
 - Writes final generated documents
-
----
-
-## docs check
+# docs-ssot check
 
 Check docs for SSOT violations by detecting near-duplicate sections across Markdown files.
 
@@ -846,7 +802,7 @@ docs-ssot check [flags]
 
 Uses TF-IDF cosine similarity to compare sections at the specified heading level. Sections scoring above the threshold are reported as potential SSOT violations — places where the same information exists in multiple source files.
 
-### Flags
+## Flags
 
 | Flag | Default | Description |
 |------|---------|-------------|
@@ -857,7 +813,7 @@ Uses TF-IDF cosine similarity to compare sections at the specified heading level
 | `--format` | `text` | Output format: `text` or `json` |
 | `--exclude` | — | Exclude path pattern (repeatable) |
 
-### Examples
+## Examples
 
 Basic check with default settings:
 
@@ -877,7 +833,7 @@ Compare at H3 level, exclude changelogs, output JSON:
 docs-ssot check --section-level 3 --exclude docs/changelog/** --format json
 ```
 
-### Output
+## Output
 
 Text output (one block per similar pair):
 
@@ -894,132 +850,25 @@ B snippet: Access tokens must be renewed prior to expiry...
 
 A score of `1.0` means identical content; `0.82` (default threshold) catches near-duplicates while filtering loosely related content.
 
-### Exit behaviour
+## Exit behaviour
 
 Exits `0` whether or not duplicates are found. Use `--format json` and inspect `result_count` in CI pipelines.
+# docs-ssot include
 
----
-
-## docs migrate
-
-Decompose existing monolithic Markdown files (e.g., README.md, CLAUDE.md) into the docs-ssot section structure.
+Resolve include directives and print the expanded result to stdout.
 
 ```
-docs-ssot migrate [files...] [flags]
+docs-ssot include <file>
 ```
 
-This is the primary adoption command. It takes existing documentation files and converts them into modular, reusable sections with template files that reproduce the original document structure via `@include` directives.
-
-### What it does
-
-1. **Splits** each input file by H2 headings into candidate sections
-2. **Categorises** sections into directories (`project/`, `development/`, `architecture/`, `reference/`, `product/`, `misc/`) based on heading keyword heuristics
-3. **Detects duplicates** across input files using TF-IDF cosine similarity (reuses the `check` command's engine)
-4. **Creates section files** under `template/sections/<category>/<slug>.md`
-5. **Creates template files** under `template/pages/<name>.tpl.md` with `@include` directives
-6. **Creates `docsgen.yaml`** if it does not already exist
-7. **Verifies round-trip** by running `build` and comparing output against originals
-
-### Section categorisation
-
-Sections are assigned to categories based on heading keywords:
-
-| Heading keywords | Category |
-|-----------------|----------|
-| Architecture, Design, System, Pipeline | `architecture/` |
-| Overview, About, Introduction, Background | `project/` |
-| Install, Setup, Getting Started, Prerequisites | `development/` |
-| Test, Testing, CI | `development/` |
-| Lint, Format, Code Quality | `development/` |
-| Contributing, Contribute | `development/` |
-| API, Commands, CLI, Reference | `reference/` |
-| License, Changelog, Roadmap | `project/` |
-| FAQ, Troubleshooting | `product/` |
-| (fallback) | `misc/` |
-
-### Duplicate handling
-
-When the same content appears in multiple input files:
-
-1. TF-IDF cosine similarity is computed between all cross-file section pairs
-2. Pairs scoring above the threshold are merged into a single section file
-3. Both templates reference the shared section via `@include`
-
-### Flags
-
-| Flag | Default | Description |
-|------|---------|-------------|
-| `--output-dir` | `template/sections` | Where to write section files |
-| `--template-dir` | `template/pages` | Where to write template files |
-| `--section-level` | `2` | Heading level used as section boundary (1–6) |
-| `--threshold` | `0.82` | Similarity threshold for duplicate detection (0.0–1.0) |
-| `--dry-run` | `false` | Print the migration plan without writing files |
-
-### Examples
-
-Migrate existing README and CLAUDE.md:
+Example:
 
 ```
-docs-ssot migrate README.md CLAUDE.md
+docs-ssot include template/README.tpl.md
 ```
 
-Preview migration plan without writing files:
-
-```
-docs-ssot migrate --dry-run README.md CLAUDE.md
-```
-
-Lower the duplicate detection threshold:
-
-```
-docs-ssot migrate --threshold 0.75 README.md
-```
-
-Split at H1 boundaries instead of H2:
-
-```
-docs-ssot migrate --section-level 1 README.md
-```
-
-### Output
-
-```
-Parsed README.md: 8 sections
-Parsed CLAUDE.md: 6 sections
-Detected 3 duplicate sections (similarity > 0.82):
-  "Architecture Overview" — merged into template/sections/architecture/overview.md (score=0.950)
-  "Setup" — merged into template/sections/development/setup.md (score=1.000)
-  "Testing" — merged into template/sections/development/testing.md (score=0.891)
-Creating 11 unique section files in template/sections
-  template/sections/project/overview.md
-  template/sections/development/setup.md
-  ...
-Created template/pages/README.tpl.md (8 includes)
-Created template/pages/CLAUDE.tpl.md (6 includes)
-Created docsgen.yaml
-Verifying round-trip...
-Round-trip verification: OK
-Migration complete.
-```
-
-### Post-migration workflow
-
-After `migrate`, the user's workflow becomes:
-
-```sh
-# Edit source sections
-vim template/sections/development/setup.md
-
-# Regenerate all outputs
-docs-ssot build
-
-# Verify
-git diff README.md CLAUDE.md
-```
-
----
-
-### Agent-aware migration (`--from`)
+Useful for debugging template expansion without writing any output files.
+# Agent-aware migration (--from)
 
 With `--from`, `migrate` scans AI tool configuration files (rules, skills, commands, subagents) from the specified tool and generates SSOT sections with per-tool templates for the target tools.
 
@@ -1027,7 +876,7 @@ With `--from`, `migrate` scans AI tool configuration files (rules, skills, comma
 docs-ssot migrate --from <tool> [--to <tools>] [flags]
 ```
 
-#### What it does
+## What it does
 
 1. **Scans** the source tool's configuration directory for rules, skills, commands, and subagents
 2. **Strips** frontmatter from source files and shifts H1→H2 headings
@@ -1036,7 +885,7 @@ docs-ssot migrate --from <tool> [--to <tools>] [flags]
 5. **Updates `docsgen.yaml`** with new build targets
 6. **Verifies round-trip** by building and comparing against originals
 
-#### Flags
+## Flags
 
 | Flag | Default | Description |
 |------|---------|-------------|
@@ -1046,7 +895,7 @@ docs-ssot migrate --from <tool> [--to <tools>] [flags]
 | `--infer-globs` | `false` | Infer path-gated globs from rule slug names |
 | `--dry-run` | `false` | Print the migration plan without writing files |
 
-#### Examples
+## Examples
 
 Migrate Claude configs to all other tools:
 
@@ -1078,7 +927,7 @@ Combine agent and file migration:
 docs-ssot migrate --from claude --to cursor README.md CLAUDE.md
 ```
 
-#### Output
+## Output
 
 ```
 Detected source tool: claude (5 files)
@@ -1101,28 +950,123 @@ Verifying round-trip...
 Round-trip verification: OK
 Agent migration complete.
 ```
+# docs-ssot migrate
 
----
-
-## docs include
-
-Resolve include directives and print the expanded result to stdout.
+Decompose existing monolithic Markdown files (e.g., README.md, CLAUDE.md) into the docs-ssot section structure.
 
 ```
-docs-ssot include <file>
+docs-ssot migrate [files...] [flags]
 ```
 
-Example:
+This is the primary adoption command. It takes existing documentation files and converts them into modular, reusable sections with template files that reproduce the original document structure via `@include` directives.
+
+## What it does
+
+1. **Splits** each input file by H2 headings into candidate sections
+2. **Categorises** sections into directories (`project/`, `development/`, `architecture/`, `reference/`, `product/`, `misc/`) based on heading keyword heuristics
+3. **Detects duplicates** across input files using TF-IDF cosine similarity (reuses the `check` command's engine)
+4. **Creates section files** under `template/sections/<category>/<slug>.md`
+5. **Creates template files** under `template/pages/<name>.tpl.md` with `@include` directives
+6. **Creates `docsgen.yaml`** if it does not already exist
+7. **Verifies round-trip** by running `build` and comparing output against originals
+
+## Section categorisation
+
+Sections are assigned to categories based on heading keywords:
+
+| Heading keywords | Category |
+|-----------------|----------|
+| Architecture, Design, System, Pipeline | `architecture/` |
+| Overview, About, Introduction, Background | `project/` |
+| Install, Setup, Getting Started, Prerequisites | `development/` |
+| Test, Testing, CI | `development/` |
+| Lint, Format, Code Quality | `development/` |
+| Contributing, Contribute | `development/` |
+| API, Commands, CLI, Reference | `reference/` |
+| License, Changelog, Roadmap | `project/` |
+| FAQ, Troubleshooting | `product/` |
+| (fallback) | `misc/` |
+
+## Duplicate handling
+
+When the same content appears in multiple input files:
+
+1. TF-IDF cosine similarity is computed between all cross-file section pairs
+2. Pairs scoring above the threshold are merged into a single section file
+3. Both templates reference the shared section via `@include`
+
+## Flags
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--output-dir` | `template/sections` | Where to write section files |
+| `--template-dir` | `template/pages` | Where to write template files |
+| `--section-level` | `2` | Heading level used as section boundary (1–6) |
+| `--threshold` | `0.82` | Similarity threshold for duplicate detection (0.0–1.0) |
+| `--dry-run` | `false` | Print the migration plan without writing files |
+
+## Examples
+
+Migrate existing README and CLAUDE.md:
 
 ```
-docs-ssot include template/README.tpl.md
+docs-ssot migrate README.md CLAUDE.md
 ```
 
-Useful for debugging template expansion without writing any output files.
+Preview migration plan without writing files:
 
----
+```
+docs-ssot migrate --dry-run README.md CLAUDE.md
+```
 
-## docs validate
+Lower the duplicate detection threshold:
+
+```
+docs-ssot migrate --threshold 0.75 README.md
+```
+
+Split at H1 boundaries instead of H2:
+
+```
+docs-ssot migrate --section-level 1 README.md
+```
+
+## Output
+
+```
+Parsed README.md: 8 sections
+Parsed CLAUDE.md: 6 sections
+Detected 3 duplicate sections (similarity > 0.82):
+  "Architecture Overview" — merged into template/sections/architecture/overview.md (score=0.950)
+  "Setup" — merged into template/sections/development/setup.md (score=1.000)
+  "Testing" — merged into template/sections/development/testing.md (score=0.891)
+Creating 11 unique section files in template/sections
+  template/sections/project/overview.md
+  template/sections/development/setup.md
+  ...
+Created template/pages/README.tpl.md (8 includes)
+Created template/pages/CLAUDE.tpl.md (6 includes)
+Created docsgen.yaml
+Verifying round-trip...
+Round-trip verification: OK
+Migration complete.
+```
+
+## Post-migration workflow
+
+After `migrate`, the user's workflow becomes:
+
+```sh
+# Edit source sections
+vim template/sections/development/setup.md
+
+# Regenerate all outputs
+docs-ssot build
+
+# Verify
+git diff README.md CLAUDE.md
+```
+# docs-ssot validate
 
 Validate documentation structure without generating any output files.
 
@@ -1132,13 +1076,13 @@ docs-ssot validate
 
 Performs a dry run over all templates in `docsgen.yaml`.
 
-### Validation checks
+## Validation checks
 
 - Missing include files
 - Circular includes
 - Invalid paths
 
-### Output
+## Output
 
 Success:
 
@@ -1153,20 +1097,14 @@ ERROR: include error (/path/to/file.md): open /path/to/file.md: no such file or 
 ```
 
 Exits with a non-zero status code when any error is found.
-
----
-
-## docs version
+# docs-ssot version
 
 Print the build version.
 
 ```
 docs-ssot version
 ```
-
----
-
-## Typical Workflow
+# Typical Workflow
 
 ```
 docs-ssot validate
@@ -1181,7 +1119,7 @@ docs-ssot include template/README.tpl.md
 
 ---
 
-## Recommended Makefile Shortcuts
+# Recommended Makefile Shortcuts
 
 ```
 make docs                                     # generate all output targets

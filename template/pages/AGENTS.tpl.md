@@ -11,7 +11,7 @@
 
 <!-- @include: ../sections/project/solution.md -->
 
-<!-- @include: ../sections/project/concept.md -->
+<!-- @include: ../sections/product/concept.md -->
 
 ---
 
