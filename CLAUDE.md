@@ -9,11 +9,9 @@
 
 It composes files such as README.md, CLAUDE.md, AGENTS.md, and other AI agent instruction files from small modular Markdown files.
 
----
-
 ## Background
 
-AI-assisted development and AI agents are becoming a standard part of software development workflows.  
+AI-assisted development and AI agents are becoming a standard part of software development workflows.
 Different AI tools and agents require different instruction and context files, for example:
 
 - README.md
@@ -35,8 +33,6 @@ Common problems include:
 
 Maintaining multiple documentation files without duplication becomes increasingly difficult.
 
----
-
 ## Problem
 
 Documentation should follow the Single Source of Truth (SSOT) principle, but Markdown alone has limited reuse and composition capabilities.
@@ -51,8 +47,6 @@ Markdown is easy to write but lacks:
 
 As a result, teams often duplicate content across multiple Markdown files.
 
----
-
 ## Solution
 
 `docs-ssot` solves this problem by introducing:
@@ -65,39 +59,10 @@ As a result, teams often duplicate content across multiple Markdown files.
 
 Instead of writing large README files directly, documentation is split into small reusable Markdown modules and assembled into final documents using templates.
 
----
-
 ## Concept
 
-The documentation workflow changes from this:
-
-```
-Manually write:
-
-- README.md
-- AGENTS.md
-- CLAUDE.md
-```
-
-To this:
-
-```
-Write small docs in docs/
-  ↓
-Use templates
-  ↓
-docs-ssot build
-  ↓
-Generate README.md / AGENTS.md / CLAUDE.md
-```
-
-This ensures:
-
-- No duplication
-- Consistent documentation
-- Easier updates
-- Scalable documentation structure
-- AI-friendly documentation organization
+Instead of maintaining large README files, this project splits documents into
+small reusable markdown modules and composes them into final documents.
 
 ---
 
@@ -960,11 +925,7 @@ Run `make install-dev` to set up hooks.
 
 # Commands Reference
 
-This document describes the available CLI commands for docs-ssot.
-
-## Overview
-
-The CLI provides commands for generating documents from templates and managing documentation sources.
+## Commands
 
 | Command | Description |
 |---------|-------------|
@@ -976,9 +937,7 @@ The CLI provides commands for generating documents from templates and managing d
 | `docs-ssot validate` | Validate documentation structure without generating output |
 | `docs-ssot version` | Print the build version |
 
----
-
-## docs build
+## docs-ssot build
 
 Generate final documents (e.g., README.md, CLAUDE.md) from templates.
 
@@ -992,10 +951,7 @@ docs-ssot build
 - Resolves `@include` directives
 - Expands included Markdown files
 - Writes final generated documents
-
----
-
-## docs check
+## docs-ssot check
 
 Check docs for SSOT violations by detecting near-duplicate sections across Markdown files.
 
@@ -1056,10 +1012,104 @@ A score of `1.0` means identical content; `0.82` (default threshold) catches nea
 ### Exit behaviour
 
 Exits `0` whether or not duplicates are found. Use `--format json` and inspect `result_count` in CI pipelines.
+## docs-ssot include
 
----
+Resolve include directives and print the expanded result to stdout.
 
-## docs migrate
+```
+docs-ssot include <file>
+```
+
+Example:
+
+```
+docs-ssot include template/pages/README.tpl.md
+```
+
+Useful for debugging template expansion without writing any output files.
+## Agent-aware migration (--from)
+
+With `--from`, `migrate` scans AI tool configuration files (rules, skills, commands, subagents) from the specified tool and generates SSOT sections with per-tool templates for the target tools.
+
+```
+docs-ssot migrate --from <tool> [--to <tools>] [flags]
+```
+
+### What it does
+
+1. **Scans** the source tool's configuration directory for rules, skills, commands, and subagents
+2. **Strips** frontmatter from source files and shifts H1→H2 headings
+3. **Creates section files** under `template/sections/ai/<type>/<slug>.md`
+4. **Generates templates** for each target tool with appropriate frontmatter
+5. **Updates `docsgen.yaml`** with new build targets
+6. **Verifies round-trip** by building and comparing against originals
+
+### Flags
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--from` | (required) | Source AI tool to migrate from (`claude`, `cursor`, `copilot`) |
+| `--to` | all except `--from` | Target tools, comma-separated (`cursor,copilot,codex`) |
+| `--convert-commands` | `false` | Convert legacy commands to skills during migration |
+| `--infer-globs` | `false` | Infer path-gated globs from rule slug names |
+| `--dry-run` | `false` | Print the migration plan without writing files |
+
+### Examples
+
+Migrate Claude configs to all other tools:
+
+```
+docs-ssot migrate --from claude
+```
+
+Migrate to specific tools only:
+
+```
+docs-ssot migrate --from claude --to cursor,codex
+```
+
+Preview migration plan:
+
+```
+docs-ssot migrate --from claude --dry-run
+```
+
+Migrate with path inference and command conversion:
+
+```
+docs-ssot migrate --from claude --to cursor --infer-globs --convert-commands
+```
+
+Combine agent and file migration:
+
+```
+docs-ssot migrate --from claude --to cursor README.md CLAUDE.md
+```
+
+### Output
+
+```
+Detected source tool: claude (5 files)
+Target tools: cursor, copilot, codex
+
+Creating sections:
+  template/sections/ai/rules/architecture.md
+  template/sections/ai/rules/testing.md
+  template/sections/ai/skills/deploy.md
+  template/sections/ai/subagents/critic.md
+  template/sections/ai/subagents/debugger.md
+
+Creating templates (3 tools × 5 files):
+  cursor: 5 templates
+  copilot: 5 templates
+  codex: 4 templates
+
+Updated docsgen.yaml (14 new targets)
+Verifying round-trip...
+Round-trip verification: OK
+Agent migration complete.
+```
+## docs-ssot migrate
 
 Decompose existing monolithic Markdown files (e.g., README.md, CLAUDE.md) into the docs-ssot section structure.
 
@@ -1175,113 +1225,7 @@ docs-ssot build
 # Verify
 git diff README.md CLAUDE.md
 ```
-
----
-
-### Agent-aware migration (`--from`)
-
-With `--from`, `migrate` scans AI tool configuration files (rules, skills, commands, subagents) from the specified tool and generates SSOT sections with per-tool templates for the target tools.
-
-```
-docs-ssot migrate --from <tool> [--to <tools>] [flags]
-```
-
-#### What it does
-
-1. **Scans** the source tool's configuration directory for rules, skills, commands, and subagents
-2. **Strips** frontmatter from source files and shifts H1→H2 headings
-3. **Creates section files** under `template/sections/ai/<type>/<slug>.md`
-4. **Generates templates** for each target tool with appropriate frontmatter
-5. **Updates `docsgen.yaml`** with new build targets
-6. **Verifies round-trip** by building and comparing against originals
-
-#### Flags
-
-| Flag | Default | Description |
-|------|---------|-------------|
-| `--from` | (required) | Source AI tool to migrate from (`claude`, `cursor`, `copilot`) |
-| `--to` | all except `--from` | Target tools, comma-separated (`cursor,copilot,codex`) |
-| `--convert-commands` | `false` | Convert legacy commands to skills during migration |
-| `--infer-globs` | `false` | Infer path-gated globs from rule slug names |
-| `--dry-run` | `false` | Print the migration plan without writing files |
-
-#### Examples
-
-Migrate Claude configs to all other tools:
-
-```
-docs-ssot migrate --from claude
-```
-
-Migrate to specific tools only:
-
-```
-docs-ssot migrate --from claude --to cursor,codex
-```
-
-Preview migration plan:
-
-```
-docs-ssot migrate --from claude --dry-run
-```
-
-Migrate with path inference and command conversion:
-
-```
-docs-ssot migrate --from claude --to cursor --infer-globs --convert-commands
-```
-
-Combine agent and file migration:
-
-```
-docs-ssot migrate --from claude --to cursor README.md CLAUDE.md
-```
-
-#### Output
-
-```
-Detected source tool: claude (5 files)
-Target tools: cursor, copilot, codex
-
-Creating sections:
-  template/sections/ai/rules/architecture.md
-  template/sections/ai/rules/testing.md
-  template/sections/ai/skills/deploy.md
-  template/sections/ai/subagents/critic.md
-  template/sections/ai/subagents/debugger.md
-
-Creating templates (3 tools × 5 files):
-  cursor: 5 templates
-  copilot: 5 templates
-  codex: 4 templates
-
-Updated docsgen.yaml (14 new targets)
-Verifying round-trip...
-Round-trip verification: OK
-Agent migration complete.
-```
-
----
-
-## docs include
-
-Resolve include directives and print the expanded result to stdout.
-
-```
-docs-ssot include <file>
-```
-
-Example:
-
-```
-docs-ssot include template/README.tpl.md
-```
-
-Useful for debugging template expansion without writing any output files.
-
----
-
-## docs validate
+## docs-ssot validate
 
 Validate documentation structure without generating any output files.
 
@@ -1312,19 +1256,13 @@ ERROR: include error (/path/to/file.md): open /path/to/file.md: no such file or 
 ```
 
 Exits with a non-zero status code when any error is found.
-
----
-
-## docs version
+## docs-ssot version
 
 Print the build version.
 
 ```
 docs-ssot version
 ```
-
----
-
 ## Typical Workflow
 
 ```
@@ -1335,7 +1273,7 @@ docs-ssot build
 Or during development:
 
 ```
-docs-ssot include template/README.tpl.md
+docs-ssot include template/pages/README.tpl.md
 ```
 
 ---
@@ -1345,7 +1283,7 @@ docs-ssot include template/README.tpl.md
 ```
 make docs                                     # generate all output targets
 make docs-validate                            # validate all templates
-make docs-include FILE=template/README.tpl.md # expand and print a template
+make docs-include FILE=template/pages/README.tpl.md # expand and print a template
 make docs-check                               # check docs for SSOT violations (default settings)
 make docs-check ARGS="--threshold 0.75"       # check with custom flags
 make docs-migrate FILES="README.md CLAUDE.md" # migrate existing docs to SSOT structure

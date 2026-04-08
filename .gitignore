@@ -37,3 +37,7 @@ go.work.sum
 docs/.vitepress/dist
 docs/.vitepress/cache
 docs/node_modules
+
+# Spec files (local only)
+spec/readme-redesign.md
+spec/readme-redesign-plan.md

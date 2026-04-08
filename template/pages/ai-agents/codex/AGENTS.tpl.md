@@ -39,7 +39,9 @@
 
 ---
 
-<!-- @include: ../../../sections/reference/commands.md level=-1 -->
+<!-- @include: ../../../sections/reference/commands-summary.md level=-1 -->
+
+<!-- @include: ../../../sections/reference/commands/ level=-1 -->
 
 ---
 
