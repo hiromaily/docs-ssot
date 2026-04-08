@@ -146,9 +146,6 @@ func GenerateRuleTemplate(tool agentscan.Tool, slug, includePath string, opts ..
 }
 
 // GenerateSubagentTemplate generates a tool-specific subagent template.
-// Note: multi-line YAML fields (e.g., disallowedTools with list values) are preserved
-// as single-line key: value pairs. The simple parseFields parser only captures the
-// first line of list values, so the value may be empty for multi-line fields.
 func GenerateSubagentTemplate(tool agentscan.Tool, slug, includePath string, sourceFields map[string]string) string {
 	var b strings.Builder
 
@@ -169,7 +166,11 @@ func GenerateSubagentTemplate(tool agentscan.Tool, slug, includePath string, sou
 		b.WriteString("description: " + description + "\n")
 		for _, key := range []string{"disallowedTools", "allowedTools", "model", "effort"} {
 			if v, ok := sourceFields[key]; ok {
-				b.WriteString(key + ": " + v + "\n")
+				if strings.Contains(v, "\n") || strings.HasPrefix(v, "- ") {
+					b.WriteString(key + ":\n" + v + "\n")
+				} else {
+					b.WriteString(key + ": " + v + "\n")
+				}
 			}
 		}
 		b.WriteString("---\n")
@@ -211,7 +212,11 @@ func GenerateSkillTemplate(tool agentscan.Tool, slug, includePath string, source
 		// Preserve Claude-specific fields.
 		for _, key := range []string{"argument-hint", "disable-model-invocation", "user-invocable", "allowed-tools", "model", "effort", "context"} {
 			if v, ok := sourceFields[key]; ok {
-				b.WriteString(key + ": " + v + "\n")
+				if strings.Contains(v, "\n") || strings.HasPrefix(v, "- ") {
+					b.WriteString(key + ":\n" + v + "\n")
+				} else {
+					b.WriteString(key + ": " + v + "\n")
+				}
 			}
 		}
 		b.WriteString("---\n")

@@ -204,6 +204,16 @@ func collectCursor(root string) ([]AgentFile, error) {
 func collectCopilot(root string) ([]AgentFile, error) {
 	var files []AgentFile
 
+	// Primary instructions file (detected by Scan but not previously collected).
+	if fileExists(filepath.Join(root, ".github", "copilot-instructions.md")) {
+		files = append(files, AgentFile{
+			Tool: ToolCopilot,
+			Type: FileTypeRule,
+			Path: filepath.Join(".github", "copilot-instructions.md"),
+			Slug: "copilot-instructions",
+		})
+	}
+
 	rules, err := collectMDFiles(root, filepath.Join(".github", "instructions"), ToolCopilot, FileTypeRule, ".instructions.md")
 	if err != nil {
 		return nil, err

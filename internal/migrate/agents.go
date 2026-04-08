@@ -110,7 +110,7 @@ func RunAgents(w io.Writer, cfg AgentConfig) error {
 	}
 
 	// Step 10: Round-trip verification.
-	verifyAgentRoundTrip(w, cfg, sections)
+	verifyAgentRoundTrip(w, cfg, sections, templates)
 
 	_, _ = fmt.Fprintln(w, "Agent migration complete.")
 	return nil
@@ -365,7 +365,9 @@ func updateConfig(w io.Writer, cfg AgentConfig, templates []templateFile) error 
 	// Load existing config or create a new one.
 	existing, loadErr := config.Load(cfg.ConfigFile)
 	if loadErr != nil {
-		// File does not exist or is invalid — create fresh config.
+		if !os.IsNotExist(loadErr) {
+			return fmt.Errorf("load config: %w", loadErr)
+		}
 		existing = &config.Config{}
 	}
 
@@ -441,21 +443,34 @@ func resolveOutputPath(t templateFile) string { //nolint:gocyclo // inherent in 
 	return t.OutputPath
 }
 
-// sourceOriginal pairs a source path with its original content and section path
+// sourceOriginal pairs a source path with its original content and the generated output path
 // for deterministic round-trip verification.
 type sourceOriginal struct {
-	sourcePath  string
-	sectionPath string
-	data        []byte
+	sourcePath string
+	outputPath string
+	data       []byte
 }
 
-func verifyAgentRoundTrip(w io.Writer, cfg AgentConfig, sections []agentSection) {
+func verifyAgentRoundTrip(w io.Writer, cfg AgentConfig, sections []agentSection, templates []templateFile) {
 	_, _ = fmt.Fprintln(w, "Verifying round-trip...")
+
+	// Build a map from slug → first resolved output path so we can compare generated files.
+	slugToOutput := make(map[string]string, len(templates))
+	for _, t := range templates {
+		if _, exists := slugToOutput[t.Slug]; !exists {
+			slugToOutput[t.Slug] = resolveOutputPath(t)
+		}
+	}
 
 	// Read original source files before building so we can compare after build.
 	// Use a slice (not a map) for deterministic iteration order.
 	originals := make([]sourceOriginal, 0, len(sections))
 	for _, s := range sections {
+		outputPath, ok := slugToOutput[s.Source.Slug]
+		if !ok {
+			// No standalone output for this section (e.g., Codex rules are embedded in AGENTS.md).
+			continue
+		}
 		srcPath := filepath.Join(cfg.RootDir, s.Source.Path)
 		data, err := os.ReadFile(srcPath)
 		if err != nil {
@@ -463,9 +478,9 @@ func verifyAgentRoundTrip(w io.Writer, cfg AgentConfig, sections []agentSection)
 			return
 		}
 		originals = append(originals, sourceOriginal{
-			sourcePath:  s.Source.Path,
-			sectionPath: s.SectionPath,
-			data:        data,
+			sourcePath: s.Source.Path,
+			outputPath: outputPath,
+			data:       data,
 		})
 	}
 
@@ -474,19 +489,20 @@ func verifyAgentRoundTrip(w io.Writer, cfg AgentConfig, sections []agentSection)
 		return
 	}
 
-	// Compare generated section files against originals.
+	// Compare generated output files against originals.
 	allMatch := true
 	for _, orig := range originals {
-		generated, err := os.ReadFile(orig.sectionPath)
+		generated, err := os.ReadFile(orig.outputPath)
 		if err != nil {
-			_, _ = fmt.Fprintf(w, "  WARNING: cannot read generated %s: %v\n", orig.sectionPath, err)
+			_, _ = fmt.Fprintf(w, "  WARNING: cannot read generated %s: %v\n", orig.outputPath, err)
 			allMatch = false
 			continue
 		}
 
-		// Normalize and compare content (strip frontmatter from original for fair comparison).
+		// Strip frontmatter from both sides for a fair comparison: the original has tool
+		// frontmatter, the generated output may have tool-specific frontmatter added by the template.
 		originalBody := frontmatter.StripContent(string(orig.data))
-		generatedBody := strings.TrimSpace(string(generated))
+		generatedBody := frontmatter.StripContent(string(generated))
 		if originalBody != generatedBody {
 			_, _ = fmt.Fprintf(w, "  WARNING: %s differs after round-trip\n", orig.sourcePath)
 			allMatch = false
