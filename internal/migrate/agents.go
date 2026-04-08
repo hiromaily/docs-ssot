@@ -191,7 +191,7 @@ func planTemplates(sections []agentSection, cfg AgentConfig) []templateFile {
 	}
 
 	// Generate combined Codex AGENTS.md template if there are rules.
-	if len(codexRuleIncludes) > 0 && containsTool(cfg.TargetTools, agentscan.ToolCodex) {
+	if len(codexRuleIncludes) > 0 && slices.Contains(cfg.TargetTools, agentscan.ToolCodex) {
 		codexPath := filepath.Join(cfg.TemplateDir, "ai-agents", "codex", "AGENTS.tpl.md")
 		templates = append(templates, templateFile{
 			Tool:       agentscan.ToolCodex,
@@ -363,13 +363,22 @@ func updateConfig(w io.Writer, cfg AgentConfig, templates []templateFile) error 
 	}
 
 	// Load existing config or create a new one.
-	existing, err := config.Load(cfg.ConfigFile)
-	if err != nil {
+	existing, loadErr := config.Load(cfg.ConfigFile)
+	if loadErr != nil {
 		// File does not exist or is invalid — create fresh config.
 		existing = &config.Config{}
 	}
 
-	existing.Targets = append(existing.Targets, newTargets...)
+	// Deduplicate: skip targets that already exist in the config.
+	existingSet := make(map[string]bool, len(existing.Targets))
+	for _, t := range existing.Targets {
+		existingSet[t.Input] = true
+	}
+	for _, t := range newTargets {
+		if !existingSet[t.Input] {
+			existing.Targets = append(existing.Targets, t)
+		}
+	}
 
 	if err := config.Save(cfg.ConfigFile, existing); err != nil {
 		return fmt.Errorf("write %s: %w", cfg.ConfigFile, err)
@@ -432,11 +441,20 @@ func resolveOutputPath(t templateFile) string { //nolint:gocyclo // inherent in 
 	return t.OutputPath
 }
 
+// sourceOriginal pairs a source path with its original content and section path
+// for deterministic round-trip verification.
+type sourceOriginal struct {
+	sourcePath  string
+	sectionPath string
+	data        []byte
+}
+
 func verifyAgentRoundTrip(w io.Writer, cfg AgentConfig, sections []agentSection) {
 	_, _ = fmt.Fprintln(w, "Verifying round-trip...")
 
 	// Read original source files before building so we can compare after build.
-	originals := make(map[string][]byte, len(sections))
+	// Use a slice (not a map) for deterministic iteration order.
+	originals := make([]sourceOriginal, 0, len(sections))
 	for _, s := range sections {
 		srcPath := filepath.Join(cfg.RootDir, s.Source.Path)
 		data, err := os.ReadFile(srcPath)
@@ -444,7 +462,11 @@ func verifyAgentRoundTrip(w io.Writer, cfg AgentConfig, sections []agentSection)
 			_, _ = fmt.Fprintf(w, "Round-trip verification: SKIP (cannot read %s: %v)\n", s.Source.Path, err)
 			return
 		}
-		originals[s.Source.Path] = data
+		originals = append(originals, sourceOriginal{
+			sourcePath:  s.Source.Path,
+			sectionPath: s.SectionPath,
+			data:        data,
+		})
 	}
 
 	if err := generator.Build(cfg.ConfigFile); err != nil {
@@ -452,22 +474,21 @@ func verifyAgentRoundTrip(w io.Writer, cfg AgentConfig, sections []agentSection)
 		return
 	}
 
-	// Compare generated output against originals.
+	// Compare generated section files against originals.
 	allMatch := true
-	for path, original := range originals {
-		outputPath := resolveOutputForSource(cfg, path)
-		generated, err := os.ReadFile(outputPath)
+	for _, orig := range originals {
+		generated, err := os.ReadFile(orig.sectionPath)
 		if err != nil {
-			_, _ = fmt.Fprintf(w, "  WARNING: cannot read generated %s: %v\n", outputPath, err)
+			_, _ = fmt.Fprintf(w, "  WARNING: cannot read generated %s: %v\n", orig.sectionPath, err)
 			allMatch = false
 			continue
 		}
 
 		// Normalize and compare content (strip frontmatter from original for fair comparison).
-		originalBody := frontmatter.StripContent(string(original))
+		originalBody := frontmatter.StripContent(string(orig.data))
 		generatedBody := strings.TrimSpace(string(generated))
 		if originalBody != generatedBody {
-			_, _ = fmt.Fprintf(w, "  WARNING: %s differs after round-trip\n", path)
+			_, _ = fmt.Fprintf(w, "  WARNING: %s differs after round-trip\n", orig.sourcePath)
 			allMatch = false
 		}
 	}
@@ -479,29 +500,10 @@ func verifyAgentRoundTrip(w io.Writer, cfg AgentConfig, sections []agentSection)
 	}
 }
 
-// resolveOutputForSource maps a source file path to the expected build output path.
-func resolveOutputForSource(cfg AgentConfig, sourcePath string) string {
-	// The output path depends on the tool and file type; for round-trip verification
-	// we check the section files themselves since they are the canonical content.
-	slug := strings.TrimSuffix(filepath.Base(sourcePath), filepath.Ext(sourcePath))
-	// Check common section locations.
-	for _, typeDir := range []string{"rules", "skills", "commands", "subagents"} {
-		candidate := filepath.Join(cfg.OutputDir, "ai", typeDir, slug+".md")
-		if _, err := os.Stat(candidate); err == nil {
-			return candidate
-		}
-	}
-	return sourcePath
-}
-
 func formatTools(tools []agentscan.Tool) string {
 	names := make([]string, len(tools))
 	for i, t := range tools {
 		names[i] = string(t)
 	}
 	return strings.Join(names, ", ")
-}
-
-func containsTool(tools []agentscan.Tool, target agentscan.Tool) bool {
-	return slices.Contains(tools, target)
 }

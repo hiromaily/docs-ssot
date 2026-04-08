@@ -3,7 +3,11 @@
 package frontmatter
 
 import (
+	"fmt"
+	"strconv"
 	"strings"
+
+	"gopkg.in/yaml.v3"
 
 	"github.com/hiromaily/docs-ssot/internal/agentscan"
 )
@@ -60,14 +64,28 @@ func normalizeCRLF(s string) string {
 // StripContent returns the body content with frontmatter removed and
 // H1 headings shifted to H2 (section file convention).
 func StripContent(content string) string {
-	p := Parse(content)
-	return ShiftH1ToH2(strings.TrimSpace(p.Body))
+	return ShiftH1ToH2(strings.TrimSpace(Parse(content).Body))
 }
 
 // ShiftH1ToH2 shifts all H1 headings (# Foo) to H2 (## Foo) for section file convention.
 // Headings inside code fences are left unchanged.
 func ShiftH1ToH2(content string) string {
-	return shiftH1ToH2(content)
+	lines := strings.Split(content, "\n")
+	inFence := false
+	for i, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "```") || strings.HasPrefix(trimmed, "~~~") {
+			inFence = !inFence
+			continue
+		}
+		if inFence {
+			continue
+		}
+		if strings.HasPrefix(line, "# ") && !strings.HasPrefix(line, "## ") {
+			lines[i] = "#" + line
+		}
+	}
+	return strings.Join(lines, "\n")
 }
 
 // RuleTemplateOpts configures rule template generation.
@@ -224,9 +242,17 @@ func GenerateCodexAGENTSTemplate(includes []string) string {
 	return b.String()
 }
 
-// parseFields parses simple key: value pairs from YAML frontmatter.
-// This is intentionally simple — it handles single-line values only.
+// parseFields parses YAML frontmatter into string key-value pairs.
+// Uses yaml.Unmarshal to handle multi-line values (lists, nested maps).
+// Complex values are serialised back to inline YAML strings.
 func parseFields(raw string) map[string]string {
+	// First try proper YAML parsing.
+	var parsed map[string]any
+	if err := yaml.Unmarshal([]byte(raw), &parsed); err == nil && len(parsed) > 0 {
+		return flattenYAML(parsed)
+	}
+
+	// Fallback to simple line-by-line parsing for non-standard YAML.
 	fields := make(map[string]string)
 	for line := range strings.SplitSeq(raw, "\n") {
 		line = strings.TrimSpace(line)
@@ -242,25 +268,36 @@ func parseFields(raw string) map[string]string {
 	return fields
 }
 
-// shiftH1ToH2 shifts all H1 headings (# Foo) to H2 (## Foo) for section file convention.
-// Headings inside code fences are left unchanged.
-func shiftH1ToH2(content string) string {
-	lines := strings.Split(content, "\n")
-	inFence := false
-	for i, line := range lines {
-		trimmed := strings.TrimSpace(line)
-		if strings.HasPrefix(trimmed, "```") || strings.HasPrefix(trimmed, "~~~") {
-			inFence = !inFence
-			continue
-		}
-		if inFence {
-			continue
-		}
-		if strings.HasPrefix(line, "# ") && !strings.HasPrefix(line, "## ") {
-			lines[i] = "#" + line
+// flattenYAML converts a parsed YAML map to string key-value pairs.
+// Scalar values are converted directly. Lists and maps are serialised
+// to compact YAML strings for preservation in generated templates.
+func flattenYAML(m map[string]any) map[string]string {
+	result := make(map[string]string, len(m))
+	for k, v := range m {
+		switch val := v.(type) {
+		case string:
+			result[k] = val
+		case bool:
+			if val {
+				result[k] = "true"
+			} else {
+				result[k] = "false"
+			}
+		case int:
+			result[k] = strconv.Itoa(val)
+		case float64:
+			result[k] = fmt.Sprintf("%g", val)
+		default:
+			// Lists, maps — serialise to compact YAML.
+			data, err := yaml.Marshal(v)
+			if err != nil {
+				result[k] = fmt.Sprintf("%v", v)
+				continue
+			}
+			result[k] = strings.TrimSpace(string(data))
 		}
 	}
-	return strings.Join(lines, "\n")
+	return result
 }
 
 // slugToDescription converts a slug like "architecture" to "Architecture" for use as a description.

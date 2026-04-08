@@ -373,6 +373,45 @@ func TestRunAgents_SubagentMigration(t *testing.T) {
 	}
 }
 
+func TestRunAgents_IdempotentConfig(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	setupAgentTestFiles(t, dir)
+
+	cfg := migrate.AgentConfig{
+		RootDir:     dir,
+		SourceTool:  "claude",
+		TargetTools: []agentscan.Tool{agentscan.ToolClaude},
+		OutputDir:   filepath.Join(dir, "template/sections"),
+		TemplateDir: filepath.Join(dir, "template/pages"),
+		DryRun:      false,
+		ConfigFile:  filepath.Join(dir, "docsgen.yaml"),
+	}
+
+	// Run twice.
+	var buf bytes.Buffer
+	if err := migrate.RunAgents(&buf, cfg); err != nil {
+		t.Fatalf("first RunAgents() error: %v", err)
+	}
+
+	buf.Reset()
+	if err := migrate.RunAgents(&buf, cfg); err != nil {
+		t.Fatalf("second RunAgents() error: %v", err)
+	}
+
+	// Verify no duplicate targets in docsgen.yaml.
+	data, err := os.ReadFile(filepath.Join(dir, "docsgen.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	content := string(data)
+	count := strings.Count(content, "architecture.tpl.md")
+	if count > 1 {
+		t.Errorf("expected no duplicate targets, found %d occurrences of architecture.tpl.md", count)
+	}
+}
+
 // helpers
 
 func setupAgentTestFiles(t *testing.T, dir string) {

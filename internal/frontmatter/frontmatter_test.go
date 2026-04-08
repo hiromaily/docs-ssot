@@ -79,13 +79,30 @@ func TestParse_CRLF(t *testing.T) {
 func TestParse_MultiValueField(t *testing.T) {
 	t.Parallel()
 
-	// Multi-line list values only capture the first line.
 	content := "---\nallowed-tools:\n  - Read\n  - Edit\n---\n\nBody\n"
 	p := frontmatter.Parse(content)
 
-	// The simple parser captures "allowed-tools" with empty value.
 	if _, ok := p.Fields["allowed-tools"]; !ok {
 		t.Errorf("expected 'allowed-tools' key in Fields, got %v", p.Fields)
+	}
+	// With yaml.Unmarshal, multi-line list values are serialised as compact YAML.
+	val := p.Fields["allowed-tools"]
+	if !strings.Contains(val, "Read") || !strings.Contains(val, "Edit") {
+		t.Errorf("expected multi-line value to contain Read and Edit, got %q", val)
+	}
+}
+
+func TestParse_BoolAndIntFields(t *testing.T) {
+	t.Parallel()
+
+	content := "---\nalwaysApply: true\neffort: 3\n---\n\nBody\n"
+	p := frontmatter.Parse(content)
+
+	if p.Fields["alwaysApply"] != "true" {
+		t.Errorf("expected alwaysApply='true', got %q", p.Fields["alwaysApply"])
+	}
+	if p.Fields["effort"] != "3" {
+		t.Errorf("expected effort='3', got %q", p.Fields["effort"])
 	}
 }
 
