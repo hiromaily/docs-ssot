@@ -112,12 +112,12 @@ docs-check:
 docs-migrate:
 	go run ./cmd/docs-ssot migrate $(ARGS) $(FILES)
 
-# Usage: make docs-migrate-agents
-# Usage: make docs-migrate-agents ARGS="--dry-run"
-# Usage: make docs-migrate-agents ARGS="--target-tools cursor,copilot"
-.PHONY: docs-migrate-agents
-docs-migrate-agents:
-	go run ./cmd/docs-ssot migrate --agents $(ARGS)
+# Usage: make docs-migrate-from FROM=claude
+# Usage: make docs-migrate-from FROM=claude TO=cursor,codex
+# Usage: make docs-migrate-from FROM=claude ARGS="--dry-run --infer-globs"
+.PHONY: docs-migrate-from
+docs-migrate-from:
+	go run ./cmd/docs-ssot migrate --from $(FROM) $(if $(TO),--to $(TO)) $(ARGS)
 
 .PHONY: docs-version
 docs-version:

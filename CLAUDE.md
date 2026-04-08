@@ -972,7 +972,7 @@ The CLI provides commands for generating documents from templates and managing d
 | `docs-ssot check` | Check docs for SSOT violations by detecting near-duplicate sections |
 | `docs-ssot include <file>` | Resolve includes and print expanded result to stdout |
 | `docs-ssot migrate [files...]` | Decompose existing Markdown files into SSOT section structure |
-| `docs-ssot migrate --agents` | Migrate AI tool configurations into SSOT multi-tool structure |
+| `docs-ssot migrate --from <tool>` | Migrate AI tool configs from one tool to others |
 | `docs-ssot validate` | Validate documentation structure without generating output |
 | `docs-ssot version` | Print the build version |
 
@@ -1178,77 +1178,84 @@ git diff README.md CLAUDE.md
 
 ---
 
-### Agent-aware migration (`--agents`)
+### Agent-aware migration (`--from`)
 
-With the `--agents` flag, `migrate` scans for AI tool configuration files (rules, skills, commands) and generates SSOT sections with per-tool templates for Claude, Cursor, Copilot, and Codex.
+With `--from`, `migrate` scans AI tool configuration files (rules, skills, commands, subagents) from the specified tool and generates SSOT sections with per-tool templates for the target tools.
 
 ```
-docs-ssot migrate --agents [flags]
+docs-ssot migrate --from <tool> [--to <tools>] [flags]
 ```
 
 #### What it does
 
-1. **Scans** the repository for AI tool directories (`.claude/`, `.cursor/`, `.github/`, `.codex/`, `AGENTS.md`)
-2. **Detects** which tool has the most configuration files (auto-selects as source of truth)
-3. **Strips** frontmatter from source files and shifts H1→H2 headings
-4. **Creates section files** under `template/sections/ai/<type>/<slug>.md`
-5. **Generates templates** for each target tool with appropriate frontmatter
-6. **Updates `docsgen.yaml`** with new build targets
-7. **Verifies round-trip** by building and comparing against originals
+1. **Scans** the source tool's configuration directory for rules, skills, commands, and subagents
+2. **Strips** frontmatter from source files and shifts H1→H2 headings
+3. **Creates section files** under `template/sections/ai/<type>/<slug>.md`
+4. **Generates templates** for each target tool with appropriate frontmatter
+5. **Updates `docsgen.yaml`** with new build targets
+6. **Verifies round-trip** by building and comparing against originals
 
-#### Agent-specific flags
+#### Flags
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--agents` | `false` | Enable agent-aware migration mode |
-| `--source-tool` | `auto` | Source tool: `auto`, `claude`, `cursor`, `copilot` |
-| `--target-tools` | `all` | Target tools: `all` or comma-separated (`claude,cursor,copilot,codex`) |
+| `--from` | — | Source AI tool to migrate from (`claude`, `cursor`, `copilot`) |
+| `--to` | all except `--from` | Target tools, comma-separated (`cursor,copilot,codex`) |
+| `--convert-commands` | `false` | Convert legacy commands to skills during migration |
+| `--infer-globs` | `false` | Infer path-gated globs from rule slug names |
 | `--dry-run` | `false` | Print the migration plan without writing files |
 
 #### Examples
 
-Migrate Claude rules to all tools:
+Migrate Claude configs to all other tools:
 
 ```
-docs-ssot migrate --agents
+docs-ssot migrate --from claude
+```
+
+Migrate to specific tools only:
+
+```
+docs-ssot migrate --from claude --to cursor,codex
 ```
 
 Preview migration plan:
 
 ```
-docs-ssot migrate --agents --dry-run
+docs-ssot migrate --from claude --dry-run
 ```
 
-Target specific tools only:
+Migrate with path inference and command conversion:
 
 ```
-docs-ssot migrate --agents --target-tools cursor,copilot
+docs-ssot migrate --from claude --to cursor --infer-globs --convert-commands
 ```
 
 Combine agent and file migration:
 
 ```
-docs-ssot migrate --agents README.md CLAUDE.md
+docs-ssot migrate --from claude --to cursor README.md CLAUDE.md
 ```
 
 #### Output
 
 ```
-Detected source tool: claude (3 files)
-Target tools: claude, cursor, copilot, codex
+Detected source tool: claude (5 files)
+Target tools: cursor, copilot, codex
 
 Creating sections:
   template/sections/ai/rules/architecture.md
   template/sections/ai/rules/testing.md
   template/sections/ai/skills/deploy.md
+  template/sections/ai/subagents/critic.md
+  template/sections/ai/subagents/debugger.md
 
-Creating templates (4 tools × 3 files):
-  claude: 3 templates
-  cursor: 3 templates
-  copilot: 3 templates
-  codex: 2 templates
+Creating templates (3 tools × 5 files):
+  cursor: 5 templates
+  copilot: 5 templates
+  codex: 4 templates
 
-Updated docsgen.yaml (11 new targets)
+Updated docsgen.yaml (14 new targets)
 Verifying round-trip...
 Round-trip verification: OK
 Agent migration complete.
@@ -1343,8 +1350,8 @@ make docs-check                               # check docs for SSOT violations (
 make docs-check ARGS="--threshold 0.75"       # check with custom flags
 make docs-migrate FILES="README.md CLAUDE.md" # migrate existing docs to SSOT structure
 make docs-migrate FILES="README.md" ARGS="--dry-run"  # preview migration plan
-make docs-migrate-agents                      # migrate AI tool configs to SSOT structure
-make docs-migrate-agents ARGS="--dry-run"     # preview agent migration plan
+make docs-migrate-from FROM=claude             # migrate Claude configs to all other tools
+make docs-migrate-from FROM=claude TO=cursor   # migrate Claude to Cursor only
 make docs-version                             # print the build version
 ```
 
