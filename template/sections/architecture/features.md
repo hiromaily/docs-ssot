@@ -40,11 +40,28 @@ Other architecture documents should reference this file rather than duplicating 
 | `validate` command | Implemented | Dry-run over all templates; reports unresolvable includes without writing any output files |
 | `version` command | Implemented | Prints the build version |
 | `migrate` command | Implemented | Decomposes existing Markdown files into SSOT section structure with duplicate detection and round-trip verification |
-| `migrate --from` mode | Implemented | Migrates AI tool configs from one tool to others (`--from claude --to cursor,codex`); supports subagents, path-gated rules (`--infer-globs`), command conversion (`--convert-commands`) |
 | Watch mode | Planned | Automatically rebuild on source file changes |
 | Dry-run mode | Planned | Preview changes without writing output files |
 | Diff / up-to-date check | Planned | Exit non-zero if generated files differ from committed versions (useful for CI) |
 | Custom config file path | Planned | Allow specifying a non-default config file via CLI flag |
+
+### Agent Migration Features (`migrate --from`)
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| AI tool detection | Implemented | Scans `.claude/`, `.cursor/`, `.github/`, `.codex/`, `AGENTS.md` to detect configured tools |
+| `--from` / `--to` flags | Implemented | Specify source and target tools; `--to` defaults to all tools except source |
+| Rules migration | Implemented | Rules converted with tool-specific frontmatter (`.mdc` for Cursor, `applyTo` for Copilot, `@include` for Codex) |
+| Skills migration | Implemented | Skills generated for all target tools with `name` + `description`; Claude preserves extra fields (`model`, `effort`, `allowed-tools`) |
+| Subagent migration | Implemented | `.claude/agents/*.md` scanned and migrated to `.cursor/agents/`, `.github/agents/`, `.codex/agents/` |
+| Command migration | Implemented | Claude commands migrated (Claude-only by default); convertible to skills via `--convert-commands` |
+| `--convert-commands` | Implemented | Converts legacy `.claude/commands/` to cross-tool skills during migration |
+| `--infer-globs` | Implemented | Infers path-gated rules from slug names (e.g., `go` → `**/*.go`, `frontend-*` → `frontend/**`) |
+| Frontmatter parsing | Implemented | Full YAML parsing via `yaml.Unmarshal`; handles multi-line values (lists, maps) |
+| CRLF handling | Implemented | Normalizes `\r\n` to `\n` before parsing |
+| Config deduplication | Implemented | `docsgen.yaml` targets deduplicated on re-run (idempotent) |
+| Round-trip verification | Implemented | Builds output and compares against source content after migration |
+| Codex combined AGENTS.md | Implemented | All rules aggregated into single `AGENTS.tpl.md` via `@include` directives |
 
 ### Output Header Features
 
