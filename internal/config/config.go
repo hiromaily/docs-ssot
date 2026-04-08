@@ -34,3 +34,14 @@ func Load(path string) (*Config, error) {
 
 	return &cfg, nil
 }
+
+// Save writes the config to the given YAML file path.
+func Save(path string, cfg *Config) error {
+	data, err := yaml.Marshal(cfg)
+	if err != nil {
+		return err
+	}
+
+	//nolint:gosec // generated config file
+	return os.WriteFile(path, data, 0o644)
+}

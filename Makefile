@@ -112,6 +112,13 @@ docs-check:
 docs-migrate:
 	go run ./cmd/docs-ssot migrate $(ARGS) $(FILES)
 
+# Usage: make docs-migrate-agents
+# Usage: make docs-migrate-agents ARGS="--dry-run"
+# Usage: make docs-migrate-agents ARGS="--target-tools cursor,copilot"
+.PHONY: docs-migrate-agents
+docs-migrate-agents:
+	go run ./cmd/docs-ssot migrate --agents $(ARGS)
+
 .PHONY: docs-version
 docs-version:
 	go run ./cmd/docs-ssot version

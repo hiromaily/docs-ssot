@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/hiromaily/docs-ssot/internal/agentscan"
+	"github.com/hiromaily/docs-ssot/internal/config"
 	"github.com/hiromaily/docs-ssot/internal/frontmatter"
 	"github.com/hiromaily/docs-ssot/internal/generator"
 )
@@ -105,7 +106,7 @@ func RunAgents(w io.Writer, cfg AgentConfig) error {
 	}
 
 	// Step 10: Round-trip verification.
-	verifyAgentRoundTrip(w, cfg)
+	verifyAgentRoundTrip(w, cfg, sections)
 
 	_, _ = fmt.Fprintln(w, "Agent migration complete.")
 	return nil
@@ -129,7 +130,7 @@ func readSourceFiles(root string, files []agentscan.AgentFile) ([]agentSection, 
 		}
 
 		parsed := frontmatter.Parse(string(data))
-		body := frontmatter.StripContent(string(data))
+		body := frontmatter.ShiftH1ToH2(strings.TrimSpace(parsed.Body))
 
 		sections = append(sections, agentSection{
 			Source:  f,
@@ -252,7 +253,8 @@ func computeRelPath(from, to string) string {
 	if err != nil {
 		return to
 	}
-	return rel
+	// Use forward slashes for cross-platform include paths in Markdown.
+	return filepath.ToSlash(rel)
 }
 
 func reportAgentPlan(w io.Writer, cfg AgentConfig, sections []agentSection, templates []templateFile) {
@@ -316,47 +318,32 @@ func writeAgentTemplateFiles(w io.Writer, templates []templateFile) error {
 
 func updateConfig(w io.Writer, cfg AgentConfig, templates []templateFile) error {
 	// Build new targets from templates.
-	newTargets := make([]string, 0, len(templates))
-
+	newTargets := make([]config.Target, 0, len(templates))
 	for _, t := range templates {
-		outputPath := resolveOutputPath(t)
-		newTargets = append(newTargets, fmt.Sprintf("  - input: %s\n    output: %s", t.OutputPath, outputPath))
+		newTargets = append(newTargets, config.Target{
+			Input:  filepath.ToSlash(t.OutputPath),
+			Output: filepath.ToSlash(resolveOutputPath(t)),
+		})
 	}
 
 	if len(newTargets) == 0 {
 		return nil
 	}
 
-	// Check if config exists.
-	configData, err := os.ReadFile(cfg.ConfigFile)
+	// Load existing config or create a new one.
+	existing, err := config.Load(cfg.ConfigFile)
 	if err != nil {
-		// Create new config.
-		content := "targets:\n" + strings.Join(newTargets, "\n") + "\n"
-		//nolint:gosec // generated config file
-		if writeErr := os.WriteFile(cfg.ConfigFile, []byte(content), 0o644); writeErr != nil {
-			return fmt.Errorf("write %s: %w", cfg.ConfigFile, writeErr)
-		}
-		_, _ = fmt.Fprintf(w, "Created %s (%d targets)\n", cfg.ConfigFile, len(newTargets))
-		return nil
+		// File does not exist or is invalid — create fresh config.
+		existing = &config.Config{}
 	}
 
-	// Append to existing config.
-	existing := string(configData)
-	if !strings.HasSuffix(existing, "\n") {
-		existing += "\n"
-	}
-	var sb strings.Builder
-	for _, target := range newTargets {
-		sb.WriteString(target + "\n")
-	}
-	existing += sb.String()
+	existing.Targets = append(existing.Targets, newTargets...)
 
-	//nolint:gosec // generated config file
-	if err := os.WriteFile(cfg.ConfigFile, []byte(existing), 0o644); err != nil {
+	if err := config.Save(cfg.ConfigFile, existing); err != nil {
 		return fmt.Errorf("write %s: %w", cfg.ConfigFile, err)
 	}
 
-	_, _ = fmt.Fprintf(w, "Added %d targets to %s\n", len(newTargets), cfg.ConfigFile)
+	_, _ = fmt.Fprintf(w, "Updated %s (%d new targets)\n", cfg.ConfigFile, len(newTargets))
 	return nil
 }
 
@@ -405,15 +392,66 @@ func resolveOutputPath(t templateFile) string { //nolint:gocyclo // inherent in 
 	return t.OutputPath
 }
 
-func verifyAgentRoundTrip(w io.Writer, cfg AgentConfig) {
+func verifyAgentRoundTrip(w io.Writer, cfg AgentConfig, sections []agentSection) {
 	_, _ = fmt.Fprintln(w, "Verifying round-trip...")
+
+	// Read original source files before building so we can compare after build.
+	originals := make(map[string][]byte, len(sections))
+	for _, s := range sections {
+		srcPath := filepath.Join(cfg.RootDir, s.Source.Path)
+		data, err := os.ReadFile(srcPath)
+		if err != nil {
+			_, _ = fmt.Fprintf(w, "Round-trip verification: SKIP (cannot read %s: %v)\n", s.Source.Path, err)
+			return
+		}
+		originals[s.Source.Path] = data
+	}
 
 	if err := generator.Build(cfg.ConfigFile); err != nil {
 		_, _ = fmt.Fprintf(w, "Round-trip verification: SKIP (build error: %v)\n", err)
 		return
 	}
 
-	_, _ = fmt.Fprintln(w, "Round-trip verification: OK")
+	// Compare generated output against originals.
+	allMatch := true
+	for path, original := range originals {
+		outputPath := resolveOutputForSource(cfg, path)
+		generated, err := os.ReadFile(outputPath)
+		if err != nil {
+			_, _ = fmt.Fprintf(w, "  WARNING: cannot read generated %s: %v\n", outputPath, err)
+			allMatch = false
+			continue
+		}
+
+		// Normalize and compare content (strip frontmatter from original for fair comparison).
+		originalBody := frontmatter.StripContent(string(original))
+		generatedBody := strings.TrimSpace(string(generated))
+		if originalBody != generatedBody {
+			_, _ = fmt.Fprintf(w, "  WARNING: %s differs after round-trip\n", path)
+			allMatch = false
+		}
+	}
+
+	if allMatch {
+		_, _ = fmt.Fprintln(w, "Round-trip verification: OK")
+	} else {
+		_, _ = fmt.Fprintln(w, "Round-trip verification: WARN (some files differ)")
+	}
+}
+
+// resolveOutputForSource maps a source file path to the expected build output path.
+func resolveOutputForSource(cfg AgentConfig, sourcePath string) string {
+	// The output path depends on the tool and file type; for round-trip verification
+	// we check the section files themselves since they are the canonical content.
+	slug := strings.TrimSuffix(filepath.Base(sourcePath), filepath.Ext(sourcePath))
+	// Check common section locations.
+	for _, typeDir := range []string{"rules", "skills", "commands"} {
+		candidate := filepath.Join(cfg.OutputDir, "ai", typeDir, slug+".md")
+		if _, err := os.Stat(candidate); err == nil {
+			return candidate
+		}
+	}
+	return sourcePath
 }
 
 func formatTools(tools []agentscan.Tool) string {

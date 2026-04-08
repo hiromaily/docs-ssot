@@ -28,7 +28,7 @@ Other architecture documents should reference this file rather than duplicating 
 | Deterministic output | Implemented | Same input always produces identical output |
 | Variable substitution | Planned | Allow `{{ variable }}` placeholders expanded at build time |
 | Conditional includes | Planned | Include or exclude sections based on build-time flags |
-| Front matter support | Planned | Parse and strip/merge YAML front matter from included files |
+| Front matter support | Partial | Parse and strip YAML front matter implemented in `frontmatter` package; merge/pass-through not yet supported |
 
 ### CLI and Workflow Features
 
@@ -40,6 +40,7 @@ Other architecture documents should reference this file rather than duplicating 
 | `validate` command | Implemented | Dry-run over all templates; reports unresolvable includes without writing any output files |
 | `version` command | Implemented | Prints the build version |
 | `migrate` command | Implemented | Decomposes existing Markdown files into SSOT section structure with duplicate detection and round-trip verification |
+| `migrate --agents` mode | Implemented | Scans AI tool configs (Claude, Cursor, Copilot, Codex) and generates multi-tool SSOT templates from a single tool's configuration |
 | Watch mode | Planned | Automatically rebuild on source file changes |
 | Dry-run mode | Planned | Preview changes without writing output files |
 | Diff / up-to-date check | Planned | Exit non-zero if generated files differ from committed versions (useful for CI) |

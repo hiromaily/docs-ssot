@@ -64,6 +64,55 @@ func TestScan_DetectsCursor(t *testing.T) {
 	}
 }
 
+func TestScan_DetectsCopilot(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+
+	// Create Copilot instructions.
+	instrDir := filepath.Join(dir, ".github", "instructions")
+	mkdirAll(t, instrDir)
+	writeFile(t, filepath.Join(instrDir, "go.instructions.md"), "---\napplyTo: \"**/*.go\"\n---\n\n# Go Rules\n")
+	writeFile(t, filepath.Join(instrDir, "testing.instructions.md"), "---\napplyTo: \"**/*_test.go\"\n---\n\n# Testing\n")
+
+	result, err := agentscan.Scan(dir)
+	if err != nil {
+		t.Fatalf("Scan() error: %v", err)
+	}
+
+	if !containsTool(result.DetectedTools, agentscan.ToolCopilot) {
+		t.Errorf("expected Copilot in detected tools, got %v", result.DetectedTools)
+	}
+
+	rules := result.FilesByType(agentscan.ToolCopilot, agentscan.FileTypeRule)
+	if len(rules) != 2 {
+		t.Errorf("expected 2 Copilot rules, got %d", len(rules))
+	}
+	if rules[0].Slug != "go" {
+		t.Errorf("expected slug 'go', got %q", rules[0].Slug)
+	}
+}
+
+func TestScan_DetectsCopilotViaInstructionsFile(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+
+	// Create only copilot-instructions.md (no instructions/ dir).
+	githubDir := filepath.Join(dir, ".github")
+	mkdirAll(t, githubDir)
+	writeFile(t, filepath.Join(githubDir, "copilot-instructions.md"), "# Instructions\n")
+
+	result, err := agentscan.Scan(dir)
+	if err != nil {
+		t.Fatalf("Scan() error: %v", err)
+	}
+
+	if !containsTool(result.DetectedTools, agentscan.ToolCopilot) {
+		t.Errorf("expected Copilot detected via copilot-instructions.md, got %v", result.DetectedTools)
+	}
+}
+
 func TestScan_SourceToolAutoDetect(t *testing.T) {
 	t.Parallel()
 

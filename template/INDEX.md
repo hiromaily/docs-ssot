@@ -15,7 +15,7 @@
 | pages/ai-agents/claude/rules/go.tpl.md | .claude/rules/go.md | 1 |
 | pages/ai-agents/claude/rules/go-test.tpl.md | .claude/rules/go-test.md | 1 |
 | pages/ai-agents/claude/rules/vitepress.tpl.md | .claude/rules/vitepress.md | 1 |
-| pages/ai-agents/claude/skills/check-ssot/skill.tpl.md | .claude/skills/check-ssot/skill.md | 1 |
+| pages/ai-agents/claude/skills/check-ssot/skill.tpl.md | .claude/skills/check-ssot/SKILL.md | 1 |
 | pages/ai-agents/claude/commands/fix-pr-reviews.tpl.md | .claude/commands/fix-pr-reviews.md | 1 |
 | pages/ai-agents/cursor/rules/general.tpl.mdc | .cursor/rules/general.mdc | 1 |
 | pages/ai-agents/cursor/rules/docs.tpl.mdc | .cursor/rules/docs.mdc | 1 |

@@ -430,6 +430,7 @@ The CLI provides commands for generating documents from templates and managing d
 | `docs-ssot check` | Check docs for SSOT violations by detecting near-duplicate sections |
 | `docs-ssot include <file>` | Resolve includes and print expanded result to stdout |
 | `docs-ssot migrate [files...]` | Decompose existing Markdown files into SSOT section structure |
+| `docs-ssot migrate --agents` | Migrate AI tool configurations into SSOT multi-tool structure |
 | `docs-ssot validate` | Validate documentation structure without generating output |
 | `docs-ssot version` | Print the build version |
 
@@ -635,6 +636,84 @@ git diff README.md CLAUDE.md
 
 ---
 
+#### Agent-aware migration (`--agents`)
+
+With the `--agents` flag, `migrate` scans for AI tool configuration files (rules, skills, commands) and generates SSOT sections with per-tool templates for Claude, Cursor, Copilot, and Codex.
+
+```
+docs-ssot migrate --agents [flags]
+```
+
+##### What it does
+
+1. **Scans** the repository for AI tool directories (`.claude/`, `.cursor/`, `.github/`, `.codex/`, `AGENTS.md`)
+2. **Detects** which tool has the most configuration files (auto-selects as source of truth)
+3. **Strips** frontmatter from source files and shifts H1→H2 headings
+4. **Creates section files** under `template/sections/ai/<type>/<slug>.md`
+5. **Generates templates** for each target tool with appropriate frontmatter
+6. **Updates `docsgen.yaml`** with new build targets
+7. **Verifies round-trip** by building and comparing against originals
+
+##### Agent-specific flags
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--agents` | `false` | Enable agent-aware migration mode |
+| `--source-tool` | `auto` | Source tool: `auto`, `claude`, `cursor`, `copilot` |
+| `--target-tools` | `all` | Target tools: `all` or comma-separated (`claude,cursor,copilot,codex`) |
+| `--dry-run` | `false` | Print the migration plan without writing files |
+
+##### Examples
+
+Migrate Claude rules to all tools:
+
+```
+docs-ssot migrate --agents
+```
+
+Preview migration plan:
+
+```
+docs-ssot migrate --agents --dry-run
+```
+
+Target specific tools only:
+
+```
+docs-ssot migrate --agents --target-tools cursor,copilot
+```
+
+Combine agent and file migration:
+
+```
+docs-ssot migrate --agents README.md CLAUDE.md
+```
+
+##### Output
+
+```
+Detected source tool: claude (3 files)
+Target tools: claude, cursor, copilot, codex
+
+Creating sections:
+  template/sections/ai/rules/architecture.md
+  template/sections/ai/rules/testing.md
+  template/sections/ai/skills/deploy.md
+
+Creating templates (4 tools × 3 files):
+  claude: 3 templates
+  cursor: 3 templates
+  copilot: 3 templates
+  codex: 2 templates
+
+Updated docsgen.yaml (11 new targets)
+Verifying round-trip...
+Round-trip verification: OK
+Agent migration complete.
+```
+
+---
+
 ### docs include
 
 Resolve include directives and print the expanded result to stdout.
@@ -722,6 +801,8 @@ make docs-check                               # check docs for SSOT violations (
 make docs-check ARGS="--threshold 0.75"       # check with custom flags
 make docs-migrate FILES="README.md CLAUDE.md" # migrate existing docs to SSOT structure
 make docs-migrate FILES="README.md" ARGS="--dry-run"  # preview migration plan
+make docs-migrate-agents                      # migrate AI tool configs to SSOT structure
+make docs-migrate-agents ARGS="--dry-run"     # preview agent migration plan
 make docs-version                             # print the build version
 ```
 
@@ -1149,7 +1230,7 @@ Other architecture documents should reference this file rather than duplicating 
 | Deterministic output | Implemented | Same input always produces identical output |
 | Variable substitution | Planned | Allow `{{ variable }}` placeholders expanded at build time |
 | Conditional includes | Planned | Include or exclude sections based on build-time flags |
-| Front matter support | Planned | Parse and strip/merge YAML front matter from included files |
+| Front matter support | Partial | Parse and strip YAML front matter implemented in `frontmatter` package; merge/pass-through not yet supported |
 
 ### CLI and Workflow Features
 
@@ -1161,6 +1242,7 @@ Other architecture documents should reference this file rather than duplicating 
 | `validate` command | Implemented | Dry-run over all templates; reports unresolvable includes without writing any output files |
 | `version` command | Implemented | Prints the build version |
 | `migrate` command | Implemented | Decomposes existing Markdown files into SSOT section structure with duplicate detection and round-trip verification |
+| `migrate --agents` mode | Implemented | Scans AI tool configs (Claude, Cursor, Copilot, Codex) and generates multi-tool SSOT templates from a single tool's configuration |
 | Watch mode | Planned | Automatically rebuild on source file changes |
 | Dry-run mode | Planned | Preview changes without writing output files |
 | Diff / up-to-date check | Planned | Exit non-zero if generated files differ from committed versions (useful for CI) |

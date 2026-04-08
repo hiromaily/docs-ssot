@@ -20,7 +20,11 @@ type Parsed struct {
 
 // Parse splits a Markdown file into frontmatter and body.
 // If no frontmatter is present, Raw and Fields are empty and Body contains the full content.
+// Handles both LF and CRLF line endings.
 func Parse(content string) Parsed {
+	// Normalize CRLF to LF for consistent parsing.
+	content = normalizeCRLF(content)
+
 	if !strings.HasPrefix(content, "---\n") {
 		return Parsed{Body: content}
 	}
@@ -48,11 +52,22 @@ func Parse(content string) Parsed {
 	}
 }
 
+// normalizeCRLF replaces all \r\n with \n.
+func normalizeCRLF(s string) string {
+	return strings.ReplaceAll(s, "\r\n", "\n")
+}
+
 // StripContent returns the body content with frontmatter removed and
 // H1 headings shifted to H2 (section file convention).
 func StripContent(content string) string {
 	p := Parse(content)
-	return shiftH1ToH2(strings.TrimSpace(p.Body))
+	return ShiftH1ToH2(strings.TrimSpace(p.Body))
+}
+
+// ShiftH1ToH2 shifts all H1 headings (# Foo) to H2 (## Foo) for section file convention.
+// Headings inside code fences are left unchanged.
+func ShiftH1ToH2(content string) string {
+	return shiftH1ToH2(content)
 }
 
 // GenerateRuleTemplate generates a tool-specific rule template with appropriate

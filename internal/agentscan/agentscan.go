@@ -325,7 +325,7 @@ func collectCopilot(root string) ([]AgentFile, error) {
 
 func selectSourceTool(toolFiles map[Tool]int) Tool {
 	if len(toolFiles) == 0 {
-		return ToolClaude // default
+		return "" // no tools detected
 	}
 
 	type toolCount struct {

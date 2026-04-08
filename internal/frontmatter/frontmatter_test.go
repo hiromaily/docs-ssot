@@ -1,6 +1,7 @@
 package frontmatter_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/hiromaily/docs-ssot/internal/agentscan"
@@ -58,6 +59,36 @@ func TestParse_FrontmatterOnly(t *testing.T) {
 	}
 }
 
+func TestParse_CRLF(t *testing.T) {
+	t.Parallel()
+
+	content := "---\r\nname: foo\r\ndescription: bar\r\n---\r\n\r\n# Title\r\n"
+	p := frontmatter.Parse(content)
+
+	if p.Fields["name"] != "foo" {
+		t.Errorf("expected name='foo', got %q", p.Fields["name"])
+	}
+	if p.Fields["description"] != "bar" {
+		t.Errorf("expected description='bar', got %q", p.Fields["description"])
+	}
+	if !strings.Contains(p.Body, "# Title") {
+		t.Errorf("expected body to contain '# Title', got %q", p.Body)
+	}
+}
+
+func TestParse_MultiValueField(t *testing.T) {
+	t.Parallel()
+
+	// Multi-line list values only capture the first line.
+	content := "---\nallowed-tools:\n  - Read\n  - Edit\n---\n\nBody\n"
+	p := frontmatter.Parse(content)
+
+	// The simple parser captures "allowed-tools" with empty value.
+	if _, ok := p.Fields["allowed-tools"]; !ok {
+		t.Errorf("expected 'allowed-tools' key in Fields, got %v", p.Fields)
+	}
+}
+
 func TestStripContent_ShiftsH1ToH2(t *testing.T) {
 	t.Parallel()
 
@@ -81,6 +112,31 @@ func TestStripContent_PreservesCodeFenceHeadings(t *testing.T) {
 	}
 }
 
+func TestShiftH1ToH2(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		input string
+		want  string
+	}{
+		{name: "simple_h1", input: "# Foo", want: "## Foo"},
+		{name: "h2_unchanged", input: "## Bar", want: "## Bar"},
+		{name: "code_fence_preserved", input: "```\n# not heading\n```", want: "```\n# not heading\n```"},
+		{name: "no_headings", input: "just text", want: "just text"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := frontmatter.ShiftH1ToH2(tt.input)
+			if got != tt.want {
+				t.Errorf("ShiftH1ToH2(%q) = %q, want %q", tt.input, got, tt.want)
+			}
+		})
+	}
+}
+
 func TestGenerateRuleTemplate_Claude(t *testing.T) {
 	t.Parallel()
 
@@ -99,14 +155,13 @@ func TestGenerateRuleTemplate_Cursor(t *testing.T) {
 	if got == "" {
 		t.Fatal("empty result")
 	}
-	// Should contain MDC frontmatter.
-	if !contains(got, "description: Architecture") {
+	if !strings.Contains(got, "description: Architecture") {
 		t.Errorf("expected description in Cursor template, got:\n%s", got)
 	}
-	if !contains(got, "alwaysApply: true") {
+	if !strings.Contains(got, "alwaysApply: true") {
 		t.Errorf("expected alwaysApply in Cursor template, got:\n%s", got)
 	}
-	if !contains(got, "@include:") {
+	if !strings.Contains(got, "@include:") {
 		t.Errorf("expected @include in template, got:\n%s", got)
 	}
 }
@@ -116,7 +171,7 @@ func TestGenerateRuleTemplate_Copilot(t *testing.T) {
 
 	got := frontmatter.GenerateRuleTemplate(agentscan.ToolCopilot, "testing", "../../sections/ai/rules/testing.md")
 
-	if !contains(got, "applyTo: \"**/*\"") {
+	if !strings.Contains(got, "applyTo: \"**/*\"") {
 		t.Errorf("expected applyTo in Copilot template, got:\n%s", got)
 	}
 }
@@ -133,7 +188,7 @@ func TestGenerateSkillTemplate(t *testing.T) {
 	t.Run("claude_preserves_extra_fields", func(t *testing.T) {
 		t.Parallel()
 		got := frontmatter.GenerateSkillTemplate(agentscan.ToolClaude, "deploy", "../sections/ai/skills/deploy.md", fields)
-		if !contains(got, "model: opus") {
+		if !strings.Contains(got, "model: opus") {
 			t.Errorf("expected model field preserved for Claude, got:\n%s", got)
 		}
 	})
@@ -141,10 +196,10 @@ func TestGenerateSkillTemplate(t *testing.T) {
 	t.Run("cursor_only_name_description", func(t *testing.T) {
 		t.Parallel()
 		got := frontmatter.GenerateSkillTemplate(agentscan.ToolCursor, "deploy", "../sections/ai/skills/deploy.md", fields)
-		if contains(got, "model:") {
+		if strings.Contains(got, "model:") {
 			t.Errorf("Cursor template should not include model field, got:\n%s", got)
 		}
-		if !contains(got, "name: deploy") {
+		if !strings.Contains(got, "name: deploy") {
 			t.Errorf("expected name in Cursor template, got:\n%s", got)
 		}
 	})
@@ -160,26 +215,13 @@ func TestGenerateCodexAGENTSTemplate(t *testing.T) {
 
 	got := frontmatter.GenerateCodexAGENTSTemplate(includes)
 
-	if !contains(got, "# Agent Instructions") {
+	if !strings.Contains(got, "# Agent Instructions") {
 		t.Errorf("expected title in AGENTS template, got:\n%s", got)
 	}
-	if !contains(got, "architecture.md") {
+	if !strings.Contains(got, "architecture.md") {
 		t.Errorf("expected architecture include, got:\n%s", got)
 	}
-	if !contains(got, "testing.md") {
+	if !strings.Contains(got, "testing.md") {
 		t.Errorf("expected testing include, got:\n%s", got)
 	}
-}
-
-func contains(s, substr string) bool {
-	return len(s) > 0 && len(substr) > 0 && s != "" && indexOf(s, substr) >= 0
-}
-
-func indexOf(s, substr string) int {
-	for i := range len(s) - len(substr) + 1 {
-		if s[i:i+len(substr)] == substr {
-			return i
-		}
-	}
-	return -1
 }

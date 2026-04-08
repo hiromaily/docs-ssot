@@ -105,6 +105,7 @@ func parseTargetTools(s string) ([]agentscan.Tool, error) {
 		return agentscan.AllTools(), nil
 	}
 
+	seen := map[agentscan.Tool]bool{}
 	var tools []agentscan.Tool
 	for name := range strings.SplitSeq(s, ",") {
 		name = strings.TrimSpace(name)
@@ -115,7 +116,10 @@ func parseTargetTools(s string) ([]agentscan.Tool, error) {
 		if err != nil {
 			return nil, err
 		}
-		tools = append(tools, tool)
+		if !seen[tool] {
+			seen[tool] = true
+			tools = append(tools, tool)
+		}
 	}
 	return tools, nil
 }

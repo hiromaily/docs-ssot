@@ -54,9 +54,12 @@ docs-ssot/
 | Package | File | Responsibility |
 |---|---|---|
 | `main` | `cmd/docs-ssot/main.go` | CLI arg parsing, dispatch to `generator.Build()` |
-| `config` | `internal/config/config.go` | Load `docsgen.yaml` into `Config{Targets []Target}` |
+| `config` | `internal/config/config.go` | Load/save `docsgen.yaml` into `Config{Targets []Target}` |
 | `generator` | `internal/generator/generator.go` | Iterate targets, call include resolver, write output |
 | `processor` | `internal/processor/processor.go` | Include resolution, transformer pipeline (ProcessFile, Transformer, Apply) |
+| `agentscan` | `internal/agentscan/agentscan.go` | Detect AI tools (.claude/, .cursor/, .github/, .codex/) and collect agent files |
+| `frontmatter` | `internal/frontmatter/frontmatter.go` | Parse/strip/generate YAML frontmatter for different tool formats |
+| `migrate` | `internal/migrate/agents.go` | Agent-aware migration pipeline (scan → section → template → config → verify) |
 
 ### Include Directive Pattern
 
