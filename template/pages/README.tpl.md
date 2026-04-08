@@ -1,49 +1,107 @@
 <!--
-⚠️ AUTO-GENERATED FILE — DO NOT EDIT - template/README.tpl.md
+⚠️ AUTO-GENERATED FILE — DO NOT EDIT - template/pages/README.tpl.md
 -->
 # docs-ssot
 
-> **Documentation Site:** <https://hiromaily.github.io/docs-ssot/>
+<!-- @include: ../sections/product/hero.md -->
+
+---
+
+<!-- @include: ../sections/product/why.md -->
+
+---
+
+<!-- @include: ../sections/product/before-after.md -->
+
+---
+
+<!-- @include: ../sections/product/quick-start.md -->
+
+---
+
+<!-- @include: ../sections/product/supported-targets.md -->
+
+---
+
+## How It Works
+
+docs-ssot adds one missing feature to Markdown: **`#include`**.
+
+<!-- @include: ../sections/architecture/includes-syntax.md level=+1 -->
+
+### The Pipeline
+
+```text
+template/sections/          template/pages/
+(single-source docs)        (document structure)
+        │                          │
+        └──────────┬───────────────┘
+                   ▼
+          docs-ssot build
+                   │
+     ┌─────────────┼──────────────────┐
+     ▼             ▼                  ▼
+  README.md    CLAUDE.md    .cursor/rules/*.mdc
+               AGENTS.md    .github/instructions/
+                            .claude/rules/*.md
+```
+
+### Template Example
+
+```markdown
+<!-- template/pages/CLAUDE.tpl.md -->
+
+# Project Context
 
 <!-- @include: ../sections/project/overview.md -->
 
----
+# Architecture
 
-<!-- @include: ../sections/development/setup.md -->
+<!-- @include: ../sections/architecture/overview.md -->
+<!-- @include: ../sections/architecture/pipeline.md -->
 
----
+# Development Guide
 
-<!-- @include: ../sections/product/features.md -->
+<!-- @include: ../sections/development/ -->
+```
 
----
-
-## Architecture
-
-<!-- @include: ../sections/architecture/overview.md level=+1 -->
-
-<!-- @include: ../sections/architecture/system.md level=+1 -->
+One template defines the structure. Sections provide the content.
+`docs-ssot build` assembles the final document.
 
 ---
 
-<!-- @include: ../sections/reference/commands.md -->
+<!-- @include: ../sections/reference/commands-summary.md -->
 
 ---
 
-<!-- @include: ../sections/architecture/includes.md -->
+## SSOT Duplicate Detection
+
+docs-ssot doesn't just generate — it helps you find existing duplication.
+
+```sh
+docs-ssot check --threshold 0.75
+```
+
+```text
+score=0.891
+A: docs/auth/overview.md [API > Authentication]
+B: docs/setup/login.md [Setup > Authentication]
+```
+
+Uses TF-IDF cosine similarity to surface sections that say the same
+thing in different places. Fix them before they confuse your AI agents.
 
 ---
 
-<!-- @include: ../sections/ai/overview.md -->
-
-<!-- @include: ../sections/ai/hooks.md level=+1 -->
+<!-- @include: ../sections/product/comparison.md -->
 
 ---
 
-<!-- @include: ../sections/project/roadmap.md -->
+<!-- @include: ../sections/product/self-hosting.md -->
 
 ---
 
-<!-- @include: ../sections/architecture/features.md -->
+<!-- @include: ../sections/development/contributing.md -->
 
 ---
 
