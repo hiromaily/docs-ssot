@@ -25,5 +25,6 @@ make docs-migrate FILES="README.md CLAUDE.md" # migrate existing docs to SSOT st
 make docs-migrate FILES="README.md" ARGS="--dry-run"  # preview migration plan
 make docs-migrate-from FROM=claude             # migrate Claude configs to all other tools
 make docs-migrate-from FROM=claude TO=cursor   # migrate Claude to Cursor only
+make docs-index                               # generate INDEX.md with include relationships
 make docs-version                             # print the build version
 ```

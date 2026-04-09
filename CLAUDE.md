@@ -968,6 +968,7 @@ Run `make install-dev` to set up hooks.
 | `docs-ssot include <file>` | Resolve includes and print expanded result to stdout |
 | `docs-ssot migrate [files...]` | Decompose existing Markdown files into SSOT section structure |
 | `docs-ssot migrate --from <tool>` | Migrate AI tool configs from one tool to others |
+| `docs-ssot index` | Generate INDEX.md with include relationships and orphan detection |
 | `docs-ssot validate` | Validate documentation structure without generating output |
 | `docs-ssot version` | Print the build version |
 
@@ -1061,6 +1062,40 @@ docs-ssot include template/pages/README.tpl.md
 ```
 
 Useful for debugging template expansion without writing any output files.
+## docs-ssot index
+
+Generate `INDEX.md` showing include relationships and orphan detection across all templates.
+
+```
+docs-ssot index [flags]
+```
+
+### What it does
+
+- Scans all templates defined in `docsgen.yaml`
+- Resolves include relationships between templates and section files
+- Detects orphaned section files not referenced by any template
+- Prints the index to stdout, or writes it to a file
+
+### Flags
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--output` | — | Write index to file instead of stdout |
+
+### Examples
+
+Print index to stdout:
+
+```
+docs-ssot index
+```
+
+Write index to a file:
+
+```
+docs-ssot index --output template/INDEX.md
+```
 ## Agent-aware migration (--from)
 
 With `--from`, `migrate` scans AI tool configuration files (rules, skills, commands, subagents) from the specified tool and generates SSOT sections with per-tool templates for the target tools.
@@ -1324,6 +1359,7 @@ make docs-migrate FILES="README.md CLAUDE.md" # migrate existing docs to SSOT st
 make docs-migrate FILES="README.md" ARGS="--dry-run"  # preview migration plan
 make docs-migrate-from FROM=claude             # migrate Claude configs to all other tools
 make docs-migrate-from FROM=claude TO=cursor   # migrate Claude to Cursor only
+make docs-index                               # generate INDEX.md with include relationships
 make docs-version                             # print the build version
 ```
 

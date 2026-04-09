@@ -80,38 +80,45 @@ test:
 	go test ./...
 
 ###############################################################################
-# Generate docs
+# docs-ssot commands
 ###############################################################################
 
+# Generate final documents (e.g., README.md, CLAUDE.md) from templates.
 .PHONY: docs
 docs:
 	go run ./cmd/docs-ssot build
 
+# Generate `INDEX.md` showing include relationships and orphan detection across all templates.
 .PHONY: docs-index
 docs-index:
 	go run ./cmd/docs-ssot index
 
+# Validate documentation structure without generating any output files.
 .PHONY: docs-validate
 docs-validate:
 	go run ./cmd/docs-ssot validate
 
+# Resolve include directives and print the expanded result to stdout.
 # Usage: make docs-include FILE=template/README.tpl.md
 .PHONY: docs-include
 docs-include:
 	go run ./cmd/docs-ssot include $(FILE)
 
+# Check docs for SSOT violations by detecting near-duplicate sections across Markdown files.
 # Usage: make docs-check
 # Usage: make docs-check ARGS="--threshold 0.75 --section-level 3"
 .PHONY: docs-check
 docs-check:
 	go run ./cmd/docs-ssot check --root template/docs $(ARGS)
 
+# Decompose existing monolithic Markdown files (e.g., README.md, CLAUDE.md) into the docs-ssot section structure.
 # Usage: make docs-migrate FILES="README.md CLAUDE.md"
 # Usage: make docs-migrate FILES="README.md" ARGS="--dry-run"
 .PHONY: docs-migrate
 docs-migrate:
 	go run ./cmd/docs-ssot migrate $(ARGS) $(FILES)
 
+# With `--from`, `migrate` scans AI tool configuration files (rules, skills, commands, subagents) from the specified tool and generates SSOT sections with per-tool templates for the target tools.
 # Usage: make docs-migrate-from FROM=claude
 # Usage: make docs-migrate-from FROM=claude TO=cursor,codex
 # Usage: make docs-migrate-from FROM=claude ARGS="--dry-run --infer-globs"

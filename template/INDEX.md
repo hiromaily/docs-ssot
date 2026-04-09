@@ -7,8 +7,8 @@
 | Template | Output | Sections included |
 | --- | --- | --- |
 | pages/README.tpl.md | README.md | 9 |
-| pages/AGENTS.tpl.md | AGENTS.md | 35 |
-| pages/CLAUDE.tpl.md | CLAUDE.md | 34 |
+| pages/AGENTS.tpl.md | AGENTS.md | 36 |
+| pages/CLAUDE.tpl.md | CLAUDE.md | 35 |
 | pages/ai-agents/claude/rules/general.tpl.md | .claude/rules/general.md | 1 |
 | pages/ai-agents/claude/rules/docs.tpl.md | .claude/rules/docs.md | 1 |
 | pages/ai-agents/claude/rules/git.tpl.md | .claude/rules/git.md | 1 |
@@ -24,7 +24,7 @@
 | pages/ai-agents/cursor/rules/go-test.tpl.mdc | .cursor/rules/go-test.mdc | 1 |
 | pages/ai-agents/cursor/rules/vitepress.tpl.mdc | .cursor/rules/vitepress.mdc | 1 |
 | pages/ai-agents/cursor/skills/fix-pr-reviews/SKILL.tpl.md | .cursor/skills/fix-pr-reviews/SKILL.md | 1 |
-| pages/AGENTS-codex.tpl.md | AGENTS-codex.md | 27 |
+| pages/AGENTS-codex.tpl.md | AGENTS-codex.md | 28 |
 | pages/ai-agents/codex/skills/fix-pr-reviews/SKILL.tpl.md | .agents/skills/fix-pr-reviews/SKILL.md | 1 |
 | pages/ai-agents/copilot/instructions/general.tpl.md | .github/instructions/general.instructions.md | 1 |
 | pages/ai-agents/copilot/instructions/docs.tpl.md | .github/instructions/docs.instructions.md | 1 |
@@ -78,6 +78,7 @@
 | sections/reference/commands/build.md | AGENTS, AGENTS-codex, CLAUDE |
 | sections/reference/commands/check.md | AGENTS, AGENTS-codex, CLAUDE |
 | sections/reference/commands/include.md | AGENTS, AGENTS-codex, CLAUDE |
+| sections/reference/commands/index.md | AGENTS, AGENTS-codex, CLAUDE |
 | sections/reference/commands/migrate-from.md | AGENTS, AGENTS-codex, CLAUDE |
 | sections/reference/commands/migrate.md | AGENTS, AGENTS-codex, CLAUDE |
 | sections/reference/commands/validate.md | AGENTS, AGENTS-codex, CLAUDE |
