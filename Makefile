@@ -126,6 +126,14 @@ docs-migrate:
 docs-migrate-from:
 	go run ./cmd/docs-ssot migrate --from $(FROM) $(if $(TO),--to $(TO)) $(ARGS)
 
+# Install the docs-ssot skill for AI coding agents.
+# Usage: make docs-install-skill
+# Usage: make docs-install-skill TOOL=claude
+# Usage: make docs-install-skill TOOL=claude,cursor
+.PHONY: docs-install-skill
+docs-install-skill:
+	go run ./cmd/docs-ssot install-skill $(if $(TOOL),--tool $(TOOL))
+
 .PHONY: docs-version
 docs-version:
 	go run ./cmd/docs-ssot version

@@ -728,6 +728,7 @@ Run `make install-dev` to set up hooks.
 | `docs-ssot migrate [files...]` | Decompose existing Markdown files into SSOT section structure |
 | `docs-ssot migrate --from <tool>` | Migrate AI tool configs from one tool to others |
 | `docs-ssot index` | Generate INDEX.md with include relationships and orphan detection |
+| `docs-ssot install-skill` | Install the docs-ssot skill for AI coding agents |
 | `docs-ssot validate` | Validate documentation structure without generating output |
 | `docs-ssot version` | Print the build version |
 
@@ -854,6 +855,54 @@ Write index to a file:
 
 ```
 docs-ssot index --output template/INDEX.md
+```
+# docs-ssot install-skill
+
+Install a `SKILL.md` file for AI coding agents so they know how to migrate existing documentation to the docs-ssot SSOT structure, build output files, and validate the result.
+
+```
+docs-ssot install-skill [flags]
+```
+
+## What it does
+
+- Writes a `SKILL.md` file into each target tool's skills directory
+- The installed skill guides the agent through the full docs-ssot workflow: migrate → build → validate
+- Prompts before overwriting an existing skill file
+
+## Skill install locations
+
+| Tool | Path |
+|------|------|
+| Claude Code | `.claude/skills/docs-ssot/SKILL.md` |
+| Cursor | `.cursor/skills/docs-ssot/SKILL.md` |
+| GitHub Copilot | `.github/skills/docs-ssot/SKILL.md` |
+| Codex | `.agents/skills/docs-ssot/SKILL.md` |
+
+## Flags
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--tool` | all | Target tool(s): `claude`, `cursor`, `copilot`, `codex` (comma-separated) |
+
+## Examples
+
+Install for all tools:
+
+```
+docs-ssot install-skill
+```
+
+Install for Claude Code only:
+
+```
+docs-ssot install-skill --tool claude
+```
+
+Install for multiple specific tools:
+
+```
+docs-ssot install-skill --tool claude,cursor
 ```
 # Agent-aware migration (--from)
 
@@ -1119,6 +1168,8 @@ make docs-migrate FILES="README.md" ARGS="--dry-run"  # preview migration plan
 make docs-migrate-from FROM=claude             # migrate Claude configs to all other tools
 make docs-migrate-from FROM=claude TO=cursor   # migrate Claude to Cursor only
 make docs-index                               # generate INDEX.md with include relationships
+make docs-install-skill                       # install docs-ssot skill for all AI tools
+make docs-install-skill TOOL=claude           # install for a specific tool
 make docs-version                             # print the build version
 ```
 
