@@ -14,17 +14,29 @@ import (
 	"github.com/hiromaily/docs-ssot/internal/agentscan"
 )
 
-//go:embed skills/claude/SKILL.md
-var claudeSkill []byte
+//go:embed skills/SKILL.md
+var skillBody []byte
 
-//go:embed skills/cursor/SKILL.md
-var cursorSkill []byte
+// claudeFrontmatter includes allowed-tools restrictions for Claude Code.
+const claudeFrontmatter = `---
+name: docs-ssot
+description: Set up docs-ssot SSOT documentation structure — migrate existing docs, build, and validate
+allowed-tools:
+  - Read
+  - Write
+  - Edit
+  - Bash(docs-ssot *)
+  - Bash(make docs*)
+  - Bash(git diff *)
+---
+`
 
-//go:embed skills/copilot/SKILL.md
-var copilotSkill []byte
-
-//go:embed skills/codex/SKILL.md
-var codexSkill []byte
+// minimalFrontmatter is used for tools that only require name and description.
+const minimalFrontmatter = `---
+name: docs-ssot
+description: Set up docs-ssot SSOT documentation structure — migrate existing docs, build, and validate
+---
+`
 
 // skillPath returns the install path for the SKILL.md file for the given tool.
 func skillPath(tool agentscan.Tool) string {
@@ -42,20 +54,16 @@ func skillPath(tool agentscan.Tool) string {
 	}
 }
 
-// skillContent returns the embedded SKILL.md content for the given tool.
+// skillContent returns the complete SKILL.md content for the given tool.
 func skillContent(tool agentscan.Tool) []byte {
+	var fm string
 	switch tool {
 	case agentscan.ToolClaude:
-		return claudeSkill
-	case agentscan.ToolCursor:
-		return cursorSkill
-	case agentscan.ToolCopilot:
-		return copilotSkill
-	case agentscan.ToolCodex:
-		return codexSkill
+		fm = claudeFrontmatter
 	default:
-		return nil
+		fm = minimalFrontmatter
 	}
+	return append([]byte(fm), skillBody...)
 }
 
 // Install installs the docs-ssot skill for each of the specified tools.

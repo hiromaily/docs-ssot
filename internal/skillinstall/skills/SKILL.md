@@ -1,8 +1,3 @@
----
-name: docs-ssot
-description: Set up docs-ssot SSOT documentation structure — migrate existing docs, build, and validate
----
-
 # docs-ssot: Documentation SSOT Setup
 
 This skill migrates existing Markdown documentation into a modular Single Source of Truth (SSOT) structure managed by `docs-ssot`, then builds and validates the output.
