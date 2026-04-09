@@ -254,14 +254,18 @@ func Install(tools []agentscan.Tool, in io.Reader, out io.Writer) error {
 
 		if _, err := os.Stat(path); err == nil {
 			// File exists — prompt user.
-			_, _ = fmt.Fprintf(out, "%s already exists. Overwrite? [y/N]: ", path)
+			if _, err := fmt.Fprintf(out, "%s already exists. Overwrite? [y/N]: ", path); err != nil {
+				return fmt.Errorf("write prompt: %w", err)
+			}
 			line, err := reader.ReadString('\n')
 			if err != nil && !errors.Is(err, io.EOF) {
 				return fmt.Errorf("read prompt: %w", err)
 			}
 			answer := strings.TrimSpace(strings.ToLower(line))
 			if answer != "y" && answer != "yes" {
-				_, _ = fmt.Fprintf(out, "Skipped %s\n", path)
+				if _, err := fmt.Fprintf(out, "Skipped %s\n", path); err != nil {
+					return fmt.Errorf("write skip message: %w", err)
+				}
 				continue
 			}
 		}
@@ -274,7 +278,9 @@ func Install(tools []agentscan.Tool, in io.Reader, out io.Writer) error {
 			return fmt.Errorf("write %s: %w", path, err)
 		}
 
-		_, _ = fmt.Fprintf(out, "Installed %s\n", path)
+		if _, err := fmt.Fprintf(out, "Installed %s\n", path); err != nil {
+			return fmt.Errorf("write install message: %w", err)
+		}
 	}
 
 	return nil
