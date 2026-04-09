@@ -1340,7 +1340,41 @@ Additional configuration can go in `agents/openai.yaml` within the skill directo
 
 ### Subagents
 
-Codex subagents are defined as TOML files in `.codex/agents/`. They specify role, model, thread limits, and other execution parameters.
+Codex subagents are defined as TOML files in `.codex/agents/`. Each file defines one custom agent.
+
+#### Required Fields
+
+| Field | Purpose |
+|-------|---------|
+| `name` | Agent identifier used when spawning |
+| `description` | Guidance for when to use this agent |
+| `developer_instructions` | Core behavioral instructions (multi-line basic string) |
+
+#### Optional Fields
+
+| Field | Default | Purpose |
+|-------|---------|---------|
+| `model` | Inherited from parent | LLM selection |
+| `model_reasoning_effort` | Inherited | Reasoning effort level |
+| `sandbox_mode` | Inherited | File access scope (e.g., `read-only`) |
+| `nickname_candidates` | — | Display name pool for spawned instances |
+| `mcp_servers` | Inherited | External tool connections |
+| `skills.config` | Inherited | Skill configuration overrides |
+
+#### Example
+
+```toml
+name = "reviewer"
+description = "Read-only codebase explorer for gathering evidence."
+model = "o3"
+sandbox_mode = "read-only"
+developer_instructions = """
+Stay in exploration mode.
+Trace the real execution path, cite files and symbols.
+"""
+```
+
+The filename conventionally matches the `name` field (e.g., `reviewer.toml`), but the `name` field is the source of truth.
 
 ## Cursor
 
@@ -1542,6 +1576,18 @@ All four tools use `SKILL.md` with YAML frontmatter, but the supported fields di
 | `alwaysApply` | Yes | — | — | — |
 | `applyTo` | — | Yes | — | — |
 | `excludeAgent` | — | Yes | — | — |
+
+### Subagent Format Comparison
+
+| Aspect | Claude `.md` | Cursor `.md` | Codex `.toml` | Copilot `.agent.md` |
+|--------|-------------|-------------|--------------|-------------------|
+| Format | Markdown + YAML frontmatter | Markdown + YAML frontmatter | TOML | Markdown + YAML frontmatter |
+| Instructions field | Body (Markdown) | Body (Markdown) | `developer_instructions` (multi-line string) | Body (Markdown) |
+| Required fields | `name`, `description` | `name`, `description` | `name`, `description`, `developer_instructions` | `name`, `description` |
+| Model override | `model` in frontmatter | — | `model` in TOML | — |
+| Tool restrictions | `allowedTools`/`disallowedTools` | — | — | — |
+
+**Key difference**: Codex is the only tool that uses TOML format for subagents. All others use Markdown with YAML frontmatter where instructions live in the document body.
 
 ### Functional Categories
 
