@@ -1,5 +1,5 @@
 <!--
-⚠️ AUTO-GENERATED FILE — DO NOT EDIT - template/ai-agents/codex/AGENTS.tpl.md
+⚠️ AUTO-GENERATED FILE — DO NOT EDIT - template/pages/AGENTS-codex.tpl.md
 -->
 # Project Context
 

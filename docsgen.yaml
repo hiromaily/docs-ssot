@@ -63,7 +63,7 @@ targets:
     output: .cursor/skills/fix-pr-reviews/SKILL.md
 
   # ── Codex: AGENTS.md (with rules) ────────────────────────────
-  - input: template/pages/ai-agents/codex/AGENTS.tpl.md
+  - input: template/pages/AGENTS-codex.tpl.md
     output: AGENTS-codex.md
 
   # ── Codex: skills ──────────────────────────────────────────

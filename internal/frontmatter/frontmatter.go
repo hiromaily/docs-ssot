@@ -126,6 +126,27 @@ func YAMLListToCSV(s string) string {
 	return strings.Join(items, ", ")
 }
 
+// splitGlobs splits a comma-separated glob string into individual patterns.
+func splitGlobs(csv string) []string {
+	var items []string
+	for p := range strings.SplitSeq(csv, ",") {
+		p = strings.TrimSpace(p)
+		if p != "" {
+			items = append(items, p)
+		}
+	}
+	return items
+}
+
+// globsToYAMLList formats a slice of glob patterns as a YAML flow sequence: ["a", "b"].
+func globsToYAMLList(items []string) string {
+	quoted := make([]string, len(items))
+	for i, item := range items {
+		quoted[i] = `"` + item + `"`
+	}
+	return "[" + strings.Join(quoted, ", ") + "]"
+}
+
 // GenerateRuleTemplate generates a tool-specific rule template with appropriate
 // frontmatter and an @include directive for the given section path.
 func GenerateRuleTemplate(tool agentscan.Tool, slug, includePath string, opts ...RuleTemplateOpts) string {
@@ -145,7 +166,12 @@ func GenerateRuleTemplate(tool agentscan.Tool, slug, includePath string, opts ..
 		b.WriteString("---\n")
 		b.WriteString("description: " + slugToDescription(slug) + "\n")
 		if o.Globs != "" {
-			b.WriteString("globs: " + o.Globs + "\n")
+			globs := splitGlobs(o.Globs)
+			if len(globs) == 1 {
+				b.WriteString("globs: " + globs[0] + "\n")
+			} else {
+				b.WriteString("globs: " + globsToYAMLList(globs) + "\n")
+			}
 		} else {
 			b.WriteString("alwaysApply: true\n")
 		}
@@ -156,7 +182,12 @@ func GenerateRuleTemplate(tool agentscan.Tool, slug, includePath string, opts ..
 	case agentscan.ToolCopilot:
 		b.WriteString("---\n")
 		if o.Globs != "" {
-			b.WriteString("applyTo: \"" + o.Globs + "\"\n")
+			globs := splitGlobs(o.Globs)
+			if len(globs) == 1 {
+				b.WriteString("applyTo: \"" + globs[0] + "\"\n")
+			} else {
+				b.WriteString("applyTo: " + globsToYAMLList(globs) + "\n")
+			}
 		} else {
 			b.WriteString("applyTo: \"**/*\"\n")
 		}
@@ -200,7 +231,12 @@ func tomlQuote(s string) string {
 		case '\r':
 			b.WriteString(`\r`)
 		default:
-			b.WriteRune(r)
+			// Escape remaining control characters (U+0000–U+001F and U+007F) per TOML spec.
+			if r < 0x20 || r == 0x7f {
+				fmt.Fprintf(&b, "\\u%04x", r)
+			} else {
+				b.WriteRune(r)
+			}
 		}
 	}
 	b.WriteByte('"')
