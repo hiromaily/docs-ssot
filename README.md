@@ -108,6 +108,11 @@ Generated 12 files from 1 source.
 ### Install
 
 ```sh
+# Homebrew (macOS/Linux)
+brew tap hiromaily/tap
+brew install docs-ssot
+
+# Or via Go
 go install github.com/hiromaily/docs-ssot/cmd/docs-ssot@latest
 ```
 

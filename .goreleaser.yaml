@@ -70,6 +70,21 @@ changelog:
     - title: "Others"
       order: 999
 
+brews:
+  - name: docs-ssot
+    repository:
+      owner: hiromaily
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    directory: Formula
+    homepage: "https://github.com/hiromaily/docs-ssot"
+    description: "Documentation Single Source of Truth (SSOT) generator"
+    license: "MIT"
+    install: |
+      bin.install "docs-ssot"
+    test: |
+      system "#{bin}/docs-ssot", "version"
+
 release:
   github:
     owner: hiromaily

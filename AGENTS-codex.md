@@ -493,11 +493,20 @@ Rules:
 
 ### Install
 
+#### Homebrew (macOS/Linux)
+
+```sh
+brew tap hiromaily/tap
+brew install docs-ssot
+```
+
+#### Go install
+
 ```sh
 go install github.com/hiromaily/docs-ssot/cmd/docs-ssot@latest
 ```
 
-Or build from source:
+#### Build from source
 
 ```sh
 git clone https://github.com/hiromaily/docs-ssot.git
