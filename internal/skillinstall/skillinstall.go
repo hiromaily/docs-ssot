@@ -17,7 +17,8 @@ import (
 //go:embed skills/SKILL.md
 var skillBody []byte
 
-// claudeFrontmatter includes allowed-tools restrictions for Claude Code.
+// claudeFrontmatter restricts allowed-tools so the skill cannot escape its
+// documented workflow. Other tools do not yet support tool restrictions.
 const claudeFrontmatter = `---
 name: docs-ssot
 description: Set up docs-ssot SSOT documentation structure — migrate existing docs, build, and validate
@@ -31,14 +32,23 @@ allowed-tools:
 ---
 `
 
-// minimalFrontmatter is used for tools that only require name and description.
 const minimalFrontmatter = `---
 name: docs-ssot
 description: Set up docs-ssot SSOT documentation structure — migrate existing docs, build, and validate
 ---
 `
 
-// skillPath returns the install path for the SKILL.md file for the given tool.
+// Pre-computed per-tool content: frontmatter + shared body, assembled once at init.
+var (
+	claudeContent  []byte
+	minimalContent []byte
+)
+
+func init() {
+	claudeContent = append([]byte(claudeFrontmatter), skillBody...)
+	minimalContent = append([]byte(minimalFrontmatter), skillBody...)
+}
+
 func skillPath(tool agentscan.Tool) string {
 	switch tool {
 	case agentscan.ToolClaude:
@@ -54,21 +64,15 @@ func skillPath(tool agentscan.Tool) string {
 	}
 }
 
-// skillContent returns the complete SKILL.md content for the given tool.
 func skillContent(tool agentscan.Tool) []byte {
-	var fm string
-	switch tool {
-	case agentscan.ToolClaude:
-		fm = claudeFrontmatter
-	default:
-		fm = minimalFrontmatter
+	if tool == agentscan.ToolClaude {
+		return claudeContent
 	}
-	return append([]byte(fm), skillBody...)
+	return minimalContent
 }
 
-// Install installs the docs-ssot skill for each of the specified tools.
-// It writes to the current working directory.
-// If a skill file already exists, it prompts the user via in/out before overwriting.
+// Install writes a SKILL.md file for each tool into the appropriate skills directory.
+// If a file already exists, the user is prompted before overwriting.
 func Install(tools []agentscan.Tool, in io.Reader, out io.Writer) error {
 	reader := bufio.NewReader(in)
 
@@ -77,8 +81,6 @@ func Install(tools []agentscan.Tool, in io.Reader, out io.Writer) error {
 		if path == "" {
 			continue
 		}
-
-		content := skillContent(tool)
 
 		if _, err := os.Stat(path); err == nil {
 			// File exists — prompt user.
@@ -102,7 +104,7 @@ func Install(tools []agentscan.Tool, in io.Reader, out io.Writer) error {
 			return fmt.Errorf("create directory for %s: %w", path, err)
 		}
 
-		if err := os.WriteFile(path, content, 0o600); err != nil {
+		if err := os.WriteFile(path, skillContent(tool), 0o600); err != nil {
 			return fmt.Errorf("write %s: %w", path, err)
 		}
 
