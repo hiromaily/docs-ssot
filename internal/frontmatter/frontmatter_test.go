@@ -226,6 +226,31 @@ func TestGenerateRuleTemplate_WithGlobs(t *testing.T) {
 	})
 }
 
+func TestYAMLListToCSV(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		input string
+		want  string
+	}{
+		{name: "yaml_list", input: "- '**/go.mod'\n- '**/go.sum'", want: "**/go.mod, **/go.sum"},
+		{name: "yaml_list_double_quotes", input: "- \"**/go.mod\"\n- \"**/go.sum\"", want: "**/go.mod, **/go.sum"},
+		{name: "plain_scalar", input: "**/go.mod", want: "**/go.mod"},
+		{name: "empty", input: "", want: ""},
+		{name: "single_item", input: "- src/**/*.ts", want: "src/**/*.ts"},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			got := frontmatter.YAMLListToCSV(tc.input)
+			if got != tc.want {
+				t.Errorf("YAMLListToCSV(%q) = %q, want %q", tc.input, got, tc.want)
+			}
+		})
+	}
+}
+
 func TestGenerateSubagentTemplate(t *testing.T) {
 	t.Parallel()
 
@@ -260,6 +285,35 @@ func TestGenerateSubagentTemplate(t *testing.T) {
 		}
 		if !strings.Contains(got, "name: critic") {
 			t.Errorf("expected name, got:\n%s", got)
+		}
+	})
+
+	t.Run("codex_generates_toml", func(t *testing.T) {
+		t.Parallel()
+		got := frontmatter.GenerateSubagentTemplate(agentscan.ToolCodex, "critic", "../sections/ai/subagents/critic.md", fields)
+		want := `name = "critic"
+description = "Adversarial critic"
+developer_instructions = """
+<!-- @include: ../sections/ai/subagents/critic.md level=-1 -->
+"""
+`
+		if got != want {
+			t.Errorf("Codex TOML mismatch.\ngot:\n%s\nwant:\n%s", got, want)
+		}
+	})
+
+	t.Run("codex_escapes_special_chars", func(t *testing.T) {
+		t.Parallel()
+		specialFields := map[string]string{
+			"name":        `say "hello"`,
+			"description": "line1\nline2\tindented",
+		}
+		got := frontmatter.GenerateSubagentTemplate(agentscan.ToolCodex, "test", "../sections/ai/subagents/test.md", specialFields)
+		if !strings.Contains(got, `name = "say \"hello\""`) {
+			t.Errorf("expected escaped quotes in name, got:\n%s", got)
+		}
+		if !strings.Contains(got, `description = "line1\nline2\tindented"`) {
+			t.Errorf("expected escaped control chars in description, got:\n%s", got)
 		}
 	})
 }

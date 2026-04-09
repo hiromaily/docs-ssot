@@ -406,6 +406,50 @@ func TestDetectTemplateDir(t *testing.T) {
 	}
 }
 
+func TestGenerate_TransitiveIncludes(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	templateDir := filepath.Join(dir, "template")
+
+	writeFile(t, filepath.Join(templateDir, "sections", "project", "overview.md"), "## Overview\n")
+	writeFile(t, filepath.Join(templateDir, "sections", "project", "background.md"), "## Background\n")
+
+	// Intermediate section that includes two other sections (like agents-base.md)
+	writeFile(t, filepath.Join(templateDir, "sections", "ai", "base.md"),
+		"<!-- @include: ../project/overview.md -->\n<!-- @include: ../project/background.md -->\n")
+
+	// Template only directly includes the base; overview and background are transitive
+	writeFile(t, filepath.Join(templateDir, "pages", "AGENTS.tpl.md"),
+		"<!-- @include: ../sections/ai/base.md -->\n")
+
+	cfg := &config.Config{
+		Targets: []config.Target{
+			{Input: filepath.Join(templateDir, "pages", "AGENTS.tpl.md"), Output: "AGENTS.md"},
+		},
+	}
+
+	data, err := index.Generate(templateDir, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// base.md + overview.md + background.md must all be tracked
+	if len(data.Sections) != 3 {
+		t.Errorf("sections count = %d, want 3; got keys: %v", len(data.Sections), keysOf(data.Sections))
+	}
+
+	// Transitively included files must not appear as orphans
+	if len(data.Orphans) != 0 {
+		t.Errorf("orphans = %v, want none", data.Orphans)
+	}
+
+	for _, key := range []string{"sections/ai/base.md", "sections/project/overview.md", "sections/project/background.md"} {
+		if _, ok := data.Sections[key]; !ok {
+			t.Errorf("expected %q to be tracked as referenced", key)
+		}
+	}
+}
+
 func TestGenerate_IncludeInsideCodeFenceIgnored(t *testing.T) {
 	t.Parallel()
 	dir := t.TempDir()

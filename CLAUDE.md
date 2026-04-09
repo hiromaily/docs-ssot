@@ -694,6 +694,31 @@ Rules:
 - Missing files are errors
 - Only Markdown files can be included
 
+## Template Design Rationale
+
+### Shared base: `sections/ai/agents-base.md`
+
+`agents-base.md` is a shared template fragment included by both `AGENTS.tpl.md` and `CLAUDE.tpl.md`. It covers the full project context, repository structure, architecture, development guide, and commands reference.
+
+These two templates generate **comprehensive documentation files** — their readers need the full project context to work effectively.
+
+### Independent template: `AGENTS-codex.tpl.md`
+
+`AGENTS-codex.tpl.md` does **not** use `agents-base.md`. This is intentional.
+
+The Codex AGENTS file is a **focused AI instruction file**, not a comprehensive documentation reference. Its structural differences from the shared base are deliberate:
+
+| Aspect | `AGENTS.tpl.md` / `CLAUDE.tpl.md` (via `agents-base.md`) | `AGENTS-codex.tpl.md` |
+|---|---|---|
+| Project Context | Full — overview, background, problem, solution, concept | Minimal — overview only |
+| Architecture | Includes pipeline documentation | No pipeline section |
+| Commands | `# Commands Reference` section (H1) | Headingless block at H2 (`level=-1`) |
+| After Development Guide | — | `# Development Rules` with per-topic rule files |
+
+Forcing `AGENTS-codex.tpl.md` through `agents-base.md` would silently expand its scope — adding background, problem, solution, and pipeline sections that the Codex file intentionally omits — or require parameterised includes that the system does not support.
+
+**Rule of thumb:** Use `agents-base.md` for templates that generate comprehensive documentation files. Keep `AGENTS-codex.tpl.md` independent because its purpose is targeted instructions, not exhaustive project context.
+
 ---
 
 # Development Guide
@@ -1544,6 +1569,18 @@ All four tools use `SKILL.md` with YAML frontmatter, but the supported fields di
 | `applyTo` | — | Yes | — | — |
 | `excludeAgent` | — | Yes | — | — |
 
+### Subagent Format Comparison
+
+| Aspect | Claude `.md` | Cursor `.md` | Codex `.toml` | Copilot `.agent.md` |
+|--------|-------------|-------------|--------------|-------------------|
+| Format | Markdown + YAML frontmatter | Markdown + YAML frontmatter | TOML | Markdown + YAML frontmatter |
+| Instructions field | Body (Markdown) | Body (Markdown) | `developer_instructions` (multi-line string) | Body (Markdown) |
+| Required fields | `name`, `description` | `name`, `description` | `name`, `description`, `developer_instructions` | `name`, `description` |
+| Model override | `model` in frontmatter | — | `model` in TOML | — |
+| Tool restrictions | `allowedTools`/`disallowedTools` | — | — | — |
+
+**Key difference**: Codex is the only tool that uses TOML format for subagents. All others use Markdown with YAML frontmatter where instructions live in the document body.
+
 ### Functional Categories
 
 Understanding what goes where:
@@ -1729,7 +1766,7 @@ Other architecture documents should reference this file rather than duplicating 
 | `--from` / `--to` flags | Implemented | Specify source and target tools; `--to` defaults to all tools except source |
 | Rules migration | Implemented | Rules converted with tool-specific frontmatter (`.mdc` for Cursor, `applyTo` for Copilot, `@include` for Codex) |
 | Skills migration | Implemented | Skills generated for all target tools with `name` + `description`; Claude preserves extra fields (`model`, `effort`, `allowed-tools`) |
-| Subagent migration | Implemented | `.claude/agents/*.md` scanned and migrated to `.cursor/agents/`, `.github/agents/`, `.codex/agents/` |
+| Subagent migration | Implemented | `.claude/agents/*.md` scanned and migrated to `.cursor/agents/`, `.github/agents/`, `.codex/agents/` (TOML format) |
 | Command migration | Implemented | Claude commands migrated (Claude-only by default); convertible to skills via `--convert-commands` |
 | `--convert-commands` | Implemented | Converts legacy `.claude/commands/` to cross-tool skills during migration |
 | `--infer-globs` | Implemented | Infers path-gated rules from slug names (e.g., `go` → `**/*.go`, `frontend-*` → `frontend/**`) |

@@ -153,18 +153,32 @@ func scanTemplates(templateDir string, cfg *config.Config) ([]TemplateInfo, erro
 	return templates, nil
 }
 
-// extractIncludes parses a template file and returns all resolved docs file paths
-// (relative to templateDir) that it references via include directives.
-// It does NOT recurse into included files — it only looks at the template itself.
+// extractIncludes parses a template file and returns all resolved section file paths
+// (relative to templateDir) that it transitively references via include directives.
+// It recurses into non-template section files so that shared base files (e.g.
+// sections/ai/agents-base.md) do not cause their transitive dependencies to appear
+// as orphans in the index.
 func extractIncludes(absPath, templateDir string) ([]string, error) {
-	data, err := os.ReadFile(absPath)
-	if err != nil {
-		return nil, err
-	}
-
 	absTemplateDir, err := filepath.Abs(templateDir)
 	if err != nil {
 		return nil, err
+	}
+	visited := make(map[string]bool)
+	return dedupSorted(collectIncludes(absPath, absTemplateDir, visited)), nil
+}
+
+// collectIncludes recursively collects all included section file paths from absPath.
+// visited prevents re-processing the same file (handles diamond dependencies and
+// guards against cycles in section files).
+func collectIncludes(absPath, absTemplateDir string, visited map[string]bool) []string {
+	if visited[absPath] {
+		return nil
+	}
+	visited[absPath] = true
+
+	data, err := os.ReadFile(absPath)
+	if err != nil {
+		return nil
 	}
 
 	var includes []string
@@ -185,16 +199,29 @@ func extractIncludes(absPath, templateDir string) ([]string, error) {
 		includePath, _ := mdutil.ParseIncludeArgs(matches[1])
 		absInclude := mdutil.ResolveIncludePath(absPath, includePath)
 
-		// Resolve the include to actual files
 		resolved, err := resolveToFiles(absInclude, includePath, absTemplateDir)
 		if err != nil {
 			// Skip unresolvable includes (they may fail at build time, not index time)
 			continue
 		}
-		includes = append(includes, resolved...)
+
+		for _, rel := range resolved {
+			includes = append(includes, rel)
+			// Recurse into non-template section files to collect transitive includes
+			if !isSectionTemplate(rel) {
+				absResolved := filepath.Join(absTemplateDir, rel)
+				includes = append(includes, collectIncludes(absResolved, absTemplateDir, visited)...)
+			}
+		}
 	}
 
-	return dedupSorted(includes), nil
+	return includes
+}
+
+// isSectionTemplate reports whether a relative path is a template file (.tpl.md or
+// .tpl.mdc) rather than a plain section file. Template files are not recursed into.
+func isSectionTemplate(path string) bool {
+	return strings.HasSuffix(path, ".tpl.md") || strings.HasSuffix(path, ".tpl.mdc")
 }
 
 // resolveToFiles resolves an include path to a list of actual file paths (relative to templateDir).

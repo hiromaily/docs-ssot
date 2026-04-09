@@ -95,6 +95,58 @@ type RuleTemplateOpts struct {
 	Globs string
 }
 
+// YAMLListToCSV converts a YAML-serialised list string (e.g., "- '**/go.mod'\n- '**/go.sum'")
+// to a comma-separated string (e.g., "**/go.mod, **/go.sum").
+// If the input is already a plain scalar (no "- " prefix), it is returned as-is.
+func YAMLListToCSV(s string) string {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return ""
+	}
+	// Not a YAML list — return as-is.
+	if !strings.HasPrefix(s, "- ") {
+		return s
+	}
+	var items []string
+	for line := range strings.SplitSeq(s, "\n") {
+		line = strings.TrimSpace(line)
+		if !strings.HasPrefix(line, "- ") {
+			continue
+		}
+		item := strings.TrimPrefix(line, "- ")
+		// Strip surrounding quotes.
+		item = strings.Trim(strings.TrimSpace(item), "'\"")
+		if item != "" {
+			items = append(items, item)
+		}
+	}
+	if len(items) == 0 {
+		return s
+	}
+	return strings.Join(items, ", ")
+}
+
+// splitGlobs splits a comma-separated glob string into individual patterns.
+func splitGlobs(csv string) []string {
+	var items []string
+	for p := range strings.SplitSeq(csv, ",") {
+		p = strings.TrimSpace(p)
+		if p != "" {
+			items = append(items, p)
+		}
+	}
+	return items
+}
+
+// globsToYAMLList formats a slice of glob patterns as a YAML flow sequence: ["a", "b"].
+func globsToYAMLList(items []string) string {
+	quoted := make([]string, len(items))
+	for i, item := range items {
+		quoted[i] = `"` + item + `"`
+	}
+	return "[" + strings.Join(quoted, ", ") + "]"
+}
+
 // GenerateRuleTemplate generates a tool-specific rule template with appropriate
 // frontmatter and an @include directive for the given section path.
 func GenerateRuleTemplate(tool agentscan.Tool, slug, includePath string, opts ...RuleTemplateOpts) string {
@@ -114,7 +166,12 @@ func GenerateRuleTemplate(tool agentscan.Tool, slug, includePath string, opts ..
 		b.WriteString("---\n")
 		b.WriteString("description: " + slugToDescription(slug) + "\n")
 		if o.Globs != "" {
-			b.WriteString("globs: " + o.Globs + "\n")
+			globs := splitGlobs(o.Globs)
+			if len(globs) == 1 {
+				b.WriteString("globs: " + globs[0] + "\n")
+			} else {
+				b.WriteString("globs: " + globsToYAMLList(globs) + "\n")
+			}
 		} else {
 			b.WriteString("alwaysApply: true\n")
 		}
@@ -125,7 +182,12 @@ func GenerateRuleTemplate(tool agentscan.Tool, slug, includePath string, opts ..
 	case agentscan.ToolCopilot:
 		b.WriteString("---\n")
 		if o.Globs != "" {
-			b.WriteString("applyTo: \"" + o.Globs + "\"\n")
+			globs := splitGlobs(o.Globs)
+			if len(globs) == 1 {
+				b.WriteString("applyTo: \"" + globs[0] + "\"\n")
+			} else {
+				b.WriteString("applyTo: " + globsToYAMLList(globs) + "\n")
+			}
 		} else {
 			b.WriteString("applyTo: \"**/*\"\n")
 		}
@@ -145,7 +207,49 @@ func GenerateRuleTemplate(tool agentscan.Tool, slug, includePath string, opts ..
 	return b.String()
 }
 
+// --- TOML helpers ---
+
+// tomlQuote wraps s as a TOML basic string, escaping characters that are
+// special in TOML basic strings (backslash, double-quote, and control chars).
+func tomlQuote(s string) string {
+	var b strings.Builder
+	b.WriteByte('"')
+	for _, r := range s {
+		switch r {
+		case '\\':
+			b.WriteString(`\\`)
+		case '"':
+			b.WriteString(`\"`)
+		case '\b':
+			b.WriteString(`\b`)
+		case '\t':
+			b.WriteString(`\t`)
+		case '\n':
+			b.WriteString(`\n`)
+		case '\f':
+			b.WriteString(`\f`)
+		case '\r':
+			b.WriteString(`\r`)
+		default:
+			// Escape remaining control characters (U+0000–U+001F and U+007F) per TOML spec.
+			if r < 0x20 || r == 0x7f {
+				fmt.Fprintf(&b, "\\u%04x", r)
+			} else {
+				b.WriteRune(r)
+			}
+		}
+	}
+	b.WriteByte('"')
+	return b.String()
+}
+
 // GenerateSubagentTemplate generates a tool-specific subagent template.
+//
+// NOTE: Codex subagents use TOML multi-line basic strings (""") for
+// developer_instructions. If the included Markdown content contains a
+// sequence of three or more consecutive double-quotes, the generated TOML
+// will be invalid. This is unlikely in practice but may require post-processing
+// in the generator if it occurs.
 func GenerateSubagentTemplate(tool agentscan.Tool, slug, includePath string, sourceFields map[string]string) string {
 	var b strings.Builder
 
@@ -176,6 +280,14 @@ func GenerateSubagentTemplate(tool agentscan.Tool, slug, includePath string, sou
 		b.WriteString("---\n")
 		b.WriteString("\n")
 		b.WriteString("<!-- @include: " + includePath + " level=-1 -->\n")
+
+	case agentscan.ToolCodex:
+		// Codex subagents use TOML format with developer_instructions.
+		b.WriteString("name = " + tomlQuote(name) + "\n")
+		b.WriteString("description = " + tomlQuote(description) + "\n")
+		b.WriteString("developer_instructions = \"\"\"\n")
+		b.WriteString("<!-- @include: " + includePath + " level=-1 -->\n")
+		b.WriteString("\"\"\"\n")
 
 	default:
 		// Other tools: name + description only.

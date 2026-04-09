@@ -223,7 +223,10 @@ func buildTemplate(tool agentscan.Tool, s agentSection, cfg AgentConfig) templat
 	switch effectiveType {
 	case agentscan.FileTypeRule:
 		var opts frontmatter.RuleTemplateOpts
-		if cfg.InferGlobs {
+		// Prefer explicit paths from source frontmatter over slug-based inference.
+		if paths, ok := s.Fields["paths"]; ok && paths != "" {
+			opts.Globs = frontmatter.YAMLListToCSV(paths)
+		} else if cfg.InferGlobs {
 			if globs, ok := agentscan.InferGlobs(s.Source.Slug); ok {
 				opts.Globs = globs
 			}
@@ -267,7 +270,11 @@ func templatePathForFile(tplDir string, tool agentscan.Tool, f agentscan.AgentFi
 	case agentscan.FileTypeCommand:
 		return filepath.Join(tplDir, "commands", f.Slug+".tpl.md")
 	case agentscan.FileTypeSubagent:
-		return filepath.Join(tplDir, "agents", f.Slug+".tpl.md")
+		ext := ".tpl.md"
+		if tool == agentscan.ToolCodex {
+			ext = ".tpl.toml"
+		}
+		return filepath.Join(tplDir, "agents", f.Slug+ext)
 	}
 	return filepath.Join(tplDir, f.Slug+".tpl.md")
 }
@@ -437,7 +444,7 @@ func resolveOutputPath(t templateFile) string { //nolint:gocyclo // inherent in 
 		case agentscan.FileTypeCommand:
 			return t.OutputPath // commands not supported for Codex
 		case agentscan.FileTypeSubagent:
-			return filepath.Join(".codex", "agents", t.Slug+".md")
+			return filepath.Join(".codex", "agents", t.Slug+".toml")
 		}
 	}
 	return t.OutputPath

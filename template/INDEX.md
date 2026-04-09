@@ -7,8 +7,8 @@
 | Template | Output | Sections included |
 | --- | --- | --- |
 | pages/README.tpl.md | README.md | 9 |
-| pages/AGENTS.tpl.md | AGENTS.md | 30 |
-| pages/CLAUDE.tpl.md | CLAUDE.md | 30 |
+| pages/AGENTS.tpl.md | AGENTS.md | 35 |
+| pages/CLAUDE.tpl.md | CLAUDE.md | 34 |
 | pages/ai-agents/claude/rules/general.tpl.md | .claude/rules/general.md | 1 |
 | pages/ai-agents/claude/rules/docs.tpl.md | .claude/rules/docs.md | 1 |
 | pages/ai-agents/claude/rules/git.tpl.md | .claude/rules/git.md | 1 |
@@ -24,7 +24,7 @@
 | pages/ai-agents/cursor/rules/go-test.tpl.mdc | .cursor/rules/go-test.mdc | 1 |
 | pages/ai-agents/cursor/rules/vitepress.tpl.mdc | .cursor/rules/vitepress.mdc | 1 |
 | pages/ai-agents/cursor/skills/fix-pr-reviews/SKILL.tpl.md | .cursor/skills/fix-pr-reviews/SKILL.md | 1 |
-| pages/ai-agents/codex/AGENTS.tpl.md | AGENTS-codex.md | 25 |
+| pages/AGENTS-codex.tpl.md | AGENTS-codex.md | 27 |
 | pages/ai-agents/codex/skills/fix-pr-reviews/SKILL.tpl.md | .agents/skills/fix-pr-reviews/SKILL.md | 1 |
 | pages/ai-agents/copilot/instructions/general.tpl.md | .github/instructions/general.instructions.md | 1 |
 | pages/ai-agents/copilot/instructions/docs.tpl.md | .github/instructions/docs.instructions.md | 1 |
@@ -38,26 +38,30 @@
 
 | File | Referenced by |
 | --- | --- |
-| sections/ai/agents.md | AGENTS, CLAUDE, codex |
+| sections/ai/agents-base.md | AGENTS, CLAUDE |
+| sections/ai/agents.md | AGENTS, AGENTS-codex, CLAUDE |
 | sections/ai/best-practices.md | AGENTS, CLAUDE |
 | sections/ai/claude.md | AGENTS, CLAUDE |
 | sections/ai/codex.md | AGENTS |
 | sections/ai/cross-tool-mapping.md | AGENTS, CLAUDE |
 | sections/ai/cursor.md | AGENTS |
 | sections/ai/github-copilot.md | AGENTS |
-| sections/ai/glossary.md | AGENTS, CLAUDE, codex |
+| sections/ai/glossary.md | AGENTS, AGENTS-codex, CLAUDE |
 | sections/ai/hooks.md | CLAUDE |
 | sections/ai/overview.md | AGENTS, CLAUDE |
 | sections/ai/skills/check-ssot.md | claude |
+| sections/architecture/diagrams/include-resolution.md | AGENTS, AGENTS-codex, CLAUDE |
+| sections/architecture/diagrams/pipeline-flow.md | AGENTS, AGENTS-codex, CLAUDE |
 | sections/architecture/features.md | CLAUDE |
 | sections/architecture/includes-syntax.md | README |
-| sections/architecture/includes.md | AGENTS, CLAUDE, codex |
-| sections/architecture/overview.md | AGENTS, CLAUDE, codex |
-| sections/architecture/pipeline.md | CLAUDE |
-| sections/architecture/system.md | AGENTS, CLAUDE, codex |
-| sections/development/lint.md | AGENTS, CLAUDE, codex |
-| sections/development/setup.md | AGENTS, CLAUDE, codex |
-| sections/development/test.md | AGENTS, CLAUDE, codex |
+| sections/architecture/includes.md | AGENTS, AGENTS-codex, CLAUDE |
+| sections/architecture/overview.md | AGENTS, AGENTS-codex, CLAUDE |
+| sections/architecture/pipeline.md | AGENTS, CLAUDE |
+| sections/architecture/system.md | AGENTS, AGENTS-codex, CLAUDE |
+| sections/architecture/templates.md | AGENTS, CLAUDE |
+| sections/development/lint.md | AGENTS, AGENTS-codex, CLAUDE |
+| sections/development/setup.md | AGENTS, AGENTS-codex, CLAUDE |
+| sections/development/test.md | AGENTS, AGENTS-codex, CLAUDE |
 | sections/product/before-after.md | README |
 | sections/product/comparison.md | README |
 | sections/product/concept.md | AGENTS, CLAUDE |
@@ -67,30 +71,30 @@
 | sections/product/supported-targets.md | README |
 | sections/product/why.md | README |
 | sections/project/background.md | AGENTS, CLAUDE |
-| sections/project/overview.md | AGENTS, CLAUDE, codex |
+| sections/project/overview.md | AGENTS, AGENTS-codex, CLAUDE |
 | sections/project/problem.md | AGENTS, CLAUDE |
 | sections/project/solution.md | AGENTS, CLAUDE |
-| sections/reference/commands-summary.md | AGENTS, CLAUDE, README, codex |
-| sections/reference/commands/build.md | AGENTS, CLAUDE, codex |
-| sections/reference/commands/check.md | AGENTS, CLAUDE, codex |
-| sections/reference/commands/include.md | AGENTS, CLAUDE, codex |
-| sections/reference/commands/migrate-from.md | AGENTS, CLAUDE, codex |
-| sections/reference/commands/migrate.md | AGENTS, CLAUDE, codex |
-| sections/reference/commands/validate.md | AGENTS, CLAUDE, codex |
-| sections/reference/commands/version.md | AGENTS, CLAUDE, codex |
-| sections/reference/commands/workflow.md | AGENTS, CLAUDE, codex |
-| sections/reference/directory.md | AGENTS, CLAUDE, codex |
+| sections/reference/commands-summary.md | AGENTS, AGENTS-codex, CLAUDE, README |
+| sections/reference/commands/build.md | AGENTS, AGENTS-codex, CLAUDE |
+| sections/reference/commands/check.md | AGENTS, AGENTS-codex, CLAUDE |
+| sections/reference/commands/include.md | AGENTS, AGENTS-codex, CLAUDE |
+| sections/reference/commands/migrate-from.md | AGENTS, AGENTS-codex, CLAUDE |
+| sections/reference/commands/migrate.md | AGENTS, AGENTS-codex, CLAUDE |
+| sections/reference/commands/validate.md | AGENTS, AGENTS-codex, CLAUDE |
+| sections/reference/commands/version.md | AGENTS, AGENTS-codex, CLAUDE |
+| sections/reference/commands/workflow.md | AGENTS, AGENTS-codex, CLAUDE |
+| sections/reference/directory.md | AGENTS, AGENTS-codex, CLAUDE |
 
 ## Rules
 
 | File | Referenced by |
 | --- | --- |
-| sections/ai/rules/docs.md | claude, codex, copilot, cursor |
-| sections/ai/rules/general.md | claude, codex, copilot, cursor |
-| sections/ai/rules/git.md | claude, codex, copilot, cursor |
-| sections/ai/rules/go-test.md | claude, codex, copilot, cursor |
-| sections/ai/rules/go.md | claude, codex, copilot, cursor |
-| sections/ai/rules/vitepress.md | claude, codex, copilot, cursor |
+| sections/ai/rules/docs.md | AGENTS-codex, claude, copilot, cursor |
+| sections/ai/rules/general.md | AGENTS-codex, claude, copilot, cursor |
+| sections/ai/rules/git.md | AGENTS-codex, claude, copilot, cursor |
+| sections/ai/rules/go-test.md | AGENTS-codex, claude, copilot, cursor |
+| sections/ai/rules/go.md | AGENTS-codex, claude, copilot, cursor |
+| sections/ai/rules/vitepress.md | AGENTS-codex, claude, copilot, cursor |
 
 ## Commands
 
@@ -102,8 +106,6 @@
 
 | File | Note |
 | --- | --- |
-| sections/architecture/diagrams/include-resolution.md | Not referenced by any template |
-| sections/architecture/diagrams/pipeline-flow.md | Not referenced by any template |
 | sections/development/contributing.md | Not referenced by any template |
 | sections/development/troubleshooting.md | Not referenced by any template |
 | sections/product/faq.md | Not referenced by any template |

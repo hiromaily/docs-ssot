@@ -41,6 +41,18 @@ All four tools use `SKILL.md` with YAML frontmatter, but the supported fields di
 | `applyTo` | — | Yes | — | — |
 | `excludeAgent` | — | Yes | — | — |
 
+### Subagent Format Comparison
+
+| Aspect | Claude `.md` | Cursor `.md` | Codex `.toml` | Copilot `.agent.md` |
+|--------|-------------|-------------|--------------|-------------------|
+| Format | Markdown + YAML frontmatter | Markdown + YAML frontmatter | TOML | Markdown + YAML frontmatter |
+| Instructions field | Body (Markdown) | Body (Markdown) | `developer_instructions` (multi-line string) | Body (Markdown) |
+| Required fields | `name`, `description` | `name`, `description` | `name`, `description`, `developer_instructions` | `name`, `description` |
+| Model override | `model` in frontmatter | — | `model` in TOML | — |
+| Tool restrictions | `allowedTools`/`disallowedTools` | — | — | — |
+
+**Key difference**: Codex is the only tool that uses TOML format for subagents. All others use Markdown with YAML frontmatter where instructions live in the document body.
+
 ### Functional Categories
 
 Understanding what goes where:

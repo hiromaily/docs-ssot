@@ -326,6 +326,165 @@ Instead of implementing a full template engine, the system performs only four op
 
 Everything else is handled through Markdown structure and file organization.
 
+## Documentation Pipeline Architecture
+
+This document describes how the documentation generation pipeline works.
+
+### Pipeline Overview
+
+The `docs-ssot` system generates final documents (e.g., README.md, CLAUDE.md) from template files and modular Markdown sources.
+
+The pipeline consists of the following stages:
+
+1. Template Loading
+2. Include Resolution
+3. Recursive Expansion
+4. Document Assembly
+5. Output Generation
+
+---
+
+### Pipeline Flow
+
+```mermaid
+flowchart TD
+    A["template/docs/ (source markdown)"] --> B["template/*.tpl.md"]
+    B --> C[Template Loader]
+    C --> D[Include Resolver]
+    D --> E{Include directive found?}
+    E -- Yes --> F{Inside code fence?}
+    F -- Yes --> G[Keep as literal text]
+    F -- No --> H{Circular reference?}
+    H -- Yes --> I[Error: circular include]
+    H -- No --> J[Load included file]
+    J --> D
+    E -- No --> K[Document Builder]
+    G --> K
+    K --> L["README.md / AGENTS.md / CLAUDE.md"]
+```
+
+---
+
+### Step 1 — Template Loading
+
+The system loads template files from the `template/` directory.
+
+Example:
+
+```
+template/README.tpl.md
+template/AGENTS.tpl.md
+template/CLAUDE.tpl.md
+```
+
+Templates define the structure of the final documents.
+
+---
+
+### Step 2 — Include Resolution
+
+Templates and Markdown files may contain include directives:
+
+The following style is compatible with [VitePress](https://vitepress.dev/).
+
+```markdown
+<!-- @include: docs/01_project/overview.md -->
+```
+
+The include resolver replaces this directive with the contents of the referenced file.
+
+---
+
+### Step 3 — Recursive Expansion
+
+Included files may also contain include directives.
+
+The system resolves includes recursively until all includes are expanded.
+
+```
+A.tpl.md
+→ includes B.md
+→ includes C.md
+```
+
+Final result:
+
+```
+A + B + C
+```
+
+### Step 4 — Link Path Rewriting
+
+When each file is processed, relative Markdown links and image URLs are rewritten so they resolve correctly relative to the output file location rather than the source file location.
+
+```markdown
+[docsgen.yaml](../../docsgen.yaml)
+```
+
+---
+
+### Step 5 — Document Assembly
+
+After all includes are expanded, the document builder assembles the final Markdown document.
+
+This includes:
+
+- Merging expanded content
+- Ensuring correct order
+
+---
+
+### Step 6 — Output Generation
+
+The final document is written to where defined at [docsgen.yaml](./docsgen.yaml):
+
+```
+README.md
+AGENTS.md
+CLAUDE.md
+```
+
+These files are generated files and should not be edited directly.
+
+---
+
+### Include Resolution Detail
+
+The include resolver processes directives recursively. The following diagram shows the exact resolution algorithm:
+
+```mermaid
+flowchart TD
+    A[processFile called with path] --> B{Path in ancestor chain?}
+    B -- Yes --> C[Error: circular include]
+    B -- No --> D[Open file, add to ancestors]
+    D --> E[Read next line]
+    E --> F{Code fence toggle?}
+    F -- Yes --> G[Flip inCodeFence flag]
+    G --> H[Write line as-is]
+    F -- No --> I{Include directive match\nAND not in code fence?}
+    I -- No --> H
+    I -- Yes --> J[Resolve include path]
+    J --> K[Call processFile recursively]
+    K --> L[Append expanded content]
+    L --> M{More lines?}
+    H --> M
+    M -- Yes --> E
+    M -- No --> N[Return assembled string]
+```
+
+---
+
+### Design Goals
+
+The pipeline is designed with the following goals:
+
+- Single Source of Truth (SSOT)
+- Modular documentation
+- Reusable Markdown components
+- Template-based document generation
+- Deterministic document builds
+- Simple and predictable behavior
+
 ---
 
 # Include Specification
@@ -534,6 +693,31 @@ Rules:
 - Circular includes are errors
 - Missing files are errors
 - Only Markdown files can be included
+
+## Template Design Rationale
+
+### Shared base: `sections/ai/agents-base.md`
+
+`agents-base.md` is a shared template fragment included by both `AGENTS.tpl.md` and `CLAUDE.tpl.md`. It covers the full project context, repository structure, architecture, development guide, and commands reference.
+
+These two templates generate **comprehensive documentation files** — their readers need the full project context to work effectively.
+
+### Independent template: `AGENTS-codex.tpl.md`
+
+`AGENTS-codex.tpl.md` does **not** use `agents-base.md`. This is intentional.
+
+The Codex AGENTS file is a **focused AI instruction file**, not a comprehensive documentation reference. Its structural differences from the shared base are deliberate:
+
+| Aspect | `AGENTS.tpl.md` / `CLAUDE.tpl.md` (via `agents-base.md`) | `AGENTS-codex.tpl.md` |
+|---|---|---|
+| Project Context | Full — overview, background, problem, solution, concept | Minimal — overview only |
+| Architecture | Includes pipeline documentation | No pipeline section |
+| Commands | `# Commands Reference` section (H1) | Headingless block at H2 (`level=-1`) |
+| After Development Guide | — | `# Development Rules` with per-topic rule files |
+
+Forcing `AGENTS-codex.tpl.md` through `agents-base.md` would silently expand its scope — adding background, problem, solution, and pipeline sections that the Codex file intentionally omits — or require parameterised includes that the system does not support.
+
+**Rule of thumb:** Use `agents-base.md` for templates that generate comprehensive documentation files. Keep `AGENTS-codex.tpl.md` independent because its purpose is targeted instructions, not exhaustive project context.
 
 ---
 
@@ -1340,7 +1524,41 @@ Additional configuration can go in `agents/openai.yaml` within the skill directo
 
 ### Subagents
 
-Codex subagents are defined as TOML files in `.codex/agents/`. They specify role, model, thread limits, and other execution parameters.
+Codex subagents are defined as TOML files in `.codex/agents/`. Each file defines one custom agent.
+
+#### Required Fields
+
+| Field | Purpose |
+|-------|---------|
+| `name` | Agent identifier used when spawning |
+| `description` | Guidance for when to use this agent |
+| `developer_instructions` | Core behavioral instructions (multi-line basic string) |
+
+#### Optional Fields
+
+| Field | Default | Purpose |
+|-------|---------|---------|
+| `model` | Inherited from parent | LLM selection |
+| `model_reasoning_effort` | Inherited | Reasoning effort level |
+| `sandbox_mode` | Inherited | File access scope (e.g., `read-only`) |
+| `nickname_candidates` | — | Display name pool for spawned instances |
+| `mcp_servers` | Inherited | External tool connections |
+| `skills.config` | Inherited | Skill configuration overrides |
+
+#### Example
+
+```toml
+name = "reviewer"
+description = "Read-only codebase explorer for gathering evidence."
+model = "o3"
+sandbox_mode = "read-only"
+developer_instructions = """
+Stay in exploration mode.
+Trace the real execution path, cite files and symbols.
+"""
+```
+
+The filename conventionally matches the `name` field (e.g., `reviewer.toml`), but the `name` field is the source of truth.
 
 ## Cursor
 
@@ -1542,6 +1760,18 @@ All four tools use `SKILL.md` with YAML frontmatter, but the supported fields di
 | `alwaysApply` | Yes | — | — | — |
 | `applyTo` | — | Yes | — | — |
 | `excludeAgent` | — | Yes | — | — |
+
+### Subagent Format Comparison
+
+| Aspect | Claude `.md` | Cursor `.md` | Codex `.toml` | Copilot `.agent.md` |
+|--------|-------------|-------------|--------------|-------------------|
+| Format | Markdown + YAML frontmatter | Markdown + YAML frontmatter | TOML | Markdown + YAML frontmatter |
+| Instructions field | Body (Markdown) | Body (Markdown) | `developer_instructions` (multi-line string) | Body (Markdown) |
+| Required fields | `name`, `description` | `name`, `description` | `name`, `description`, `developer_instructions` | `name`, `description` |
+| Model override | `model` in frontmatter | — | `model` in TOML | — |
+| Tool restrictions | `allowedTools`/`disallowedTools` | — | — | — |
+
+**Key difference**: Codex is the only tool that uses TOML format for subagents. All others use Markdown with YAML frontmatter where instructions live in the document body.
 
 ### Functional Categories
 
