@@ -145,7 +145,44 @@ func GenerateRuleTemplate(tool agentscan.Tool, slug, includePath string, opts ..
 	return b.String()
 }
 
+// --- TOML helpers ---
+
+// tomlQuote wraps s as a TOML basic string, escaping characters that are
+// special in TOML basic strings (backslash, double-quote, and control chars).
+func tomlQuote(s string) string {
+	var b strings.Builder
+	b.WriteByte('"')
+	for _, r := range s {
+		switch r {
+		case '\\':
+			b.WriteString(`\\`)
+		case '"':
+			b.WriteString(`\"`)
+		case '\b':
+			b.WriteString(`\b`)
+		case '\t':
+			b.WriteString(`\t`)
+		case '\n':
+			b.WriteString(`\n`)
+		case '\f':
+			b.WriteString(`\f`)
+		case '\r':
+			b.WriteString(`\r`)
+		default:
+			b.WriteRune(r)
+		}
+	}
+	b.WriteByte('"')
+	return b.String()
+}
+
 // GenerateSubagentTemplate generates a tool-specific subagent template.
+//
+// NOTE: Codex subagents use TOML multi-line basic strings (""") for
+// developer_instructions. If the included Markdown content contains a
+// sequence of three or more consecutive double-quotes, the generated TOML
+// will be invalid. This is unlikely in practice but may require post-processing
+// in the generator if it occurs.
 func GenerateSubagentTemplate(tool agentscan.Tool, slug, includePath string, sourceFields map[string]string) string {
 	var b strings.Builder
 
@@ -311,13 +348,6 @@ func flattenYAML(m map[string]any) map[string]string {
 		}
 	}
 	return result
-}
-
-// tomlQuote returns a TOML basic string with inner double-quotes and backslashes escaped.
-func tomlQuote(s string) string {
-	s = strings.ReplaceAll(s, `\`, `\\`)
-	s = strings.ReplaceAll(s, `"`, `\"`)
-	return `"` + s + `"`
 }
 
 // slugToDescription converts a slug like "architecture" to "Architecture" for use as a description.
