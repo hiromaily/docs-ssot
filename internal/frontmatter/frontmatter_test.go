@@ -262,6 +262,26 @@ func TestGenerateSubagentTemplate(t *testing.T) {
 			t.Errorf("expected name, got:\n%s", got)
 		}
 	})
+
+	t.Run("codex_generates_toml", func(t *testing.T) {
+		t.Parallel()
+		got := frontmatter.GenerateSubagentTemplate(agentscan.ToolCodex, "critic", "../sections/ai/subagents/critic.md", fields)
+		if !strings.Contains(got, `name = "critic"`) {
+			t.Errorf("expected TOML name field, got:\n%s", got)
+		}
+		if !strings.Contains(got, `description = "Adversarial critic"`) {
+			t.Errorf("expected TOML description field, got:\n%s", got)
+		}
+		if !strings.Contains(got, `developer_instructions = """`) {
+			t.Errorf("expected TOML multi-line developer_instructions, got:\n%s", got)
+		}
+		if !strings.Contains(got, "@include:") {
+			t.Errorf("expected @include directive, got:\n%s", got)
+		}
+		if strings.Contains(got, "---") {
+			t.Errorf("Codex TOML should not contain YAML delimiters, got:\n%s", got)
+		}
+	})
 }
 
 func TestGenerateSkillTemplate(t *testing.T) {

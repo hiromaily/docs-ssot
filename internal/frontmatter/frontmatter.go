@@ -177,6 +177,14 @@ func GenerateSubagentTemplate(tool agentscan.Tool, slug, includePath string, sou
 		b.WriteString("\n")
 		b.WriteString("<!-- @include: " + includePath + " level=-1 -->\n")
 
+	case agentscan.ToolCodex:
+		// Codex subagents use TOML format with developer_instructions.
+		b.WriteString("name = " + tomlQuote(name) + "\n")
+		b.WriteString("description = " + tomlQuote(description) + "\n")
+		b.WriteString("developer_instructions = \"\"\"\n")
+		b.WriteString("<!-- @include: " + includePath + " level=-1 -->\n")
+		b.WriteString("\"\"\"\n")
+
 	default:
 		// Other tools: name + description only.
 		b.WriteString("---\n")
@@ -303,6 +311,13 @@ func flattenYAML(m map[string]any) map[string]string {
 		}
 	}
 	return result
+}
+
+// tomlQuote returns a TOML basic string with inner double-quotes and backslashes escaped.
+func tomlQuote(s string) string {
+	s = strings.ReplaceAll(s, `\`, `\\`)
+	s = strings.ReplaceAll(s, `"`, `\"`)
+	return `"` + s + `"`
 }
 
 // slugToDescription converts a slug like "architecture" to "Architecture" for use as a description.

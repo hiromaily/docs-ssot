@@ -53,7 +53,7 @@ Other architecture documents should reference this file rather than duplicating 
 | `--from` / `--to` flags | Implemented | Specify source and target tools; `--to` defaults to all tools except source |
 | Rules migration | Implemented | Rules converted with tool-specific frontmatter (`.mdc` for Cursor, `applyTo` for Copilot, `@include` for Codex) |
 | Skills migration | Implemented | Skills generated for all target tools with `name` + `description`; Claude preserves extra fields (`model`, `effort`, `allowed-tools`) |
-| Subagent migration | Implemented | `.claude/agents/*.md` scanned and migrated to `.cursor/agents/`, `.github/agents/`, `.codex/agents/` |
+| Subagent migration | Implemented | `.claude/agents/*.md` scanned and migrated to `.cursor/agents/`, `.github/agents/`, `.codex/agents/` (TOML format) |
 | Command migration | Implemented | Claude commands migrated (Claude-only by default); convertible to skills via `--convert-commands` |
 | `--convert-commands` | Implemented | Converts legacy `.claude/commands/` to cross-tool skills during migration |
 | `--infer-globs` | Implemented | Infers path-gated rules from slug names (e.g., `go` → `**/*.go`, `frontend-*` → `frontend/**`) |
