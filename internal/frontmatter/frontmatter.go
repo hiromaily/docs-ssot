@@ -95,6 +95,37 @@ type RuleTemplateOpts struct {
 	Globs string
 }
 
+// YAMLListToCSV converts a YAML-serialised list string (e.g., "- '**/go.mod'\n- '**/go.sum'")
+// to a comma-separated string (e.g., "**/go.mod, **/go.sum").
+// If the input is already a plain scalar (no "- " prefix), it is returned as-is.
+func YAMLListToCSV(s string) string {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return ""
+	}
+	// Not a YAML list — return as-is.
+	if !strings.HasPrefix(s, "- ") {
+		return s
+	}
+	var items []string
+	for line := range strings.SplitSeq(s, "\n") {
+		line = strings.TrimSpace(line)
+		if !strings.HasPrefix(line, "- ") {
+			continue
+		}
+		item := strings.TrimPrefix(line, "- ")
+		// Strip surrounding quotes.
+		item = strings.Trim(strings.TrimSpace(item), "'\"")
+		if item != "" {
+			items = append(items, item)
+		}
+	}
+	if len(items) == 0 {
+		return s
+	}
+	return strings.Join(items, ", ")
+}
+
 // GenerateRuleTemplate generates a tool-specific rule template with appropriate
 // frontmatter and an @include directive for the given section path.
 func GenerateRuleTemplate(tool agentscan.Tool, slug, includePath string, opts ...RuleTemplateOpts) string {

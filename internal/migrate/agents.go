@@ -223,7 +223,10 @@ func buildTemplate(tool agentscan.Tool, s agentSection, cfg AgentConfig) templat
 	switch effectiveType {
 	case agentscan.FileTypeRule:
 		var opts frontmatter.RuleTemplateOpts
-		if cfg.InferGlobs {
+		// Prefer explicit paths from source frontmatter over slug-based inference.
+		if paths, ok := s.Fields["paths"]; ok && paths != "" {
+			opts.Globs = frontmatter.YAMLListToCSV(paths)
+		} else if cfg.InferGlobs {
 			if globs, ok := agentscan.InferGlobs(s.Source.Slug); ok {
 				opts.Globs = globs
 			}

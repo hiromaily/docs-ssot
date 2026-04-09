@@ -226,6 +226,31 @@ func TestGenerateRuleTemplate_WithGlobs(t *testing.T) {
 	})
 }
 
+func TestYAMLListToCSV(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		input string
+		want  string
+	}{
+		{name: "yaml_list", input: "- '**/go.mod'\n- '**/go.sum'", want: "**/go.mod, **/go.sum"},
+		{name: "yaml_list_double_quotes", input: "- \"**/go.mod\"\n- \"**/go.sum\"", want: "**/go.mod, **/go.sum"},
+		{name: "plain_scalar", input: "**/go.mod", want: "**/go.mod"},
+		{name: "empty", input: "", want: ""},
+		{name: "single_item", input: "- src/**/*.ts", want: "src/**/*.ts"},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			got := frontmatter.YAMLListToCSV(tc.input)
+			if got != tc.want {
+				t.Errorf("YAMLListToCSV(%q) = %q, want %q", tc.input, got, tc.want)
+			}
+		})
+	}
+}
+
 func TestGenerateSubagentTemplate(t *testing.T) {
 	t.Parallel()
 
