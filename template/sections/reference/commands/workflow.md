@@ -26,5 +26,7 @@ make docs-migrate FILES="README.md" ARGS="--dry-run"  # preview migration plan
 make docs-migrate-from FROM=claude             # migrate Claude configs to all other tools
 make docs-migrate-from FROM=claude TO=cursor   # migrate Claude to Cursor only
 make docs-index                               # generate INDEX.md with include relationships
+make docs-install-skill                       # install docs-ssot skill for all AI tools
+make docs-install-skill TOOL=claude           # install for a specific tool
 make docs-version                             # print the build version
 ```
